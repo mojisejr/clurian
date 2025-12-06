@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Calendar, ClipboardList } from "lucide-react";
+import { Calendar, ClipboardList } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
-import { cn, formatThaiDate, getDaysRemaining } from "@/lib/utils";
+import { formatThaiDate, getDaysRemaining } from "@/lib/utils";
 import type { Log } from "@/lib/types";
 
 export interface LogDetailModalProps {

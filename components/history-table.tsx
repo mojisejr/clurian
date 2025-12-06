@@ -19,7 +19,6 @@ import type { Log } from "@/lib/types";
 export interface HistoryTableProps {
   logs: Log[];
   onRowClick?: (logId: number | string) => void;
-  onFollowUp?: (logId: number | string) => void;
   className?: string;
 }
 
@@ -32,7 +31,6 @@ type SortOrder = "asc" | "desc";
 export function HistoryTable({
   logs,
   onRowClick,
-  onFollowUp,
   className,
 }: HistoryTableProps) {
   const [activeTab, setActiveTab] = useState<TabType>("all");
