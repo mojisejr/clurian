@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: clurian-db
+    restart: always
+    environment:
+      POSTGRES_USER: clurian_user
+      POSTGRES_PASSWORD: clurian_password
+      POSTGRES_DB: clurian_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

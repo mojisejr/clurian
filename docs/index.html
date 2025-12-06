@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clurian - Orchard Manager</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+        }
+
+        /* Theme Variables from React Code */
+        :root {
+            /* Background: Warm Stone */
+            --background: 40 20% 97%;
+            --foreground: 150 10% 15%;
+
+            /* Card */
+            --card: 0 0% 100%;
+            --card-foreground: 150 10% 15%;
+            
+            --popover: 0 0% 100%;
+            --popover-foreground: 150 10% 15%;
+
+            /* Primary: Deep Forest Green */
+            --primary: 150 40% 25%;
+            --primary-foreground: 0 0% 98%;
+
+            /* Secondary: Sage Green */
+            --secondary: 140 20% 90%;
+            --secondary-foreground: 150 40% 20%;
+
+            /* Muted */
+            --muted: 140 20% 96%;
+            --muted-foreground: 150 5% 45%;
+
+            /* Accent: Muted Terracotta */
+            --accent: 14 60% 92%;
+            --accent-foreground: 14 70% 35%;
+
+            /* Destructive */
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 0 0% 98%;
+
+            /* Border */
+            --border: 150 10% 88%;
+            --input: 150 10% 88%;
+            --ring: 150 40% 25%;
+            
+            --radius: 0.5rem;
+        }
+
+        /* Utility for hiding scrollbar */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Print Styles */
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; }
+            .print-p-0 { padding: 0 !important; }
+            .print-shadow-none { box-shadow: none !important; }
+            .print-bg-white { background: white !important; }
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-[hsl(var(--background))] text-[hsl(var(--foreground))] min-h-screen pb-20">
+
+    <div id="root">
+        <!-- App Content Will Be Injected Here -->
+    </div>
+
+    <script>
+        // --- Mock Data ---
+        const generateMockTrees = () => {
+            const trees = [];
+            const statuses = ['healthy', 'sick', 'dead'];
+            const varieties = ['หมอนทอง', 'ก้านยาว', 'ชะนี', 'พวงมณี', 'นกหยิบ'];
+            
+            trees.push({ id: 'uuid-1', orchardId: 'orchard-1', code: 'A01', zone: 'A', type: 'ทุเรียน', variety: 'หมอนทอง', plantedDate: '2020-05-15', status: 'healthy' });
+            trees.push({ id: 'uuid-2', orchardId: 'orchard-1', code: 'A02', zone: 'A', type: 'ทุเรียน', variety: 'หมอนทอง', plantedDate: '2020-05-15', status: 'sick' });
+            trees.push({ id: 'uuid-3', orchardId: 'orchard-1', code: 'A03', zone: 'A', type: 'ทุเรียน', variety: 'ก้านยาว', plantedDate: '2021-06-20', status: 'healthy' });
+            trees.push({ id: 'uuid-4', orchardId: 'orchard-1', code: 'B01', zone: 'B', type: 'ทุเรียน', variety: 'หมอนทอง', plantedDate: '2019-04-10', status: 'healthy' });
+            trees.push({ id: 'uuid-5', orchardId: 'orchard-1', code: 'B02', zone: 'B', type: 'ทุเรียน', variety: 'พวงมณี', plantedDate: '2019-04-10', status: 'dead' });
+            trees.push({ id: 'uuid-6', orchardId: 'orchard-2', code: 'X01', zone: 'ริมน้ำ', type: 'ทุเรียน', variety: 'นกหยิบ', plantedDate: '2022-01-10', status: 'healthy' });
+            trees.push({ id: 'uuid-7', orchardId: 'orchard-2', code: 'M01', zone: 'ริมน้ำ', type: 'มังคุด', variety: 'พื้นเมือง', plantedDate: '2018-05-20', status: 'healthy' });
+
+            for (let i = 1; i <= 25; i++) {
+                trees.push({ 
+                    id: `gen-${i}`, 
+                    orchardId: 'orchard-1', 
+                    code: `C${i.toString().padStart(2, '0')}`, 
+                    zone: 'C', 
+                    type: 'ทุเรียน', 
+                    variety: varieties[Math.floor(Math.random() * varieties.length)], 
+                    plantedDate: '2021-01-01', 
+                    status: statuses[Math.floor(Math.random() * statuses.length)] 
+                });
+            }
+            return trees;
+        };
+
+        const INITIAL_ORCHARDS = [
+            { id: 'orchard-1', name: 'สวนแปลงใหญ่ (เขาสอยดาว)', zones: ['A', 'B', 'C'] },
+            { id: 'orchard-2', name: 'สวนหลังบ้าน', zones: ['ริมน้ำ'] },
+        ];
+
+        const INITIAL_LOGS = [
+            { id: 1, orchardId: 'orchard-1', type: 'batch', zone: 'A', action: 'ใส่ปุ๋ยสูตร 15-15-15', date: '2023-10-01', note: 'เตรียมสะสมอาหาร', status: 'completed' },
+            { id: 2, orchardId: 'orchard-1', type: 'batch', zone: 'B', action: 'พ่นยาป้องกันเชื้อรา', date: '2023-10-02', note: 'ฝนตกหนักต่อเนื่อง', status: 'completed' },
+            { id: 3, orchardId: 'orchard-1', type: 'individual', treeId: 'uuid-2', action: 'ขูดแผลทายา', date: '2023-10-05', note: 'พบโรครากเน่าโคนเน่า แผลขนาด 5cm', status: 'in-progress', followUpDate: '2023-10-12' },
+            { id: 4, orchardId: 'orchard-1', type: 'individual', treeId: 'uuid-5', action: 'ตรวจพบต้นตาย', date: '2023-09-20', note: 'ยืนต้นตาย', status: 'completed' },
+            { id: 5, orchardId: 'orchard-1', type: 'individual', treeId: 'uuid-2', action: 'ฉีดพ่นอาหารเสริม', date: '2023-10-08', note: 'บำรุงใบอ่อน', status: 'in-progress', followUpDate: '2025-12-15' }, // Mock future date
+        ];
+
+        // --- State Management ---
+        const state = {
+            isAuthenticated: false,
+            view: 'dashboard',
+            orchards: [...INITIAL_ORCHARDS],
+            currentOrchardId: INITIAL_ORCHARDS[0].id,
+            trees: generateMockTrees(),
+            logs: [...INITIAL_LOGS],
+            selectedTreeId: null,
+            filterZone: 'All',
+            searchQuery: '',
+            currentPage: 1,
+            ITEMS_PER_PAGE: 10,
+            
+            // UI States
+            isEditingStatus: false,
+            followUpModalOpen: false,
+            viewLogDetailOpen: false, // New Modal for Viewing Details
+            targetLog: null,
+            viewingLog: null, // Log being viewed in Detail Modal
+            
+            // History Tab State
+            activeHistoryTab: 'all',
+            historySearch: '',
+            historySort: 'desc',
+
+            // Form States
+            addTreeFormData: {
+                isNewZone: false,
+                isCustomType: false,
+                isCustomVariety: false
+            }
+        };
+
+        // --- Logic & Helpers ---
+        
+        const getCurrentOrchard = () => state.orchards.find(o => o.id === state.currentOrchardId) || state.orchards[0];
+        
+        const getOrchardZones = () => getCurrentOrchard().zones || [];
+
+        const formatThaiDate = (dateString) => {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric' });
+        };
+
+        const getDaysRemaining = (targetDateString) => {
+            if (!targetDateString) return null;
+            const target = new Date(targetDateString);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            target.setHours(0,0,0,0);
+            
+            const diffTime = target - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            
+            if (diffDays < 0) return { text: `เกิน ${Math.abs(diffDays)} วัน`, color: 'text-red-600 bg-red-50' };
+            if (diffDays === 0) return { text: 'วันนี้', color: 'text-orange-600 bg-orange-50' };
+            return { text: `อีก ${diffDays} วัน`, color: 'text-green-600 bg-green-50' };
+        };
+
+        const getProcessedTrees = () => {
+            let result = state.trees.filter(t => t.orchardId === state.currentOrchardId && t.status !== 'archived');
+            
+            if (state.filterZone !== 'All') {
+                result = result.filter(t => t.zone === state.filterZone);
+            }
+            
+            if (state.searchQuery) {
+                const query = state.searchQuery.toLowerCase();
+                result = result.filter(t => 
+                    t.code.toLowerCase().includes(query) || 
+                    t.variety.includes(query)
+                );
+            }
+            
+            result.sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true, sensitivity: 'base' }));
+            return result;
+        };
+
+        const getPaginatedTrees = () => {
+            const trees = getProcessedTrees();
+            const start = (state.currentPage - 1) * state.ITEMS_PER_PAGE;
+            const end = start + state.ITEMS_PER_PAGE;
+            return {
+                data: trees.slice(start, end),
+                totalPages: Math.ceil(trees.length / state.ITEMS_PER_PAGE),
+                totalItems: trees.length
+            };
+        };
+
+        const getTreeHistory = (treeId) => {
+            return state.logs.filter(log => {
+                const tree = state.trees.find(t => t.id === treeId);
+                if (!tree) return false;
+                if (log.orchardId !== state.currentOrchardId) return false;
+                if (log.type === 'individual' && log.treeId === treeId) return true;
+                if (log.type === 'batch' && log.zone === tree.zone) return true;
+                return false;
+            }).sort((a, b) => new Date(b.date) - new Date(a.date));
+        };
+
+        // --- Actions ---
+
+        window.actions = {
+            login: () => {
+                state.isAuthenticated = true;
+                render();
+            },
+            logout: () => {
+                state.isAuthenticated = false;
+                render();
+            },
+            setView: (newView) => {
+                state.view = newView;
+                state.isEditingStatus = false;
+                if(newView === 'dashboard') {
+                    state.selectedTreeId = null;
+                }
+                render();
+            },
+            setOrchard: (id) => {
+                state.currentOrchardId = id;
+                state.filterZone = 'All';
+                state.currentPage = 1;
+                state.view = 'dashboard';
+                render();
+            },
+            setFilterZone: (zone) => {
+                state.filterZone = zone;
+                state.currentPage = 1;
+                render();
+            },
+            setSearchQuery: (val) => {
+                state.searchQuery = val;
+                state.currentPage = 1;
+                render();
+            },
+            setPage: (page) => {
+                state.currentPage = page;
+                render();
+            },
+            selectTree: (id) => {
+                state.selectedTreeId = id;
+                state.view = 'tree_detail';
+                render();
+            },
+            toggleStatusEdit: () => {
+                state.isEditingStatus = !state.isEditingStatus;
+                render();
+            },
+            changeTreeStatus: (newStatus) => {
+                const tree = state.trees.find(t => t.id === state.selectedTreeId);
+                if(tree) {
+                    tree.status = newStatus;
+                    const statusLabels = { healthy: 'ปกติ', sick: 'ป่วย', dead: 'ตาย' };
+                    state.logs.unshift({
+                        id: Date.now(),
+                        orchardId: state.currentOrchardId,
+                        date: new Date().toISOString().split('T')[0],
+                        action: `อัพเดทสถานะ: ${statusLabels[newStatus]}`,
+                        note: 'ปรับปรุงสถานะผ่านหน้าข้อมูลต้นไม้',
+                        status: 'completed',
+                        type: 'individual',
+                        treeId: tree.id
+                    });
+                }
+                state.isEditingStatus = false;
+                render();
+            },
+            // Detail View Actions
+            openLogDetail: (logId) => {
+                state.viewingLog = state.logs.find(l => l.id === logId);
+                state.viewLogDetailOpen = true;
+                render();
+            },
+            closeLogDetail: () => {
+                state.viewLogDetailOpen = false;
+                state.viewingLog = null;
+                render();
+            },
+            // Follow Up Actions
+            openFollowUpFromDetail: () => {
+                // Transfer from view mode to edit mode
+                state.targetLog = state.viewingLog;
+                state.viewLogDetailOpen = false; // Close detail view
+                state.followUpModalOpen = true; // Open edit view
+                render();
+            },
+            openFollowUp: (logId) => {
+                state.targetLog = state.logs.find(l => l.id === logId);
+                state.followUpModalOpen = true;
+                render();
+            },
+            closeFollowUp: () => {
+                state.followUpModalOpen = false;
+                state.targetLog = null;
+                render();
+            },
+            submitFollowUp: (resultType, note, nextDate) => {
+                const targetLog = state.targetLog;
+                const today = new Date().toISOString().split('T')[0];
+
+                if (resultType === 'cured') {
+                    const completionLog = {
+                        id: Date.now(),
+                        orchardId: state.currentOrchardId,
+                        type: 'individual',
+                        treeId: state.selectedTreeId,
+                        date: today,
+                        action: `ติดตามอาการ: ${targetLog.action}`,
+                        note: `[จบเคส] อาการดีขึ้น/หายแล้ว - ${note}`,
+                        status: 'completed'
+                    };
+                    state.logs.forEach(l => { if(l.id === targetLog.id) l.status = 'completed'; });
+                    state.logs.unshift(completionLog);
+                    
+                    if(confirm("ต้องการเปลี่ยนสถานะต้นไม้เป็น 'ปกติ' ด้วยหรือไม่?")) {
+                        window.actions.changeTreeStatus('healthy');
+                    }
+                } else {
+                    const nextLog = {
+                        id: Date.now(),
+                        orchardId: state.currentOrchardId,
+                        type: 'individual',
+                        treeId: state.selectedTreeId,
+                        date: today,
+                        action: `รักษาต่อเนื่อง: ${targetLog.action}`, 
+                        note: `[ยังไม่หาย] ${note}`,
+                        status: 'in-progress',
+                        followUpDate: nextDate
+                    };
+                    state.logs.forEach(l => { if(l.id === targetLog.id) l.status = 'completed'; });
+                    state.logs.unshift(nextLog);
+                }
+                
+                state.followUpModalOpen = false;
+                state.targetLog = null;
+                render();
+            },
+            replantTree: () => {
+                const oldTree = state.trees.find(t => t.id === state.selectedTreeId);
+                if(confirm(`ต้องการ "ปลูกซ่อม" ในตำแหน่ง ${oldTree.code} ใช่หรือไม่?\n\nระบบจะเก็บต้นเก่าเข้า Archive และสร้างต้นใหม่ในตำแหน่งเดิมทันที`)) {
+                    oldTree.status = 'archived';
+                    oldTree.code = `${oldTree.code}_HIST_${new Date().getFullYear()}`;
+                    
+                    const newTree = {
+                        id: `uuid-${Date.now()}`,
+                        orchardId: oldTree.orchardId,
+                        code: oldTree.code.split('_')[0],
+                        zone: oldTree.zone,
+                        type: oldTree.type,
+                        variety: oldTree.variety,
+                        plantedDate: new Date().toISOString().split('T')[0],
+                        status: 'healthy'
+                    };
+                    
+                    state.trees.push(newTree);
+                    state.selectedTreeId = newTree.id;
+                    
+                    state.logs.unshift({
+                        id: Date.now() + 1,
+                        orchardId: state.currentOrchardId,
+                        date: new Date().toISOString().split('T')[0],
+                        action: 'ปลูกซ่อม (Replant)',
+                        note: `ปลูกแทนต้นเดิมที่ตาย/รื้อถอน (Ref Old ID: ${oldTree.id})`,
+                        status: 'completed',
+                        type: 'individual',
+                        treeId: newTree.id
+                    });
+                    render();
+                }
+            },
+            createOrchard: () => {
+                const name = prompt("ตั้งชื่อสวนใหม่ของคุณ:");
+                if (name) {
+                    const newOrchard = { id: `orchard-${Date.now()}`, name, zones: ['A'] };
+                    state.orchards.push(newOrchard);
+                    state.currentOrchardId = newOrchard.id;
+                    state.filterZone = 'All';
+                    state.view = 'dashboard';
+                    render();
+                }
+            },
+            submitAddTree: (e) => {
+                e.preventDefault();
+                const form = e.target;
+                const zone = state.addTreeFormData.isNewZone ? form.newZone.value : form.zone.value;
+                if(!zone) { alert('ระบุโซน'); return; }
+                
+                const type = state.addTreeFormData.isCustomType ? form.customType.value : form.type.value;
+                const variety = state.addTreeFormData.isCustomVariety ? form.customVariety.value : form.variety.value;
+
+                const newTree = {
+                    id: `uuid-${Date.now()}`,
+                    orchardId: state.currentOrchardId,
+                    status: 'healthy',
+                    code: form.code.value,
+                    zone: zone,
+                    type: type || 'ทุเรียน',
+                    variety: variety || 'หมอนทอง',
+                    plantedDate: form.plantedDate.value
+                };
+
+                state.trees.push(newTree);
+                
+                const orchard = getCurrentOrchard();
+                if(!orchard.zones.includes(zone)) {
+                    orchard.zones.push(zone);
+                    orchard.zones.sort();
+                }
+
+                state.view = 'dashboard';
+                state.addTreeFormData = { isNewZone: false, isCustomType: false, isCustomVariety: false };
+                render();
+            },
+            submitAddLog: (e, isBatch) => {
+                e.preventDefault();
+                const form = e.target;
+                const action = state.addTreeFormData.isCustomAction ? form.customAction.value : form.action.value;
+                
+                const newLog = {
+                    id: Date.now(),
+                    orchardId: state.currentOrchardId,
+                    date: form.date.value,
+                    action: action,
+                    note: form.note.value,
+                    status: form.followUpDate.value ? 'in-progress' : 'completed',
+                    followUpDate: form.followUpDate.value,
+                };
+
+                if(isBatch) {
+                    newLog.type = 'batch';
+                    newLog.zone = form.targetZone.value;
+                } else {
+                    newLog.type = 'individual';
+                    newLog.treeId = state.selectedTreeId;
+                }
+
+                state.logs.unshift(newLog);
+                state.view = isBatch ? 'dashboard' : 'tree_detail';
+                render();
+            },
+            toggleHistorySort: () => {
+                state.historySort = state.historySort === 'desc' ? 'asc' : 'desc';
+                render();
+            },
+            setHistoryTab: (tab) => {
+                state.activeHistoryTab = tab;
+                render();
+            },
+            setHistorySearch: (val) => {
+                state.historySearch = val;
+                render();
+            }
+        };
+
+        // --- Render Helpers ---
+
+        const StatusBadge = (status) => {
+            const colors = {
+                healthy: 'bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] border-[hsl(var(--secondary))]',
+                sick: 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] border-[hsl(var(--accent))]', 
+                dead: 'bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] border-[hsl(var(--destructive))]',
+                archived: 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] border-[hsl(var(--border))]',
+            };
+            const labels = {
+                healthy: 'ปกติ',
+                sick: 'ป่วย/ดูแล',
+                dead: 'ตาย',
+                archived: 'Archive',
+            };
+            return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border whitespace-nowrap ${colors[status] || colors.healthy}">${labels[status]}</span>`;
+        };
+
+        // --- Views Rendering ---
+
+        function renderLogin() {
+            return `
+            <div class="min-h-screen flex flex-col items-center justify-center p-4 bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+                <div class="bg-[hsl(var(--card))] p-8 rounded-2xl shadow-xl w-full max-w-sm text-center border border-[hsl(var(--border))]">
+                    <div class="w-32 h-32 mx-auto mb-6 relative group">
+                        <div class="absolute inset-0 bg-[hsl(var(--secondary))] rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                        <img 
+                            src="logo-1.png" 
+                            alt="Clurian Logo" 
+                            class="w-full h-full object-contain relative z-10 drop-shadow-md hover:scale-105 transition-transform duration-300"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+                        />
+                        <div class="hidden w-full h-full bg-[hsl(var(--secondary))] rounded-full items-center justify-center shadow-inner" style="display:none">
+                             <i data-lucide="leaf" class="text-[hsl(var(--primary))] w-16 h-16 opacity-20"></i>
+                        </div>
+                    </div>
+                    
+                    <h1 class="text-4xl font-black text-[hsl(var(--primary))] mb-2 tracking-tight">Clurian</h1>
+                    <p class="text-[hsl(var(--muted-foreground))] mb-10 text-sm font-medium">ระบบบริหารจัดการสวนทุเรียนอัจฉริยะ</p>
+                    
+                    <button 
+                      onclick="window.actions.login()"
+                      class="w-full bg-[#06C755] hover:opacity-90 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-3 transition-all transform active:scale-95 shadow-lg"
+                    >
+                      <div class="bg-white text-[#06C755] w-7 h-7 rounded flex items-center justify-center font-black text-sm">L</div>
+                      <span class="text-lg">เข้าสู่ระบบด้วย LINE</span>
+                    </button>
+                    
+                    <div class="mt-8 pt-6 border-t border-[hsl(var(--border))]">
+                      <p class="text-xs text-[hsl(var(--muted-foreground))]">
+                        สำหรับเจ้าของสวนและทีมงานดูแลสวน<br/>
+                        v1.1.0 (Vanilla JS)
+                      </p>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        function renderDashboard() {
+            const treesInfo = getPaginatedTrees();
+            const currentOrchardTrees = state.trees.filter(t => t.orchardId === state.currentOrchardId);
+            
+            let treeListHTML = '';
+            if (treesInfo.data.length === 0) {
+                treeListHTML = `
+                <div class="text-center py-10 text-[hsl(var(--muted-foreground))] bg-[hsl(var(--muted))] rounded-xl border-2 border-dashed border-[hsl(var(--border))]">
+                     <div class="mx-auto mb-2 opacity-50 flex justify-center"><i data-lucide="sprout" size="48"></i></div>
+                     <p>ไม่พบข้อมูลต้นไม้</p>
+                     ${state.searchQuery ? '<p class="text-xs mt-1">ลองค้นหาด้วยคำอื่น หรือเปลี่ยนโซน</p>' : ''}
+                </div>`;
+            } else {
+                treeListHTML = `<div class="space-y-2">
+                    ${treesInfo.data.map(tree => {
+                        const statusBorderColors = {
+                            healthy: 'border-l-[hsl(var(--secondary))]',
+                            sick: 'border-l-[hsl(var(--accent))]',
+                            dead: 'border-l-[hsl(var(--destructive))]',
+                            archived: 'border-l-[hsl(var(--muted-foreground))]',
+                        };
+                        return `
+                        <div 
+                            onclick="window.actions.selectTree('${tree.id}')"
+                            class="bg-[hsl(var(--card))] p-3 rounded-lg border border-[hsl(var(--border))] border-l-4 shadow-sm hover:shadow-md transition cursor-pointer flex justify-between items-center ${statusBorderColors[tree.status] || 'border-l-gray-300'}"
+                        >
+                            <div class="flex items-center gap-3">
+                                <div class="flex flex-col items-center justify-center w-12 h-12 bg-[hsl(var(--muted))] rounded-lg border border-[hsl(var(--border))]">
+                                    <span class="text-xs text-[hsl(var(--muted-foreground))] uppercase font-bold">โซน</span>
+                                    <span class="text-lg font-black text-[hsl(var(--foreground))] leading-none">${tree.code.replace(tree.zone,'')}</span>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xl font-bold text-[hsl(var(--foreground))]">${tree.code}</span>
+                                    </div>
+                                    <div class="text-sm text-[hsl(var(--muted-foreground))]">
+                                        ${tree.type} • ${tree.variety}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end gap-1">
+                                ${StatusBadge(tree.status)}
+                                <i data-lucide="chevron-right" size="16" class="text-[hsl(var(--muted-foreground))]"></i>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>`;
+            }
+
+            let paginationHTML = '';
+            if (treesInfo.totalPages > 1) {
+                paginationHTML = `
+                <div class="flex justify-center items-center gap-4 mt-4 text-sm text-[hsl(var(--foreground))]">
+                    <button 
+                        onclick="window.actions.setPage(${Math.max(state.currentPage - 1, 1)})"
+                        ${state.currentPage === 1 ? 'disabled' : ''}
+                        class="p-2 rounded-full hover:bg-[hsl(var(--muted))] disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                        <i data-lucide="chevron-left" size="20"></i>
+                    </button>
+                    <span class="font-medium">
+                        หน้า ${state.currentPage} / ${treesInfo.totalPages}
+                    </span>
+                    <button 
+                        onclick="window.actions.setPage(${Math.min(state.currentPage + 1, treesInfo.totalPages)})"
+                        ${state.currentPage === treesInfo.totalPages ? 'disabled' : ''}
+                        class="p-2 rounded-full hover:bg-[hsl(var(--muted))] disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                        <i data-lucide="chevron-right" size="20"></i>
+                    </button>
+                </div>
+                <div class="text-center text-xs text-[hsl(var(--muted-foreground))] mt-2">
+                    แสดง ${((state.currentPage - 1) * state.ITEMS_PER_PAGE) + 1} - ${Math.min(state.currentPage * state.ITEMS_PER_PAGE, treesInfo.totalItems)} จาก ${treesInfo.totalItems} ต้น
+                </div>`;
+            }
+
+            return `
+            <div class="space-y-6">
+                <!-- Header Stats -->
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="bg-[hsl(var(--card))] p-4 rounded-xl shadow-sm border border-[hsl(var(--border))]">
+                    <div class="text-[hsl(var(--muted-foreground))] text-sm">ทั้งหมดในสวนนี้</div>
+                    <div class="text-2xl font-bold text-[hsl(var(--primary))]">${currentOrchardTrees.filter(t => t.status !== 'archived').length} ต้น</div>
+                  </div>
+                  <div class="bg-[hsl(var(--card))] p-4 rounded-xl shadow-sm border border-[hsl(var(--border))]">
+                     <div class="text-[hsl(var(--muted-foreground))] text-sm">ต้องดูแลพิเศษ</div>
+                    <div class="text-2xl font-bold text-[hsl(var(--accent-foreground))]">${currentOrchardTrees.filter(t => t.status === 'sick').length} ต้น</div>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="grid grid-cols-2 gap-3">
+                     <button onclick="window.actions.setView('add_tree')" class="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] p-3 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition shadow-sm">
+                        <i data-lucide="plus-circle" size="20"></i> ลงทะเบียนต้นใหม่
+                    </button>
+                    <button onclick="window.actions.setView('add_batch_log')" class="bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] p-3 rounded-lg flex items-center justify-center gap-2 hover:opacity-80 transition shadow-sm">
+                        <i data-lucide="clipboard-list" size="20"></i> บันทึกงานทั้งแปลง
+                    </button>
+                </div>
+
+                <!-- Filter & Search -->
+                <div class="bg-[hsl(var(--card))] p-3 rounded-xl border border-[hsl(var(--border))] space-y-3">
+                    <div class="relative">
+                        <i data-lucide="search" size="18" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input 
+                            type="text" 
+                            placeholder="ค้นหาเลขต้น..." 
+                            class="w-full pl-10 pr-4 py-2 border border-[hsl(var(--input))] rounded-lg focus:ring-2 focus:ring-[hsl(var(--ring))] outline-none bg-white"
+                            value="${state.searchQuery}"
+                            oninput="window.actions.setSearchQuery(this.value)"
+                        />
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar max-w-[200px] md:max-w-[300px]">
+                            <button onclick="window.actions.setFilterZone('All')" class="px-3 py-1 rounded-full text-xs whitespace-nowrap ${state.filterZone === 'All' ? 'bg-[hsl(var(--primary))] text-white' : 'bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))]'}">ทุกโซน</button>
+                            ${getOrchardZones().map(z => `
+                                <button onclick="window.actions.setFilterZone('${z}')" class="px-3 py-1 rounded-full text-xs whitespace-nowrap ${state.filterZone === z ? 'bg-[hsl(var(--primary))] text-white' : 'bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))]'}">โซน ${z}</button>
+                            `).join('')}
+                        </div>
+                        <button onclick="window.actions.setView('qr_print')" class="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] flex items-center gap-1 text-xs font-medium pl-2 border-l border-[hsl(var(--border))]">
+                            <i data-lucide="printer" size="14"></i> พิมพ์ QR
+                        </button>
+                    </div>
+                </div>
+
+                <!-- List & Pagination -->
+                ${treeListHTML}
+                ${paginationHTML}
+            </div>
+            `;
+        }
+
+        function renderTreeDetail() {
+            const tree = state.trees.find(t => t.id === state.selectedTreeId);
+            if (!tree) return '';
+            
+            const orchardName = state.orchards.find(o => o.id === tree.orchardId)?.name;
+            const history = getTreeHistory(tree.id);
+
+            // Filter History Logic
+            let processedHistory = [...history];
+            if (state.activeHistoryTab === 'followup') {
+                processedHistory = processedHistory.filter(log => log.status === 'in-progress' || log.followUpDate);
+            }
+            if (state.historySearch) {
+                const q = state.historySearch.toLowerCase();
+                processedHistory = processedHistory.filter(log => 
+                    log.action.toLowerCase().includes(q) || 
+                    log.note.toLowerCase().includes(q)
+                );
+            }
+            processedHistory.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return state.historySort === 'asc' ? dateA - dateB : dateB - dateA;
+            });
+
+            // --- Dynamic Table Content ---
+            let tableHeader = '';
+            let tableBody = '';
+
+            if (state.activeHistoryTab === 'all') {
+                // Table structure for "All" tab
+                tableHeader = `
+                    <tr>
+                        <th class="px-4 py-3 font-semibold whitespace-nowrap">วันที่ (พ.ศ.)</th>
+                        <th class="px-4 py-3 font-semibold whitespace-nowrap">กิจกรรม</th>
+                        <th class="px-4 py-3 font-semibold whitespace-nowrap">สถานะ</th>
+                    </tr>
+                `;
+                
+                if (processedHistory.length === 0) {
+                    tableBody = `<tr><td colspan="3" class="p-8 text-center text-gray-400"><div class="flex justify-center mb-2"><i data-lucide="clipboard-list" size="40" class="opacity-30"></i></div><p>ไม่พบรายการประวัติ</p></td></tr>`;
+                } else {
+                    tableBody = processedHistory.map(log => `
+                        <tr onclick="window.actions.openLogDetail(${log.id})" class="hover:bg-gray-50 transition-colors cursor-pointer group">
+                            <td class="px-4 py-3 align-top whitespace-nowrap text-gray-600 font-medium text-sm">
+                                ${formatThaiDate(log.date)}
+                            </td>
+                            <td class="px-4 py-3 align-top">
+                                <div class="font-medium text-[hsl(var(--foreground))] group-hover:text-[hsl(var(--primary))] transition-colors">${log.action}</div>
+                                <div class="flex items-center gap-1 mt-1">
+                                    ${log.type === 'batch' 
+                                        ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 flex items-center gap-1 w-fit"><i data-lucide="sprout" size="10"></i> แปลง</span>`
+                                        : `<span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 flex items-center gap-1 w-fit"><i data-lucide="leaf" size="10"></i> ต้น</span>`
+                                    }
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 align-top whitespace-nowrap">
+                                ${log.status === 'in-progress' 
+                                    ? `<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full flex items-center gap-1 w-fit border border-yellow-200"><i data-lucide="clock" size="10"></i> รอติดตาม</span>`
+                                    : `<span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full flex items-center gap-1 w-fit border border-gray-200"><i data-lucide="check-circle" size="10"></i> เสร็จสิ้น</span>`
+                                }
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } else {
+                // Table structure for "Follow Up" tab
+                tableHeader = `
+                    <tr>
+                        <th class="px-4 py-3 font-semibold whitespace-nowrap">วันที่ทำ</th>
+                        <th class="px-4 py-3 font-semibold whitespace-nowrap">กิจกรรม</th>
+                        <th class="px-4 py-3 font-semibold">วันนัดหมาย</th>
+                        <th class="px-4 py-3 font-semibold whitespace-nowrap">สถานะ</th>
+                    </tr>
+                `;
+
+                if (processedHistory.length === 0) {
+                    tableBody = `<tr><td colspan="4" class="p-8 text-center text-gray-400"><div class="flex justify-center mb-2"><i data-lucide="clipboard-list" size="40" class="opacity-30"></i></div><p>ไม่พบรายการนัดหมาย</p></td></tr>`;
+                } else {
+                    tableBody = processedHistory.map(log => {
+                        const remaining = log.followUpDate ? getDaysRemaining(log.followUpDate) : null;
+                        return `
+                        <tr onclick="window.actions.openLogDetail(${log.id})" class="hover:bg-gray-50 transition-colors cursor-pointer group">
+                            <td class="px-4 py-3 align-top whitespace-nowrap text-gray-500 font-mono text-xs">
+                                ${formatThaiDate(log.date)}
+                            </td>
+                            <td class="px-4 py-3 align-top">
+                                <div class="font-medium text-[hsl(var(--foreground))] group-hover:text-[hsl(var(--primary))] transition-colors">${log.action}</div>
+                            </td>
+                            <td class="px-4 py-3 align-top">
+                                ${log.followUpDate ? `
+                                    <div class="flex flex-col gap-1">
+                                        <div class="text-sm font-medium text-gray-800">${formatThaiDate(log.followUpDate)}</div>
+                                        ${remaining ? `<span class="text-[10px] px-2 py-0.5 rounded-full w-fit ${remaining.color}">${remaining.text}</span>` : ''}
+                                    </div>
+                                ` : '<span class="text-gray-400 text-xs">-</span>'}
+                            </td>
+                            <td class="px-4 py-3 align-top whitespace-nowrap">
+                                ${log.status === 'in-progress' 
+                                    ? `<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full flex items-center gap-1 w-fit border border-yellow-200"><i data-lucide="clock" size="10"></i> รอติดตาม</span>`
+                                    : `<span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full flex items-center gap-1 w-fit border border-gray-200"><i data-lucide="check-circle" size="10"></i> เสร็จสิ้น</span>`
+                                }
+                            </td>
+                        </tr>
+                    `}).join('');
+                }
+            }
+
+            return `
+            <div class="space-y-6 pb-20">
+                <button onclick="window.actions.setView('dashboard')" class="flex items-center text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] mb-4">
+                    <i data-lucide="arrow-left" size="18" class="mr-1"></i> กลับหน้าหลัก
+                </button>
+
+                <!-- Profile Card -->
+                <div class="bg-[hsl(var(--card))] rounded-xl p-6 shadow-sm border border-[hsl(var(--border))] relative">
+                    <div class="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-[hsl(var(--secondary))] rounded-bl-full -mr-4 -mt-4 z-0 opacity-60"></div>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h2 class="text-3xl font-bold text-[hsl(var(--foreground))]">${tree.code}</h2>
+                                <p class="text-[hsl(var(--muted-foreground))] font-medium text-lg">
+                                    ${tree.type} <span class="text-sm font-normal text-[hsl(var(--foreground))]">(${tree.variety})</span>
+                                </p>
+                                <p class="text-[hsl(var(--muted-foreground))] text-sm mt-1">โซน: ${tree.zone} | ปลูกเมื่อ: ${formatThaiDate(tree.plantedDate)}</p>
+                                <p class="text-xs text-[hsl(var(--primary))] font-medium mt-2 bg-[hsl(var(--muted))] inline-block px-2 py-1 rounded-md border border-[hsl(var(--border))]">${orchardName}</p>
+                            </div>
+                            <div class="flex flex-col items-end gap-2 relative">
+                                <div class="flex items-center gap-2">
+                                    ${StatusBadge(tree.status)}
+                                    <button onclick="window.actions.toggleStatusEdit()" class="p-1.5 rounded-full transition shadow-sm border ${state.isEditingStatus ? 'bg-white text-red-500 border-red-100' : 'bg-white text-gray-500 border-gray-200'}">
+                                        <i data-lucide="${state.isEditingStatus ? 'x' : 'edit-3'}" size="16"></i>
+                                    </button>
+                                </div>
+                                ${state.isEditingStatus ? `
+                                <div class="absolute top-10 right-0 bg-white border border-gray-200 shadow-xl rounded-lg p-2 z-50 w-56 animate-in fade-in slide-in-from-top-2">
+                                     <div class="flex justify-between items-center mb-2 px-2 border-b border-gray-100 pb-2">
+                                        <span class="text-xs font-bold text-gray-600">เปลี่ยนสถานะ:</span>
+                                        <button onclick="window.actions.toggleStatusEdit()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" size="12"></i></button>
+                                     </div>
+                                     <button onclick="window.actions.changeTreeStatus('healthy')" class="w-full text-left px-3 py-2.5 text-sm hover:bg-green-50 text-gray-700 font-medium rounded-md flex items-center gap-2 mb-1"><div class="w-2.5 h-2.5 rounded-full bg-green-500 shadow-sm"></div> ปกติ</button>
+                                     <button onclick="window.actions.changeTreeStatus('sick')" class="w-full text-left px-3 py-2.5 text-sm hover:bg-orange-50 text-gray-700 font-medium rounded-md flex items-center gap-2 mb-1"><div class="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-sm"></div> ป่วย/ดูแลพิเศษ</button>
+                                     <button onclick="window.actions.changeTreeStatus('dead')" class="w-full text-left px-3 py-2.5 text-sm hover:bg-red-50 text-gray-700 font-medium rounded-md flex items-center gap-2"><div class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm"></div> ตาย</button>
+                                </div>` : ''}
+                                <div class="w-16 h-16 bg-white rounded-lg flex items-center justify-center border border-gray-200 text-xs text-gray-400 mt-2 shadow-sm">QR Code</div>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex gap-3">
+                            <button onclick="window.actions.setView('add_tree_log')" class="flex-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm hover:opacity-90">
+                                <i data-lucide="plus" size="18"></i> บันทึกกิจกรรม
+                            </button>
+                            ${tree.status === 'dead' ? `
+                            <button onclick="window.actions.replantTree()" class="flex-1 px-4 py-2 bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] border border-[hsl(var(--secondary-foreground))] rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:opacity-80 shadow-md">
+                                <i data-lucide="refresh-cw" size="18"></i> ปลูกซ่อม (Replant)
+                            </button>` : ''}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Table -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 mb-2">
+                         <i data-lucide="clipboard-list" size="20" class="text-[hsl(var(--foreground))]"></i>
+                         <h3 class="font-bold text-[hsl(var(--foreground))]">ประวัติการดูแล</h3>
+                    </div>
+
+                    <div class="flex gap-2 border-b border-[hsl(var(--border))]">
+                        <button onclick="window.actions.setHistoryTab('all')" class="px-4 py-2 text-sm font-medium border-b-2 transition-colors ${state.activeHistoryTab === 'all' ? 'border-[hsl(var(--primary))] text-[hsl(var(--primary))]' : 'border-transparent text-gray-500 hover:text-gray-700'}">📋 ทั้งหมด</button>
+                        <button onclick="window.actions.setHistoryTab('followup')" class="px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${state.activeHistoryTab === 'followup' ? 'border-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]' : 'border-transparent text-gray-500 hover:text-gray-700'}">
+                            ⏰ ติดตาม/นัดหมาย ${history.some(l => l.status === 'in-progress') ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>' : ''}
+                        </button>
+                    </div>
+
+                    <div class="flex gap-2 bg-[hsl(var(--card))] p-2 rounded-lg border border-[hsl(var(--border))]">
+                        <div class="relative flex-1">
+                            <i data-lucide="search" size="16" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" class="w-full pl-9 pr-3 py-1.5 text-sm border border-[hsl(var(--input))] rounded-md focus:ring-1 focus:ring-[hsl(var(--ring))] outline-none bg-white" placeholder="ค้นหากิจกรรม..." value="${state.historySearch}" oninput="window.actions.setHistorySearch(this.value)" />
+                        </div>
+                        <button onclick="window.actions.toggleHistorySort()" class="flex items-center gap-1 px-3 py-1.5 text-sm border border-[hsl(var(--input))] rounded-md hover:bg-gray-50 text-gray-600">
+                            <i data-lucide="arrow-up-down" size="14"></i> ${state.historySort === 'desc' ? 'ใหม่-เก่า' : 'เก่า-ใหม่'}
+                        </button>
+                    </div>
+
+                    <div class="bg-[hsl(var(--card))] rounded-xl border border-[hsl(var(--border))] overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-gray-50 text-gray-600 border-b border-[hsl(var(--border))]">
+                                    ${tableHeader}
+                                </thead>
+                                <tbody class="divide-y divide-[hsl(var(--border))]">
+                                    ${tableBody}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        // --- Detail Modal Renderer ---
+        function renderLogDetailModal() {
+            if (!state.viewLogDetailOpen || !state.viewingLog) return '';
+            
+            const log = state.viewingLog;
+            const isFollowUp = log.status === 'in-progress';
+            
+            return `
+            <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+                <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden relative">
+                    <div class="absolute top-0 right-0 p-3">
+                         <button onclick="window.actions.closeLogDetail()" class="p-1 rounded-full bg-black/10 hover:bg-black/20 text-white transition"><i data-lucide="x" size="20"></i></button>
+                    </div>
+                    
+                    <div class="bg-[hsl(var(--primary))] p-6 text-white pt-10">
+                        <div class="text-sm opacity-80 mb-1">${formatThaiDate(log.date)}</div>
+                        <h3 class="text-2xl font-bold leading-tight">${log.action}</h3>
+                        <div class="flex items-center gap-2 mt-3">
+                            ${log.type === 'batch' 
+                                ? `<span class="text-xs px-2 py-1 rounded bg-white/20 flex items-center gap-1 w-fit border border-white/20"><i data-lucide="sprout" size="12"></i> เหมาแปลง ${log.zone}</span>`
+                                : `<span class="text-xs px-2 py-1 rounded bg-white/20 flex items-center gap-1 w-fit border border-white/20"><i data-lucide="leaf" size="12"></i> เฉพาะต้น</span>`
+                            }
+                            ${log.status === 'in-progress' 
+                                ? `<span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-1 rounded font-bold flex items-center gap-1"><i data-lucide="clock" size="12"></i> รอติดตามผล</span>`
+                                : `<span class="text-xs bg-green-500 text-white px-2 py-1 rounded font-bold flex items-center gap-1"><i data-lucide="check-circle" size="12"></i> เสร็จสิ้น</span>`
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-wide">รายละเอียด</label>
+                            <p class="text-gray-700 mt-1 text-sm leading-relaxed">${log.note || '-'}</p>
+                        </div>
+                        
+                        ${log.followUpDate ? `
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-start gap-3">
+                            <div class="text-orange-500 mt-0.5"><i data-lucide="calendar" size="20"></i></div>
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase tracking-wide">วันนัดดูอาการ</label>
+                                <div class="font-bold text-gray-800">${formatThaiDate(log.followUpDate)}</div>
+                                ${log.status === 'in-progress' ? (() => {
+                                    const rem = getDaysRemaining(log.followUpDate);
+                                    return `<div class="text-xs mt-1 ${rem.color} px-2 py-0.5 rounded-full w-fit font-medium">${rem.text}</div>`;
+                                })() : ''}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        ${isFollowUp ? `
+                        <button onclick="window.actions.openFollowUpFromDetail()" class="w-full py-3 mt-2 bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] rounded-xl font-bold shadow-sm hover:opacity-90 flex items-center justify-center gap-2 transition-transform active:scale-95">
+                            <i data-lucide="edit-3" size="18"></i> อัพเดทอาการ / รักษาต่อ
+                        </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function renderAddTreeForm() {
+            // ... (Keep existing implementation)
+             return `
+            <div class="max-w-lg mx-auto">
+                <button onclick="window.actions.setView('dashboard')" class="flex items-center text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] mb-4">
+                    <i data-lucide="arrow-left" size="18" class="mr-1"></i> ยกเลิก
+                </button>
+                <div class="bg-[hsl(var(--card))] p-6 rounded-xl shadow-lg border border-[hsl(var(--border))]">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2 text-[hsl(var(--primary))]">
+                        <i data-lucide="plus-circle" class="text-[hsl(var(--primary))]"></i> ลงทะเบียนต้นใหม่
+                    </h3>
+                    <form onsubmit="window.actions.submitAddTree(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">รหัสต้น / เบอร์ต้น</label>
+                            <input type="text" name="code" class="w-full border border-[hsl(var(--input))] rounded-lg p-2 focus:ring-2 focus:ring-[hsl(var(--ring))] outline-none bg-white" placeholder="เช่น A01, B12" required />
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">โซน</label>
+                                <div id="zoneSelectContainer" class="${state.addTreeFormData.isNewZone ? 'hidden' : ''}">
+                                    <select name="zone" class="w-full border border-[hsl(var(--input))] rounded-lg p-2 bg-white">
+                                        ${getOrchardZones().map(z => `<option value="${z}">${z}</option>`).join('')}
+                                    </select>
+                                    <button type="button" onclick="state.addTreeFormData.isNewZone=true; render()" class="text-xs text-[hsl(var(--primary))] flex items-center gap-1 hover:underline mt-1">+ เพิ่มโซนใหม่</button>
+                                </div>
+                                <div id="zoneInputContainer" class="${!state.addTreeFormData.isNewZone ? 'hidden' : ''}">
+                                    <input type="text" name="newZone" class="w-full border border-[hsl(var(--input))] rounded-lg p-2 bg-[hsl(var(--muted))]" placeholder="ตั้งชื่อโซนใหม่..." />
+                                    <button type="button" onclick="state.addTreeFormData.isNewZone=false; render()" class="text-xs text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] mt-1">กลับไปเลือกที่มีอยู่</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">ชนิดพืช</label>
+                                <select name="type" onchange="state.addTreeFormData.isCustomType=(this.value==='other'); render()" class="w-full border border-[hsl(var(--input))] rounded-lg p-2 bg-white">
+                                    <option value="ทุเรียน">ทุเรียน</option>
+                                    <option value="มังคุด">มังคุด</option>
+                                    <option value="เงาะ">เงาะ</option>
+                                    <option value="other" ${state.addTreeFormData.isCustomType ? 'selected' : ''}>อื่นๆ</option>
+                                </select>
+                                ${state.addTreeFormData.isCustomType ? '<input type="text" name="customType" class="w-full border border-[hsl(var(--input))] rounded-lg p-2 mt-2 bg-[hsl(var(--muted))]" placeholder="ระบุชนิดพืช..." required />' : ''}
+                            </div>
+                        </div>
+                         <div>
+                             <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">สายพันธุ์</label>
+                             <select name="variety" onchange="state.addTreeFormData.isCustomVariety=(this.value==='other'); render()" class="w-full border border-[hsl(var(--input))] rounded-lg p-2 bg-white">
+                                 <option value="หมอนทอง">หมอนทอง</option>
+                                 <option value="ก้านยาว">ก้านยาว</option>
+                                 <option value="ชะนี">ชะนี</option>
+                                 <option value="พวงมณี">พวงมณี</option>
+                                 <option value="other" ${state.addTreeFormData.isCustomVariety ? 'selected' : ''}>อื่นๆ</option>
+                             </select>
+                             ${state.addTreeFormData.isCustomVariety ? '<input type="text" name="customVariety" class="w-full border border-[hsl(var(--input))] rounded-lg p-2 mt-2 bg-[hsl(var(--muted))]" placeholder="ระบุสายพันธุ์..." required />' : ''}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">วันที่ปลูก (โดยประมาณ)</label>
+                            <input type="date" name="plantedDate" class="w-full border border-[hsl(var(--input))] rounded-lg p-2 bg-white" value="${new Date().toISOString().split('T')[0]}" />
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded-lg hover:opacity-90 font-medium mt-4 shadow-sm">บันทึกเข้าระบบ</button>
+                    </form>
+                </div>
+            </div>`;
+        }
+
+        function renderAddLogForm(isBatch) {
+            // ... (Keep existing implementation)
+            const tree = state.trees.find(t => t.id === state.selectedTreeId);
+            const title = isBatch ? 'บันทึกงานเหมาแปลง (Batch)' : `บันทึกงานต้น ${tree?.code}`;
+            const icon = isBatch ? 'sprout' : 'leaf';
+            
+            return `
+            <div class="bg-[hsl(var(--card))] p-6 rounded-xl shadow-lg border border-[hsl(var(--border))] max-w-lg mx-auto mt-4">
+                 <h3 class="text-xl font-bold mb-4 flex items-center gap-2 text-[hsl(var(--foreground))]">
+                     <i data-lucide="${icon}" class="text-[hsl(var(--primary))]"></i> ${title}
+                 </h3>
+                 <form onsubmit="window.actions.submitAddLog(event, ${isBatch})" class="space-y-4">
+                     ${isBatch ? `
+                     <div>
+                         <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">เลือกโซน</label>
+                         <select name="targetZone" class="w-full border border-[hsl(var(--input))] rounded-lg p-2 bg-white">
+                             ${getOrchardZones().map(z => `<option value="${z}">โซน ${z}</option>`).join('')}
+                         </select>
+                     </div>` : ''}
+                     <div>
+                         <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">กิจกรรม</label>
+                         <select name="action" onchange="state.addTreeFormData.isCustomAction=(this.value==='other'); render()" class="w-full border border-[hsl(var(--input))] rounded-lg p-2 bg-white" required>
+                             <option value="">-- เลือกกิจกรรม --</option>
+                             <option value="ใส่ปุ๋ย">ใส่ปุ๋ย</option>
+                             <option value="พ่นยา/ฮอร์โมน">พ่นยา/ฮอร์โมน</option>
+                             <option value="ตัดแต่งกิ่ง">ตัดแต่งกิ่ง</option>
+                             <option value="รักษาโรค/ทายา">รักษาโรค/ทายา</option>
+                             <option value="other" ${state.addTreeFormData.isCustomAction ? 'selected' : ''}>อื่นๆ (ระบุเอง)</option>
+                         </select>
+                         ${state.addTreeFormData.isCustomAction ? `<input type="text" name="customAction" class="w-full border border-[hsl(var(--input))] rounded-lg p-2 mt-2 bg-[hsl(var(--muted))]" placeholder="ระบุกิจกรรม..." required />` : ''}
+                     </div>
+                     <div>
+                         <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">วันที่ทำ</label>
+                         <input type="date" name="date" class="w-full border border-[hsl(var(--input))] rounded-lg p-2 bg-white" value="${new Date().toISOString().split('T')[0]}" />
+                     </div>
+                     <div>
+                         <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">รายละเอียดเพิ่มเติม</label>
+                         <textarea name="note" class="w-full border border-[hsl(var(--input))] rounded-lg p-2 bg-white" rows="3" placeholder="เช่น ใช้ยาตัวไหน อาการเป็นอย่างไร..."></textarea>
+                     </div>
+                     <div>
+                         <label class="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">วันนัดดูอาการ (ถ้ามี)</label>
+                         <input type="date" name="followUpDate" class="w-full border border-[hsl(var(--input))] rounded-lg p-2 bg-white" />
+                         <p class="text-xs text-[hsl(var(--muted-foreground))] mt-1">*เว้นว่างไว้หากเสร็จสิ้นแล้ว</p>
+                     </div>
+                     <div class="flex gap-3 pt-2">
+                         <button type="button" onclick="window.actions.setView('${isBatch ? 'dashboard' : 'tree_detail'}')" class="flex-1 py-2 border border-[hsl(var(--border))] rounded-lg text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]">ยกเลิก</button>
+                         <button type="submit" class="flex-1 py-2 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded-lg hover:opacity-90 font-medium">บันทึก</button>
+                     </div>
+                 </form>
+             </div>`;
+        }
+
+        function renderFollowUpModal() {
+            // ... (Keep existing implementation)
+            if (!state.followUpModalOpen || !state.targetLog) return '';
+            return `
+            <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+              <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden animate-[fadeIn_0.2s]">
+                  <div class="bg-[hsl(var(--primary))] p-4 text-white flex justify-between items-center">
+                      <h3 class="font-bold flex items-center gap-2"><i data-lucide="clock" size="18"></i> อัพเดทการรักษา</h3>
+                      <button onclick="window.actions.closeFollowUp()"><i data-lucide="x" size="20"></i></button>
+                  </div>
+                  
+                  <div class="p-6">
+                      <div class="mb-4 bg-gray-50 p-3 rounded-lg border border-gray-100 text-sm text-gray-600">
+                          <div class="font-semibold text-gray-800 mb-1">กิจกรรมเดิม:</div>
+                          "${state.targetLog.action}" <br/>
+                          <span class="text-xs text-gray-400">เมื่อ: ${state.targetLog.date}</span>
+                      </div>
+
+                      <div id="modalStep1">
+                          <div class="space-y-3">
+                              <p class="text-center text-gray-700 font-medium mb-2">อาการวันนี้เป็นอย่างไร?</p>
+                              <button onclick="document.getElementById('modalStep1').classList.add('hidden'); document.getElementById('modalStep2').classList.remove('hidden'); document.getElementById('followUpType').value='continue';" class="w-full p-4 rounded-xl border-2 border-orange-100 bg-orange-50 text-orange-800 font-bold flex items-center justify-between hover:bg-orange-100 transition">
+                                  <div class="flex items-center gap-3"><div class="bg-orange-200 p-2 rounded-full"><i data-lucide="alert-circle" size="20"></i></div>ยังไม่หาย / ต้องทำซ้ำ</div>
+                                  <i data-lucide="arrow-right" size="18"></i>
+                              </button>
+                              <button onclick="document.getElementById('modalStep1').classList.add('hidden'); document.getElementById('modalStep2').classList.remove('hidden'); document.getElementById('followUpType').value='cured';" class="w-full p-4 rounded-xl border-2 border-green-100 bg-green-50 text-green-800 font-bold flex items-center justify-between hover:bg-green-100 transition">
+                                  <div class="flex items-center gap-3"><div class="bg-green-200 p-2 rounded-full"><i data-lucide="check-circle" size="20"></i></div>หายดีแล้ว / จบเคส</div>
+                                  <i data-lucide="arrow-right" size="18"></i>
+                              </button>
+                          </div>
+                      </div>
+
+                      <div id="modalStep2" class="hidden space-y-4">
+                          <input type="hidden" id="followUpType" />
+                          <div>
+                              <label class="block text-sm font-medium text-gray-700 mb-1">บันทึกเพิ่มเติม:</label>
+                              <textarea id="followUpNote" class="w-full border rounded-lg p-3 h-24 focus:ring-2 focus:ring-[hsl(var(--primary))] outline-none"></textarea>
+                          </div>
+                          <div id="nextDateContainer">
+                              <label class="block text-sm font-medium text-gray-700 mb-1">วันนัดดูอาการครั้งถัดไป</label>
+                              <input type="date" id="followUpDate" class="w-full border rounded-lg p-2" />
+                          </div>
+                          <div class="flex gap-2 pt-2">
+                              <button onclick="document.getElementById('modalStep2').classList.add('hidden'); document.getElementById('modalStep1').classList.remove('hidden');" class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg">ย้อนกลับ</button>
+                              <button onclick="window.actions.submitFollowUp(document.getElementById('followUpType').value, document.getElementById('followUpNote').value, document.getElementById('followUpDate').value)" class="flex-1 py-2 rounded-lg bg-[hsl(var(--primary))] text-white font-bold shadow-md">บันทึกข้อมูล</button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+            </div>`;
+        }
+
+        function renderNavbar() {
+            const currentOrchard = getCurrentOrchard();
+            return `
+            <nav class="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] px-4 py-3 shadow-md sticky top-0 z-50 no-print">
+                <div class="max-w-md mx-auto flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                         <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border border-white/20">
+                            <img src="logo-1.png" alt="Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'" />
+                            <i data-lucide="leaf" class="text-[hsl(var(--secondary))]" style="display:none" size="16"></i>
+                         </div>
+                         <div class="relative group">
+                             <button class="flex items-center gap-1 font-bold text-lg hover:opacity-80">
+                                 ${currentOrchard.name}
+                                 <i data-lucide="chevron-down" size="16"></i>
+                             </button>
+                             <div class="absolute top-full left-0 mt-2 w-56 bg-[hsl(var(--card))] rounded-xl shadow-xl border border-[hsl(var(--border))] overflow-hidden hidden group-hover:block text-[hsl(var(--foreground))]">
+                                 <div class="p-2 border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))] text-xs font-semibold text-[hsl(var(--muted-foreground))]">เลือกสวนของคุณ</div>
+                                 ${state.orchards.map(o => `
+                                    <button onclick="window.actions.setOrchard('${o.id}')" class="w-full text-left px-4 py-3 hover:bg-[hsl(var(--secondary))] text-sm flex justify-between items-center ${state.currentOrchardId === o.id ? 'text-[hsl(var(--primary))] font-bold bg-[hsl(var(--muted))]' : ''}">
+                                         ${o.name}
+                                         ${state.currentOrchardId === o.id ? '<i data-lucide="check-circle" size="14"></i>' : ''}
+                                     </button>
+                                 `).join('')}
+                                 <button onclick="window.actions.createOrchard()" class="w-full text-left px-4 py-3 text-sm text-[hsl(var(--primary))] hover:bg-[hsl(var(--muted))] border-t border-[hsl(var(--border))] flex items-center gap-2 font-medium">
+                                     <i data-lucide="plus-circle" size="14"></i> เพิ่มสวนใหม่
+                                 </button>
+                             </div>
+                         </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="text-xs bg-black/20 px-2 py-1 rounded border border-white/20">Admin</div>
+                        <button onclick="window.actions.logout()" class="text-[hsl(var(--primary-foreground))] hover:opacity-80"><i data-lucide="log-out" size="18"></i></button>
+                    </div>
+                </div>
+            </nav>`;
+        }
+
+        // --- Main Render Function ---
+
+        function render() {
+            const root = document.getElementById('root');
+            
+            if (!state.isAuthenticated) {
+                root.innerHTML = renderLogin();
+            } else {
+                let contentHTML = '';
+                if (state.view === 'dashboard') contentHTML = renderDashboard();
+                else if (state.view === 'tree_detail') contentHTML = renderTreeDetail();
+                else if (state.view === 'add_tree') contentHTML = renderAddTreeForm();
+                else if (state.view === 'add_tree_log') contentHTML = renderAddLogForm(false);
+                else if (state.view === 'add_batch_log') contentHTML = renderAddLogForm(true);
+                else if (state.view === 'qr_print') {
+                    // QR Print View
+                    const trees = state.trees.filter(t => t.orchardId === state.currentOrchardId && t.status !== 'archived');
+                    contentHTML = `
+                    <div class="bg-[hsl(var(--muted))] min-h-screen p-8 print:p-0 print:bg-white flex flex-col items-center">
+                        <div class="w-full max-w-[210mm] mb-6 flex justify-between items-start no-print">
+                            <div>
+                                <h2 class="text-2xl font-bold text-[hsl(var(--foreground))] flex items-center gap-2"><i data-lucide="file-text" class="text-[hsl(var(--primary))]"></i> ออกเอกสาร PDF</h2>
+                                <p class="text-[hsl(var(--muted-foreground))] text-sm mt-1">หน้านี้จัดรูปแบบสำหรับกระดาษ A4</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="window.print()" class="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg font-bold"><i data-lucide="download" size="20"></i> พิมพ์</button>
+                                <button onclick="window.actions.setView('dashboard')" class="bg-[hsl(var(--card))] px-4 py-3 rounded-lg border shadow-sm"><i data-lucide="x" size="20"></i> ปิด</button>
+                            </div>
+                        </div>
+                        <div class="bg-white shadow-xl print:shadow-none mx-auto overflow-hidden relative" style="width: 210mm; min-height: 297mm; padding: 10mm">
+                            <div class="mb-6 border-b-2 border-black pb-2 flex justify-between items-end">
+                                <div><h1 class="text-2xl font-black uppercase tracking-wider text-black">${getCurrentOrchard().name}</h1></div>
+                                <div class="text-right text-xs text-gray-400">จำนวนทั้งหมด: ${trees.length} ต้น</div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                ${trees.map(tree => `
+                                <div class="border-2 border-black rounded-xl p-4 flex items-center gap-4 relative text-black" style="height: 55mm">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=LOC:${state.currentOrchardId}:${tree.code}" class="w-32 h-32 object-contain" />
+                                    <div class="flex-1"><div class="text-5xl font-black leading-none mb-1">${tree.code}</div><div class="text-lg font-bold">${tree.type} (${tree.variety})</div><div class="text-sm text-black bg-gray-100 inline-block px-2 py-0.5 rounded mt-1 border border-gray-300">โซน ${tree.zone}</div></div>
+                                </div>`).join('')}
+                            </div>
+                        </div>
+                    </div>`;
+                }
+
+                root.innerHTML = `
+                    ${state.view !== 'qr_print' ? renderNavbar() : ''}
+                    <div class="max-w-md mx-auto p-4 print:p-0 print:max-w-none">
+                        ${contentHTML}
+                    </div>
+                    ${renderFollowUpModal()}
+                    ${renderLogDetailModal()}
+                `;
+            }
+            
+            // Re-initialize Icons
+            lucide.createIcons();
+        }
+
+        // Initial Render
+        render();
+
+    </script>
+</body>
+</html>

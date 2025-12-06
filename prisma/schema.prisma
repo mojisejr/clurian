@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- Better Auth Models ---
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified Boolean?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions      Session[]
+  accounts      Account[]
+  
+  // Domain relations
+  orchards      Orchard[]
+  
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  
+  @@map("verifications")
+}
+
+// --- Clurian Domain Models ---
+
+model Orchard {
+  id        String   @id @default(uuid())
+  ownerId   String
+  name      String
+  zones     Json     @default("[]") // List of zone names e.g. ["A", "B"]
+  createdAt DateTime @default(now()) @map("created_at")
+
+  owner     User     @relation(fields: [ownerId], references: [id])
+  trees     Tree[]
+  logs      ActivityLog[]
+
+  @@map("orchards")
+}
+
+enum TreeStatus {
+  HEALTHY
+  SICK
+  DEAD
+  ARCHIVED
+}
+
+model Tree {
+  id            String     @id @default(uuid())
+  orchardId     String
+  code          String     // e.g. A01
+  zone          String
+  type          String?    // Durian, Mangosteen
+  variety       String?    // Monthong, Kanyao
+  plantedDate   DateTime?  @map("planted_date") @db.Date
+  status        TreeStatus
+  
+  replacedTreeId String?   @unique
+  replacedTree   Tree?     @relation("ReplantingHistory", fields: [replacedTreeId], references: [id])
+  replacement    Tree?     @relation("ReplantingHistory")
+
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  orchard       Orchard    @relation(fields: [orchardId], references: [id])
+  logs          ActivityLog[]
+
+  @@unique([orchardId, code], name: "orchard_code_unique") // Ensure unique code within an orchard
+  @@index([orchardId, status])
+  @@map("trees")
+}
+
+enum LogType {
+  INDIVIDUAL
+  BATCH
+}
+
+enum LogStatus {
+  COMPLETED
+  IN_PROGRESS
+}
+
+model ActivityLog {
+  id           String    @id @default(uuid())
+  orchardId    String
+  logType      LogType   @map("log_type")
+  
+  // For Individual Logs
+  treeId       String?
+  tree         Tree?     @relation(fields: [treeId], references: [id])
+  
+  // For Batch Logs
+  targetZone   String?   @map("target_zone")
+
+  action       String
+  note         String?   @db.Text
+  performDate  DateTime  @map("perform_date") @db.Date
+  status       LogStatus @default(COMPLETED)
+  followUpDate DateTime? @map("follow_up_date") @db.Date
+
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  orchard      Orchard   @relation(fields: [orchardId], references: [id])
+
+  @@index([treeId, performDate(sort: Desc)])
+  @@index([orchardId, status, followUpDate])
+  @@map("activity_logs")
+}
