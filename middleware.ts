@@ -15,7 +15,7 @@ export default async function authMiddleware(request: NextRequest) {
 	);
 
 	if (!session) {
-		if (request.nextUrl.pathname.startsWith("/dashboard")) {
+		if (request.nextUrl.pathname.startsWith("/dashboard") || request.nextUrl.pathname === "/") {
 			return NextResponse.redirect(new URL("/login", request.url));
 		}
 	} else {
