@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Tree, Log } from "@/lib/types";
+import { useSearchParams } from 'next/navigation';
 
 // Context
 import { useOrchard } from "@/components/providers/orchard-provider";
@@ -18,12 +19,25 @@ type ViewState = 'dashboard' | 'add_tree' | 'add_batch_log' | 'tree_detail';
 
 export default function DashboardPage() {
   const { currentOrchardId, currentOrchard, trees, addTree, addLog, addOrchard } = useOrchard();
+  const searchParams = useSearchParams();
 
   // --- State ---
   const [view, setView] = useState<ViewState>('dashboard');
   const [selectedTreeId, setSelectedTreeId] = useState<string | null>(null);
 
   const selectedTree = trees.find(t => t.id === selectedTreeId);
+
+  // --- Deep Linking ---
+  useEffect(() => {
+    const treeId = searchParams.get('treeId');
+    if (treeId && trees.length > 0) {
+      if (trees.some(t => t.id === treeId)) {
+        setSelectedTreeId(treeId);
+        setView('tree_detail');
+      }
+    }
+  }, [searchParams, trees]);
+
 
   // --- Actions ---
 
