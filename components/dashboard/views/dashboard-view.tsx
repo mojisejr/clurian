@@ -29,13 +29,23 @@ interface DashboardViewProps {
   onIdentifyTree: (treeId: string) => void;
 }
 
+interface QRItem {
+  code: string;
+  zone: string;
+  url: string;
+  type: string;
+  variety: string;
+  plantedDate?: string;
+  qrDataUrl?: string;
+}
+
 export function DashboardView({ onViewChange, onIdentifyTree }: DashboardViewProps) {
   const { trees, currentOrchardId, currentOrchard } = useOrchard();
   
   const [filterZone, setFilterZone] = useState(ZONE_FILTER_ALL);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [qrData, setQrData] = useState<any[]>([]);
+  const [qrData, setQrData] = useState<QRItem[]>([]);
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
   const [logoBase64, setLogoBase64] = useState<string>('');
 

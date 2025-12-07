@@ -27,7 +27,7 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
 
   // --- Actions ---
 
-  const handleReplant = () => {
+  const handleReplant = async () => {
      if (!confirm(`ต้องการ "ปลูกซ่อม" ในตำแหน่ง ${tree.code} ใช่หรือไม่?`)) return;
 
      const oldTree = tree;
@@ -38,27 +38,28 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
          plantedDate: new Date().toISOString().split('T')[0]
      };
 
-     updateTree(oldTree.id, { status: 'archived', code: `${oldTree.code}_HIST` });
-     addTree(newTree);
+     await updateTree(oldTree.id, { status: 'archived', code: `${oldTree.code}_HIST_${Date.now()}` });
+     const savedTree = await addTree(newTree);
      
-     addLog({
-         id: Date.now(),
-         orchardId: currentOrchardId,
-         type: 'individual',
-         treeId: newTree.id,
-         date: new Date().toISOString().split('T')[0],
-         action: 'ปลูกซ่อม (Replant)',
-         note: `ปลูกแทนต้นเดิม (Ref: ${oldTree.id})`,
-         status: 'completed'
-     } as Log);
-     
-     onBack(); 
+     if (savedTree) {
+        addLog({
+            id: Date.now(),
+            orchardId: currentOrchardId,
+            type: 'individual',
+            treeId: savedTree.id,
+            date: new Date().toISOString().split('T')[0],
+            action: 'ปลูกซ่อม (Replant)',
+            note: `ปลูกแทนต้นเดิม (Ref: ${oldTree.id})`,
+            status: 'completed'
+        } as Log);
+        
+        onBack(); 
+     }
   };
 
   const handleFollowUpSubmit = (result: { type: 'cured' | 'continue', note: string, nextDate?: string }) => {
     if (!followUpLog) return;
     const today = new Date().toISOString().split('T')[0];
-    const newLogs: Log[] = [];
     const updatedAllLogs = logs.map(l => l.id === followUpLog.id ? { ...l, status: 'completed' as const } : l);
 
     if (result.type === 'cured') {
@@ -92,7 +93,14 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
     setFollowUpLog(null);
   };
 
-  const handleAddLogSubmit = (data: any) => {
+  interface LogSubmissionData {
+    action: string;
+    note: string;
+    date: string;
+    followUpDate?: string;
+  }
+
+  const handleAddLogSubmit = (data: LogSubmissionData) => {
     addLog({ 
         ...data, 
         id: Date.now(),

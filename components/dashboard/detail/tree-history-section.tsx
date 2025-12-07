@@ -23,7 +23,7 @@ export function TreeHistorySection({ tree, onLogClick }: TreeHistorySectionProps
   const { logs, currentOrchardId } = useOrchard();
   
   // History Filter State
-  const [historyTab, setHistoryTab] = useState<'all' | 'followup'>('all');
+  const [historyTab, setHistoryTab] = useState<'all' | 'batch' | 'followup'>('all');
   const [historySearch, setHistorySearch] = useState('');
   const [historySort, setHistorySort] = useState<'desc' | 'asc'>('desc');
 
@@ -36,6 +36,8 @@ export function TreeHistorySection({ tree, onLogClick }: TreeHistorySectionProps
 
     if (historyTab === 'followup') {
         result = result.filter(l => l.status === 'in-progress');
+    } else if (historyTab === 'batch') {
+        result = result.filter(l => l.type === 'batch');
     }
 
     if (historySearch) {
@@ -74,6 +76,17 @@ export function TreeHistorySection({ tree, onLogClick }: TreeHistorySectionProps
                    )}
                >
                    📋 ทั้งหมด
+               </button>
+               <button 
+                   onClick={() => setHistoryTab('batch')}
+                   className={cn(
+                       "px-4 py-2 text-sm font-medium border-b-2 transition-colors",
+                       historyTab === 'batch' 
+                           ? "border-primary text-primary" 
+                           : "border-transparent text-muted-foreground hover:text-foreground"
+                   )}
+               >
+                   📦 งานเหมา
                </button>
                <button 
                    onClick={() => setHistoryTab('followup')}

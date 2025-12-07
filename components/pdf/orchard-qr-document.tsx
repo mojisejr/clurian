@@ -128,6 +128,7 @@ export const OrchardQRDocument = ({ trees, orchardName, logoUrl }: OrchardQRDocu
             {/* Left: QR */}
             <View style={styles.qrSection}>
               {tree.qrDataUrl ? (
+                // eslint-disable-next-line jsx-a11y/alt-text
                 <Image src={tree.qrDataUrl} style={styles.qrImage} />
               ) : (
                 <Text style={{fontSize: 8}}>QR</Text>
@@ -147,6 +148,7 @@ export const OrchardQRDocument = ({ trees, orchardName, logoUrl }: OrchardQRDocu
 
             {/* Brand/Logo */}
             {logoUrl ? (
+                 // eslint-disable-next-line jsx-a11y/alt-text
                  <Image src={logoUrl} style={styles.logo} />
             ) : (
                  <Text style={{...styles.logo, fontSize: 10, width: 'auto', height: 'auto'}}>Clurian</Text>

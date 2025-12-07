@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import type { Tree, Log } from "@/lib/types";
 import { useSearchParams } from 'next/navigation';
 
@@ -12,12 +12,12 @@ import { DashboardView } from '@/components/dashboard/views/dashboard-view';
 import { TreeDetailView } from '@/components/dashboard/views/tree-detail-view';
 import { EmptyDashboardView } from '@/components/dashboard/views/empty-dashboard-view';
 import { AddTreeForm } from "@/components/forms/add-tree-form";
-import { AddLogForm } from "@/components/forms/add-log-form";
+import { AddLogForm, type AddLogFormData } from "@/components/forms/add-log-form";
 
 // Types
 type ViewState = 'dashboard' | 'add_tree' | 'add_batch_log' | 'tree_detail';
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { currentOrchardId, currentOrchard, trees, addTree, addLog, addOrchard } = useOrchard();
   const searchParams = useSearchParams();
 
@@ -32,11 +32,14 @@ export default function DashboardPage() {
     const treeId = searchParams.get('treeId');
     if (treeId && trees.length > 0) {
       if (trees.some(t => t.id === treeId)) {
-        setSelectedTreeId(treeId);
-        setView('tree_detail');
+        if (selectedTreeId !== treeId || view !== 'tree_detail') {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setSelectedTreeId(treeId);
+          setView('tree_detail');
+        }
       }
     }
-  }, [searchParams, trees]);
+  }, [searchParams, trees, selectedTreeId, view]);
 
 
   // --- Actions ---
@@ -70,7 +73,7 @@ export default function DashboardPage() {
     setView('dashboard');
   };
 
-  const handleAddBatchLog = (data: Partial<Log>) => {
+  const handleAddBatchLog = (data: AddLogFormData) => {
      addLog({
         id: Date.now(),
         orchardId: currentOrchardId,
@@ -80,7 +83,7 @@ export default function DashboardPage() {
         status: data.followUpDate ? 'in-progress' : 'completed',
         followUpDate: data.followUpDate,
         type: 'batch',
-        zone: data.zone,
+        zone: data.targetZone,
      } as Log);
      
      setView('dashboard');
@@ -133,5 +136,13 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50 p-4 pb-24 md:pb-8 max-w-md mx-auto space-y-4">
         {viewContent}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }

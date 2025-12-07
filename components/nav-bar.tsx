@@ -3,8 +3,8 @@
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { LogOut, Leaf, ChevronDown, CheckCircle, PlusCircle } from "lucide-react";
-import { authClient } from "@/src/lib/auth-client";
+import { LogOut, ChevronDown, CheckCircle, PlusCircle } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -15,12 +15,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useOrchard } from "@/components/providers/orchard-provider";
-import { Button } from "./ui/button";
 
 export function NavBar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: session } = authClient.useSession();
   const { orchards, currentOrchardId, currentOrchard, setCurrentOrchardId, addOrchard } = useOrchard();
 
   const handleLogout = async () => {

@@ -22,8 +22,8 @@ interface OrchardContextType {
   
   trees: Tree[];
   setTrees: React.Dispatch<React.SetStateAction<Tree[]>>;
-  addTree: (tree: Tree) => void;
-  updateTree: (treeId: string, updates: Partial<Tree>) => void;
+  addTree: (tree: Tree) => Promise<Tree | null>;
+  updateTree: (treeId: string, updates: Partial<Tree>) => Promise<void>;
   
   logs: Log[];
   setLogs: React.Dispatch<React.SetStateAction<Log[]>>;
@@ -57,8 +57,11 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
   // 2. When Orchard Changes, Get Data
   useEffect(() => {
       if (!currentOrchardId) {
-          setTrees([]);
-          setLogs([]);
+          if (trees.length > 0 || logs.length > 0) {
+              // eslint-disable-next-line react-hooks/set-state-in-effect
+              setTrees([]);
+              setLogs([]);
+          }
           return;
       }
       const fetchData = async () => {
@@ -67,7 +70,7 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
           setLogs(logs);
       };
       fetchData();
-  }, [currentOrchardId]);
+  }, [currentOrchardId, trees.length, logs.length]);
 
   // --- Actions ---
 
@@ -93,6 +96,7 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
             }));
         }
     }
+    return savedTree;
   };
 
   const handleUpdateTree = async (treeId: string, updates: Partial<Tree>) => {

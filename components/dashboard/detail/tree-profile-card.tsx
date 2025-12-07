@@ -3,7 +3,6 @@
 import React from 'react';
 import type { Tree, Log, TreeStatus } from "@/lib/types";
 import { useOrchard } from "@/components/providers/orchard-provider";
-import { Button } from "@/components/ui/button";
 import { 
     Edit3, 
     Plus, 
@@ -12,7 +11,6 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 
 interface TreeProfileCardProps {
   tree: Tree;
