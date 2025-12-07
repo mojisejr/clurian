@@ -101,8 +101,8 @@ model Tree {
   orchardId     String
   code          String     // e.g. A01
   zone          String
-  type          String?    // Durian, Mangosteen
-  variety       String?    // Monthong, Kanyao
+  type          String     // Durian, Mangosteen
+  variety       String     // Monthong, Kanyao
   plantedDate   DateTime?  @map("planted_date") @db.Date
   status        TreeStatus
   
