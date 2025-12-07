@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 import { LogOut, Leaf, ChevronDown, CheckCircle, PlusCircle } from "lucide-react";
 import { authClient } from "@/src/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -47,8 +48,15 @@ export function NavBar() {
       <div className="max-w-md mx-auto flex justify-between items-center md:max-w-6xl">
         <div className="flex items-center gap-2">
             {/* Logo Placeholder */}
+            {/* Logo */}
             <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border border-white/20">
-                <Leaf className="text-secondary" size={16} />
+                <Image 
+                  src="/logo-1.png" 
+                  alt="Clurian Logo" 
+                  width={32} 
+                  height={32} 
+                  className="w-full h-full object-cover"
+                />
             </div>
 
             {/* Orchard Selector */}

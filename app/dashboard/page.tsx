@@ -9,11 +9,9 @@ import { useOrchard } from "@/components/providers/orchard-provider";
 // Views & Forms
 import { DashboardView } from '@/components/dashboard/views/dashboard-view';
 import { TreeDetailView } from '@/components/dashboard/views/tree-detail-view';
+import { EmptyDashboardView } from '@/components/dashboard/views/empty-dashboard-view';
 import { AddTreeForm } from "@/components/forms/add-tree-form";
 import { AddLogForm } from "@/components/forms/add-log-form";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Sprout, PlusCircle } from "lucide-react";
 
 // Types
 type ViewState = 'dashboard' | 'add_tree' | 'add_batch_log' | 'tree_detail';
@@ -76,38 +74,22 @@ export default function DashboardPage() {
 
   // --- Empty State ---
   if (!currentOrchard) {
-      return (
-          <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-              <Card className="max-w-md w-full p-8 text-center space-y-6 shadow-xl">
-                  <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-                      <Sprout size={40} className="text-green-600" />
-                  </div>
-                  <div>
-                      <h2 className="text-2xl font-bold text-gray-800">ยินดีต้อนรับสู่ Clurian</h2>
-                      <p className="text-gray-500 mt-2">เริ่มจัดการสวนของคุณได้ง่ายๆ เพียงสร้างสวนแรกของคุณ</p>
-                  </div>
-                  <Button onClick={handleCreateFirstOrchard} className="w-full h-12 text-lg gap-2 shadow-lg animate-pulse">
-                      <PlusCircle size={20} /> สร้างสวนใหม่
-                  </Button>
-              </Card>
-          </div>
-      );
+      return <EmptyDashboardView onCreateOrchard={handleCreateFirstOrchard} />;
   }
 
   // --- Render Views ---
+  let viewContent;
 
   if (view === 'add_tree') {
-    return (
+     viewContent = (
       <AddTreeForm 
         onCancel={() => setView('dashboard')}
         onSubmit={handleAddTree}
         zones={currentOrchard.zones}
       />
     );
-  }
-
-  if (view === 'add_batch_log') {
-    return (
+  } else if (view === 'add_batch_log') {
+    viewContent = (
         <AddLogForm
             onCancel={() => setView('dashboard')}
             onSubmit={handleAddBatchLog}
@@ -115,24 +97,27 @@ export default function DashboardPage() {
             isBatch={true}
         />
     );
-  }
-
-  if (view === 'tree_detail' && selectedTree) {
-      return (
+  } else if (view === 'tree_detail' && selectedTree) {
+      viewContent = (
           <TreeDetailView 
               tree={selectedTree} 
               onBack={() => setView('dashboard')} 
           />
       );
-  }
-
-  // Default Dashboard View
-  return (
-    <div className="min-h-screen  p-4 pb-20 max-w-md mx-auto">
+  } else {
+     // Default Dashboard View
+     viewContent = (
         <DashboardView 
             onViewChange={setView}
             onIdentifyTree={handleIdentifyTree}
         />
+     );
+  }
+  
+  // Consistency Wrapper
+  return (
+    <div className="min-h-screen bg-gray-50 p-4 pb-24 md:pb-8 max-w-md mx-auto space-y-4">
+        {viewContent}
     </div>
   );
 }
