@@ -15,12 +15,14 @@ import {
 
 interface OrchardContextType {
   orchards: Orchard[];
+  isLoadingOrchards: boolean;
   currentOrchardId: string;
   currentOrchard: Orchard;
   setCurrentOrchardId: (id: string) => void;
   addOrchard: (name: string) => void;
   
   trees: Tree[];
+  isLoadingOrchardData: boolean;
   setTrees: React.Dispatch<React.SetStateAction<Tree[]>>;
   addTree: (tree: Tree) => Promise<Tree | null>;
   updateTree: (treeId: string, updates: Partial<Tree>) => Promise<void>;
@@ -35,9 +37,11 @@ const OrchardContext = createContext<OrchardContextType | undefined>(undefined);
 
 export function OrchardProvider({ children }: { children: React.ReactNode }) {
   const [orchards, setOrchards] = useState<Orchard[]>([]);
+  const [isLoadingOrchards, setIsLoadingOrchards] = useState(true);
   const [currentOrchardId, setCurrentOrchardId] = useState<string>("");
   // We'll assume the first orchard is default for now, or handle empty properly
   const [trees, setTrees] = useState<Tree[]>([]);
+  const [isLoadingOrchardData, setIsLoadingOrchardData] = useState(false);
   const [logs, setLogs] = useState<Log[]>([]);
 
   const currentOrchard = orchards.find((o) => o.id === currentOrchardId) || orchards[0];
@@ -45,10 +49,21 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
   // 1. Initial Load: Get Orchards
   useEffect(() => {
       const initInfo = async () => {
-          const fetchedOrchards = await getOrchards();
-          setOrchards(fetchedOrchards);
-          if (fetchedOrchards.length > 0) {
-              setCurrentOrchardId(fetchedOrchards[0].id);
+          setIsLoadingOrchards(true);
+          try {
+            const fetchedOrchards = await getOrchards();
+            setOrchards(fetchedOrchards);
+            if (fetchedOrchards.length > 0) {
+                setCurrentOrchardId(fetchedOrchards[0].id);
+            }
+          } catch (error) {
+            console.error("Failed to fetch orchards:", error);
+            if (error instanceof Error && error.message.includes("Unauthorized")) {
+                // Session might be invalid despite middleware check
+                window.location.href = '/login';
+            }
+          } finally {
+            setIsLoadingOrchards(false);
           }
       };
       initInfo();
@@ -65,12 +80,22 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
           return;
       }
       const fetchData = async () => {
-          const { trees, logs } = await getOrchardData(currentOrchardId);
-          setTrees(trees);
-          setLogs(logs);
+          setIsLoadingOrchardData(true);
+          try {
+            const { trees, logs } = await getOrchardData(currentOrchardId);
+            setTrees(trees);
+            setLogs(logs);
+          } catch (error) {
+            console.error("Failed to fetch orchard data:", error);
+            if (error instanceof Error && error.message.includes("Unauthorized")) {
+                window.location.href = '/login';
+            }
+          } finally {
+            setIsLoadingOrchardData(false);
+          }
       };
       fetchData();
-  }, [currentOrchardId, trees.length, logs.length]);
+  }, [currentOrchardId]);
 
   // --- Actions ---
 
@@ -165,11 +190,13 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
     <OrchardContext.Provider
       value={{
         orchards,
+        isLoadingOrchards,
         currentOrchardId,
         currentOrchard,
         setCurrentOrchardId,
         addOrchard: handleAddOrchard,
         trees,
+        isLoadingOrchardData,
         setTrees,
         addTree: handleAddTree,
         updateTree: handleUpdateTree,

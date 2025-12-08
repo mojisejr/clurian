@@ -18,9 +18,6 @@ export const metadata: Metadata = {
   description: "ระบบบริหารจัดการสวนทุเรียนอัจฉริยะ",
 };
 
-import { NavBar } from "@/components/nav-bar";
-import { OrchardProvider } from "@/components/providers/orchard-provider";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,10 +28,7 @@ export default function RootLayout({
       <body
         className={`${kanit.variable} ${geistMono.variable} antialiased pb-16 md:pb-0`}
       >
-        <OrchardProvider>
-          <NavBar />
-          {children}
-        </OrchardProvider>
+        {children}
       </body>
     </html>
   );
