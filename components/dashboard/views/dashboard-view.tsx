@@ -110,21 +110,22 @@ export function DashboardView({ onViewChange, onIdentifyTree }: DashboardViewPro
       
       setIsGeneratingQR(true);
       const data = await Promise.all(processedTrees.map(async (tree) => {
-        // Current host logic placeholder - ideally use ENV or window.location
+        // Generate QR code that points to login with redirect to tree detail
         const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://clurian.com';
-        const url = `${baseUrl}/dashboard?treeId=${tree.id}`;
+        const treeDetailUrl = `${baseUrl}/dashboard?treeId=${tree.id}`;
+        const loginUrl = `${baseUrl}/login?redirect=${encodeURIComponent(treeDetailUrl)}`;
         
         try {
-          const qrDataUrl = await QRCode.toDataURL(url);
+          const qrDataUrl = await QRCode.toDataURL(loginUrl);
           return {
             ...tree,
             plantedDate: tree.plantedDate, // Ensure this field exists
-            url,
+            url: loginUrl,
             qrDataUrl
           };
         } catch (e) {
           console.error('QR Gen Error', e);
-          return { ...tree, url };
+          return { ...tree, url: loginUrl };
         }
       }));
       setQrData(data);
