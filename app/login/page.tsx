@@ -9,16 +9,19 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect') || '/dashboard';
 
   const handleLogin = async () => {
     setIsLoading(true);
     await authClient.signIn.social({
       provider: "line",
-      callbackURL: "/dashboard",
+      callbackURL: redirectUrl,
     });
   };
 
@@ -73,5 +76,17 @@ export default function LoginPage() {
         </CardFooter>
       </Card>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#26623d] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
