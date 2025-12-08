@@ -111,15 +111,16 @@ export function DashboardView({ onViewChange, onIdentifyTree }: DashboardViewPro
       setIsGeneratingQR(true);
       const data = await Promise.all(processedTrees.map(async (tree) => {
         // Generate QR code that points to login with redirect to tree detail
-        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://clurian.com';
-        const treeDetailUrl = `${baseUrl}/dashboard?treeId=${tree.id}`;
-        const loginUrl = `${baseUrl}/login?redirect=${encodeURIComponent(treeDetailUrl)}`;
+        // Use relative URLs to avoid domain issues
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://clurian.vercel.app';
+        const treeDetailPath = `/dashboard?treeId=${tree.id}`;
+        const loginUrl = `${baseUrl}/login?redirect=${encodeURIComponent(treeDetailPath)}`;
         
         try {
           const qrDataUrl = await QRCode.toDataURL(loginUrl);
           return {
             ...tree,
-            plantedDate: tree.plantedDate, // Ensure this field exists
+            plantedDate: tree.plantedDate,
             url: loginUrl,
             qrDataUrl
           };
