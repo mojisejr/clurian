@@ -11,6 +11,7 @@ import { useOrchard } from "@/components/providers/orchard-provider";
 import { DashboardView } from '@/components/dashboard/views/dashboard-view';
 import { TreeDetailView } from '@/components/dashboard/views/tree-detail-view';
 import { EmptyDashboardView } from '@/components/dashboard/views/empty-dashboard-view';
+import { DashboardSkeleton } from '@/components/dashboard/skeleton-loader';
 import { AddTreeForm } from "@/components/forms/add-tree-form";
 import { AddLogForm, type AddLogFormData } from "@/components/forms/add-log-form";
 
@@ -18,7 +19,16 @@ import { AddLogForm, type AddLogFormData } from "@/components/forms/add-log-form
 type ViewState = 'dashboard' | 'add_tree' | 'add_batch_log' | 'tree_detail';
 
 function DashboardContent() {
-  const { currentOrchardId, currentOrchard, trees, addTree, addLog, addOrchard } = useOrchard();
+  const { 
+    currentOrchardId, 
+    currentOrchard, 
+    trees, 
+    addTree, 
+    addLog, 
+    addOrchard,
+    isLoadingOrchards,
+    isLoadingOrchardData
+  } = useOrchard();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -94,6 +104,11 @@ function DashboardContent() {
      setView('dashboard');
   };
 
+  // --- Loading State ---
+  if (isLoadingOrchards || isLoadingOrchardData) {
+      return <DashboardSkeleton />;
+  }
+
   // --- Empty State ---
   if (!currentOrchard) {
       return <EmptyDashboardView onCreateOrchard={handleCreateFirstOrchard} />;
@@ -146,7 +161,7 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<DashboardSkeleton />}>
       <DashboardContent />
     </Suspense>
   );
