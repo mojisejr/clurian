@@ -19,7 +19,14 @@ export default async function authMiddleware(request: NextRequest) {
 			return NextResponse.redirect(new URL("/login", request.url));
 		}
 	} else {
-        if (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/") {
+        if (request.nextUrl.pathname === "/login") {
+            // If user is already logged in and accessing login page,
+            // check for redirect parameter
+            const redirect = request.nextUrl.searchParams.get("redirect");
+            const redirectUrl = redirect || "/dashboard";
+            return NextResponse.redirect(new URL(redirectUrl, request.url));
+        }
+        if (request.nextUrl.pathname === "/") {
             return NextResponse.redirect(new URL("/dashboard", request.url));
         }
     }
