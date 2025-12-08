@@ -33,30 +33,25 @@ function DashboardContent() {
     const treeId = searchParams.get('treeId');
     if (treeId && trees.length > 0) {
       if (trees.some(t => t.id === treeId)) {
-        if (selectedTreeId !== treeId || view !== 'tree_detail') {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setSelectedTreeId(treeId);
-          setView('tree_detail');
-        }
+        setSelectedTreeId(treeId);
+        setView('tree_detail');
       }
+    } else if (!treeId && view === 'tree_detail') {
+      // If no treeId in URL but view is tree_detail, go back to dashboard
+      setView('dashboard');
+      setSelectedTreeId(null);
     }
-  }, [searchParams, trees, selectedTreeId, view]);
+  }, [searchParams, trees]);
 
 
   // --- Actions ---
 
   const handleIdentifyTree = (treeId: string) => {
-    setSelectedTreeId(treeId);
-    setView('tree_detail');
-    // Update URL to reflect tree detail
-    router.push(`/dashboard?treeId=${treeId}`);
+    router.replace(`/dashboard?treeId=${treeId}`, { scroll: false });
   };
 
   const handleBackToDashboard = () => {
-    setView('dashboard');
-    setSelectedTreeId(null);
-    // Clear the treeId from URL
-    router.push('/dashboard');
+    router.replace('/dashboard', { scroll: false });
   };
 
   const handleCreateFirstOrchard = () => {
