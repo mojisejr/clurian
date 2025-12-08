@@ -3,29 +3,10 @@ import { Orchard, Tree, Log } from '@/lib/types';
 import { mapPrismaTreeToDomain, mapPrismaLogToDomain } from '@/lib/domain/mappers';
 import { handleServiceError } from '@/lib/errors';
 
-// Hardcoded user ID for now as requested (assuming single user context/MVP)
-const DEMO_USER_ID = "cm458x2z30000356sl1234567"; 
-
-async function ensureDemoUser() {
-  let user = await prisma.user.findUnique({ where: { id: DEMO_USER_ID } });
-  if (!user) {
-      user = await prisma.user.create({
-          data: {
-              id: DEMO_USER_ID,
-              name: "Demo User",
-              email: "demo@clurian.com"
-          }
-      });
-  }
-  return user;
-}
-
-export async function getOrchards(): Promise<Orchard[]> {
+export async function getOrchards(userId: string): Promise<Orchard[]> {
   try {
-      await ensureDemoUser();
-
       const orchards = await prisma.orchard.findMany({
-          where: { ownerId: DEMO_USER_ID },
+          where: { ownerId: userId },
           orderBy: { createdAt: 'desc' }
       });
 
@@ -40,12 +21,12 @@ export async function getOrchards(): Promise<Orchard[]> {
   }
 }
 
-export async function createOrchard(name: string): Promise<Orchard | null> {
+export async function createOrchard(userId: string, name: string): Promise<Orchard | null> {
   try {
       const orchard = await prisma.orchard.create({
           data: {
               name,
-              ownerId: DEMO_USER_ID,
+              ownerId: userId,
               zones: ["A"] // Default zone
           }
       });
