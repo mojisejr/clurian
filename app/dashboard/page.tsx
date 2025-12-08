@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import type { Tree, Log } from "@/lib/types";
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 // Context
 import { useOrchard } from "@/components/providers/orchard-provider";
@@ -20,6 +20,7 @@ type ViewState = 'dashboard' | 'add_tree' | 'add_batch_log' | 'tree_detail';
 function DashboardContent() {
   const { currentOrchardId, currentOrchard, trees, addTree, addLog, addOrchard } = useOrchard();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   // --- State ---
   const [view, setView] = useState<ViewState>('dashboard');
@@ -47,6 +48,15 @@ function DashboardContent() {
   const handleIdentifyTree = (treeId: string) => {
     setSelectedTreeId(treeId);
     setView('tree_detail');
+    // Update URL to reflect tree detail
+    router.push(`/dashboard?treeId=${treeId}`);
+  };
+
+  const handleBackToDashboard = () => {
+    setView('dashboard');
+    setSelectedTreeId(null);
+    // Clear the treeId from URL
+    router.push('/dashboard');
   };
 
   const handleCreateFirstOrchard = () => {
@@ -118,7 +128,7 @@ function DashboardContent() {
       viewContent = (
           <TreeDetailView 
               tree={selectedTree} 
-              onBack={() => setView('dashboard')} 
+              onBack={handleBackToDashboard} 
           />
       );
   } else {
