@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
-import type { Tree, Log } from "@/lib/types";
+import type { Tree } from "@/lib/types";
 import { useSearchParams, useRouter } from 'next/navigation';
 
 // Context
@@ -118,14 +118,15 @@ function DashboardContent() {
         await addLog({
            id: Date.now(),
            orchardId: currentOrchardId,
-           date: data.date || new Date().toISOString().split('T')[0],
+           type: 'batch',
+           treeId: undefined,
+           zone: data.targetZone,
            action: data.action || '',
            note: data.note || '',
+           date: data.date || new Date().toISOString().split('T')[0],
            status: data.followUpDate ? 'in-progress' : 'completed',
            followUpDate: data.followUpDate,
-           type: 'batch',
-           zone: data.targetZone,
-        } as Log);
+        });
 
         setView('dashboard');
         setActiveTab('trees');
