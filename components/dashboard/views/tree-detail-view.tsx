@@ -22,6 +22,7 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
   
   // Local State
   const [isAddingLog, setIsAddingLog] = useState(false);
+  const [isSubmittingLog, setIsSubmittingLog] = useState(false);
   const [viewLog, setViewLog] = useState<Log | null>(null);
   const [followUpLog, setFollowUpLog] = useState<Log | null>(null);
 
@@ -101,6 +102,7 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
   }
 
   const handleAddLogSubmit = async (data: LogSubmissionData) => {
+    setIsSubmittingLog(true);
     try {
       await addLog({
           ...data,
@@ -114,6 +116,8 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
     } catch (error) {
       console.error('Failed to add log:', error);
       alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
+    } finally {
+      setIsSubmittingLog(false);
     }
   };
 
@@ -129,7 +133,7 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
               zones={[]}
               isBatch={false}
               treeCode={tree.code}
-              isLoading={true}
+              isLoading={isSubmittingLog}
           />
       );
   }
