@@ -1,42 +1,20 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import { ITEMS_PER_PAGE, ZONE_FILTER_ALL } from "@/lib/constants";
 import { useOrchard } from "@/components/providers/orchard-provider";
 import { TreeCard } from "@/components/tree-card";
 import { Pagination } from "@/components/pagination";
 import { ZoneFilter } from "@/components/zone-filter";
+import { PDFGeneratorModal } from "@/components/modals/pdf-generator-modal";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Printer, Sprout, PlusCircle, ClipboardList, Loader2 } from "lucide-react";
-import QRCode from 'qrcode';
-
-// Dynamically import PDF Download Link to avoid SSR issues
-const PDFDownloadLink = dynamic(
-  () => import("@react-pdf/renderer").then((mod) => mod.PDFDownloadLink),
-  {
-    ssr: false,
-    loading: () => <Button variant="ghost" size="sm" disabled><Loader2 className="animate-spin mr-1" size={14} /> Loading PDF...</Button>,
-  }
-);
-
-import { OrchardQRDocument } from "@/components/pdf/orchard-qr-document";
+import { Search, Sprout, PlusCircle, ClipboardList, Printer } from "lucide-react";
 
 interface DashboardViewProps {
   onViewChange: (view: 'add_tree' | 'add_batch_log' | 'tree_detail') => void;
   onIdentifyTree: (treeId: string) => void;
-}
-
-interface QRItem {
-  code: string;
-  zone: string;
-  url: string;
-  type: string;
-  variety: string;
-  plantedDate?: string;
-  qrDataUrl?: string;
 }
 
 export function DashboardView({ onViewChange, onIdentifyTree }: DashboardViewProps) {
@@ -45,9 +23,8 @@ export function DashboardView({ onViewChange, onIdentifyTree }: DashboardViewPro
   const [filterZone, setFilterZone] = useState(ZONE_FILTER_ALL);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [qrData, setQrData] = useState<QRItem[]>([]);
-  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
   const [logoBase64, setLogoBase64] = useState<string>('');
+  const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
 
   const orchardZones = currentOrchard.zones;
 
@@ -103,43 +80,6 @@ export function DashboardView({ onViewChange, onIdentifyTree }: DashboardViewPro
       loadLogo();
   }, []);
 
-  // --- QR Generation ---
-  useEffect(() => {
-    const generateQRs = async () => {
-      if (processedTrees.length === 0) return;
-      
-      setIsGeneratingQR(true);
-      const data = await Promise.all(processedTrees.map(async (tree) => {
-        // Generate QR code that points to login with redirect to tree detail
-        // Use relative URLs to avoid domain issues
-        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://clurian.vercel.app';
-        const treeDetailPath = `/dashboard?treeId=${tree.id}`;
-        const loginUrl = `${baseUrl}/login?redirect=${encodeURIComponent(treeDetailPath)}`;
-        
-        try {
-          const qrDataUrl = await QRCode.toDataURL(loginUrl);
-          return {
-            ...tree,
-            plantedDate: tree.plantedDate,
-            url: loginUrl,
-            qrDataUrl
-          };
-        } catch (e) {
-          console.error('QR Gen Error', e);
-          return { ...tree, url: loginUrl };
-        }
-      }));
-      setQrData(data);
-      setIsGeneratingQR(false);
-    };
-
-    const timer = setTimeout(() => {
-        generateQRs();
-    }, 1000); // Debounce slightly
-
-    return () => clearTimeout(timer);
-  }, [processedTrees]);
-
   return (
     <div className="space-y-4">
       {/* Header Stats */}
@@ -191,27 +131,16 @@ export function DashboardView({ onViewChange, onIdentifyTree }: DashboardViewPro
           />
           
           {/* Export PDF Button */}
-          {processedTrees.length > 0 && !isGeneratingQR ? (
-             <PDFDownloadLink
-                document={
-                    <OrchardQRDocument 
-                        trees={qrData} 
-                        orchardName={currentOrchard.name} 
-                        logoUrl={logoBase64} // Pass Logo
-                    />
-                }
-                fileName={`QR_Codes_${currentOrchard.name}_${new Date().toISOString().split('T')[0]}.pdf`}
-             >
-                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
-                    <Printer size={14} className="mr-1" /> พิมพ์ QR ({qrData.length})
-                </Button>
-             </PDFDownloadLink>
-          ) : (
-            <Button variant="ghost" size="sm" disabled className="text-xs text-muted-foreground">
-                 <Loader2 className="animate-spin mr-1" size={14} /> เตรียม QR...
-            </Button>
-          )}
-
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs text-muted-foreground"
+            onClick={() => setIsPDFModalOpen(true)}
+            disabled={processedTrees.length === 0}
+          >
+            <Printer size={14} className="mr-1" /> 
+            พิมพ์ QR ({processedTrees.length})
+          </Button>
         </div>
       </Card>
 
@@ -245,6 +174,15 @@ export function DashboardView({ onViewChange, onIdentifyTree }: DashboardViewPro
       <div className="pt-4 border-t text-center text-xs text-muted-foreground">
           CLURIAN: Orchard Manager v1.1
       </div>
+
+      {/* PDF Generator Modal */}
+      <PDFGeneratorModal
+        isOpen={isPDFModalOpen}
+        onClose={() => setIsPDFModalOpen(false)}
+        trees={processedTrees}
+        orchardName={currentOrchard?.name || ''}
+        logoBase64={logoBase64}
+      />
     </div>
   );
 }
