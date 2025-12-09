@@ -13,7 +13,7 @@
    - Break down the requirement into smaller, testable components
    - Identify what needs to be implemented vs what already exists
    - Determine success criteria and acceptance tests
-   - Check if Neon DB connection or Vercel Workflow setup is needed
+   - Check if Prisma migrations or LINE Login changes are needed
 
 2. **Analyze Codebase & Dependencies**
    - Explore relevant code to understand existing patterns
@@ -26,14 +26,14 @@
    - Create comprehensive todo list with Red-Green-Refactor phases
    - Define what "success" looks like for each component
    - Plan test cases covering: happy path, edge cases, error handling
-   - Consider testing framework for Next.js (Jest, Vitest, or Playwright)
+   - Consider testing framework: Vitest + React Testing Library
 
 ### 🔴 Phase 1: RED - Write Failing Tests
 1. **Write Tests BEFORE Implementation**
-   - Create test files alongside implementation or in __tests__ directories
-   - For API routes: test in app/api/__tests__/
-   - For components: test in components/__tests__/ or using .test.tsx
-   - For utilities: test in utils/__tests__/ or using .test.ts
+   - Create test files in `tests/` directory
+   - For domain logic: `tests/domain.test.ts`
+   - For API routes: `tests/integration.test.ts`
+   - For components: `tests/components/` or using `.test.tsx`
    - Tests must clearly define expected behavior
 
 2. **Verify Tests FAIL**
@@ -64,6 +64,7 @@
    - Run tests after EVERY refactor change
    - Ensure 100% test pass rate is maintained
    - Check TypeScript compilation: `npx tsc --noEmit`
+   - Run `npx prisma generate` if schema changes
    - Repeat Refactor phase until code quality meets standards
 
 ### 🔄 Phase 4: Final Quality Assurance
@@ -76,6 +77,7 @@
    - **Build MUST pass 100%**: `npm run build` - No build errors allowed
    - **Linter MUST pass 100%**: `npm run lint` - No warnings/errors allowed
    - **TypeScript MUST pass**: `npx tsc --noEmit` - No type errors allowed
+   - **Prisma MUST be generated**: `npx prisma generate` if schema changed
    - Fix any issues before proceeding
 
 ### 📋 Branch Management (STAGING-ONLY POLICY)
@@ -102,7 +104,7 @@
 - Run `git add .` after all phases complete successfully
 - Create comprehensive commit messages that are:
   - Follow conventional commits: feat:, fix:, docs:, refactor:, etc.
-  - Include scope: e.g., feat(api): add tarot prediction endpoint
+  - Include scope: e.g., feat(orchard): add tree health monitoring
   - Include issue reference: closes #123
   - Descriptive and readable for future reference
 - Include context about what was changed and why
@@ -141,13 +143,13 @@ Bash git checkout -b feature/task-123-description
 
 2. **Phase 1: RED**
    - Write failing tests for ALL components
-   - Use appropriate testing framework (Jest/Vitest/Playwright)
-   - Run tests: `npm test` or specific test runner
+   - Use Vitest + React Testing Library
+   - Run tests: `npm test`
    - Verify tests actually FAIL (100% red phase)
 
 3. **Phase 2: GREEN**
    - Implement minimal code to make tests pass
-   - Run tests continuously: `npm test` (watch mode)
+   - Run tests continuously: `npm test -- --watch`
    - **NEVER proceed until 100% tests pass**
 
 4. **Phase 3: REFACTOR**
@@ -167,12 +169,12 @@ Bash git checkout -b feature/task-123-description
 #### Step 3: Git Operations
 ```bash
 Bash git add .  # After ALL phases complete
-Bash git commit -m "feat(api): add tarot prediction endpoint
+Bash git commit -m "feat(orchard): add tree health monitoring
 
-- Implement POST /api/predict for question submission
-- Add GET /api/predict/[jobId] for status checking
-- Integrate with Vercel Workflow for async processing
-- Connect to Neon database for data persistence
+- Implement health status tracking for individual trees
+- Add health check date field to Tree model
+- Create dashboard filters for sick trees
+- Add follow-up scheduling for health monitoring
 
 Closes #123"
 ```
@@ -190,20 +192,28 @@ Closes #123"
 - **Pages**: `app/*/page.tsx`
 - **Layouts**: `app/*/layout.tsx`
 - **Components**: `components/*/` or alongside pages
-- **Utilities**: `lib/`, `utils/`, or `helpers/`
-- **Types**: `types/` or inline with components
+- **Server Actions**: `app/actions/` or component-level
+- **Domain Logic**: `lib/domain/`
+- **Database**: `prisma/schema.prisma`
 
 ### Testing Patterns:
-- **Components**: Use React Testing Library + Jest/Vitest
-- **API Routes**: Test request/response with supertest
+- **Components**: Use React Testing Library + Vitest
+- **API Routes**: Test in `tests/integration.test.ts`
 - **Database**: Use test database or mocks
-- **Integration**: Playwright for E2E tests
+- **Domain Logic**: Test in `tests/domain.test.ts`
 
 ### TypeScript Requirements:
 - Always use strict mode
 - Define interfaces for all props and data structures
 - Use proper typing for API responses
-- Leverage Next.js built-in types
+- Leverage Prisma generated types
+
+### Orchard Domain Patterns:
+- **Tree Management**: CRUD operations with status tracking
+- **Activity Logging**: Individual and batch activities
+- **Dashboard**: Statistics, filtering, pagination
+- **Authentication**: Better Auth with LINE Login
+- **QR Codes**: Tree identification with PDF generation
 
 ## Example Execution Flow:
 ```
@@ -230,6 +240,8 @@ Closes #123"
 - **STOP if additional config/environment needed**
 - **ALWAYS follow Next.js App Router conventions**
 - **ALWAYS use TypeScript strict mode**
+- **ALWAYS use Prisma for database operations**
+- **ALWAYS validate with orchard domain knowledge**
 
 ## Success Criteria:
 - All tests written first (RED phase confirmed)
@@ -238,3 +250,4 @@ Closes #123"
 - 100% pass rate on: build, lint, TypeScript, ALL tests
 - Comprehensive commit with conventional format
 - No TypeScript errors or warnings
+- Prisma schema properly synchronized

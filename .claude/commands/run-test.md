@@ -1,4 +1,4 @@
-# Test Command for Next.js Project
+# Test Command for Clurian Orchard Manager
 
 ## Usage
 ```
@@ -8,24 +8,22 @@
 ## Test Command Execution
 
 ### Primary Test Command
-- `/run-test` → Execute full test suite based on current test setup
+- `/run-test` → Execute full test suite using Vitest
 
 ### Test Type Options
 ```bash
-/run-test                    # Run all tests if available
-/run-test unit              # Run unit tests
-/run-test integration       # Run integration tests
-/run-test e2e               # Run end-to-end tests (Playwright)
-/run-test api               # Run API route tests
-/run-test component         # Run component tests
+/run-test                    # Run all tests
+/run-test unit              # Run unit tests (domain logic)
+/run-test integration       # Run integration tests (API, database)
+/run-test component         # Run component tests (React components)
 /run-test <test-name>       # Run specific test file or pattern
 ```
 
 ### Test Command Implementation
 ```typescript
 // Command execution logic:
-1. Check if test framework is configured (Jest/Vitest/Playwright)
-2. If no tests exist yet, suggest setting up testing framework
+1. Check if test framework is configured (Vitest)
+2. Verify test files exist in tests/ directory
 3. Execute appropriate npm script based on test type
 4. Report test results and coverage if available
 ```
@@ -37,161 +35,239 @@
 {
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint",
+    "test": "vitest run"
   }
 }
 ```
 
-### Missing Test Configuration
-- ❌ No test scripts in package.json
-- ❌ No Jest/Vitest configuration
-- ❌ No Playwright configuration
-- ❌ No testing libraries installed
-- ❌ No test files exist yet
+### Current Test Configuration
+- ✅ Vitest configured in `vitest.config.ts`
+- ✅ Test files exist in `tests/` directory
+- ✅ React Testing Library for component tests
+- ✅ jsdom environment for DOM testing
+- ✅ dotenv for environment variables in tests
 
-## Recommended Test Setup
+### Existing Tests
+- `tests/domain.test.ts` - Domain logic tests (orchard, tree, activity mapping)
+- `tests/integration.test.ts` - API route and database tests
+- `tests/qr-redirect.test.ts` - QR code redirect feature tests
+- `tests/setup.ts` - Global test setup with environment loading
 
-### 1. Install Testing Dependencies
+## Test Execution Commands
+
+### Run All Tests
 ```bash
-npm install -D jest @testing-library/react @testing-library/jest-dom
-npm install -D @types/jest jest-environment-jsdom ts-jest
-npm install -D @playwright/test  # For E2E tests
+npm test
+# or
+vitest run
 ```
 
-### 2. Add Test Scripts to package.json
-```json
-{
-  "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:e2e": "playwright test",
-    "test:api": "jest --testPathPattern=api",
-    "test:component": "jest --testPathPattern=components"
-  }
-}
+### Run Tests in Watch Mode
+```bash
+npm test -- --watch
+# or
+vitest
 ```
 
-### 3. Create Jest Configuration (jest.config.js)
-```javascript
-module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'jsdom',
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
-  },
-  testMatch: [
-    '**/__tests__/**/*.+(ts|tsx|js)',
-    '**/*.(test|spec).+(ts|tsx|js)',
-  ],
-  collectCoverageFrom: [
-    'app/**/*.{ts,tsx}',
-    'components/**/*.{ts,tsx}',
-    'lib/**/*.{ts,tsx}',
-    '!**/*.d.ts',
-    '!**/node_modules/**',
-  ],
-}
+### Run Tests with Coverage
+```bash
+npm test -- --coverage
+# or
+vitest run --coverage
 ```
 
-### 4. Create jest.setup.js
-```javascript
-import '@testing-library/jest-dom'
+### Run Specific Test File
+```bash
+npm test tests/domain.test.ts
+# or
+vitest run tests/domain.test.ts
+```
+
+### Run Tests by Pattern
+```bash
+# Run integration tests only
+npm test -- integration
+
+# Run domain tests only
+npm test -- domain
 ```
 
 ## Test Organization Structure
 
-### Recommended Directory Layout
+### Current Directory Layout
 ```
-mmv-tarots/
-├── app/
-│   ├── api/
-│   │   └── __tests__/          # API route tests
-│   └── __tests__/              # Page/layout tests
-├── components/
-│   └── __tests__/              # Component tests
-├── lib/
-│   └── __tests__/              # Utility tests
-├── __tests__/                  # Integration tests
-├── e2e/                        # Playwright E2E tests
-└── coverage/                   # Coverage reports
+clurian/
+├── tests/                        # All test files
+│   ├── setup.ts                  # Global test setup
+│   ├── domain.test.ts            # Domain logic tests
+│   ├── integration.test.ts       # API/database tests
+│   └── qr-redirect.test.ts       # Feature-specific tests
+├── vitest.config.ts              # Vitest configuration
+└── package.json                  # Test scripts
 ```
 
+### Recommended Test File Locations
+- **Domain Logic**: `tests/domain.test.ts`
+- **API Routes**: `tests/integration.test.ts`
+- **Server Actions**: `tests/integration.test.ts`
+- **Components**: `tests/components.test.ts` (create if needed)
+- **Features**: `tests/[feature-name].test.ts`
+
 ### Test File Naming Conventions
-- `*.test.ts` or `*.test.tsx` - Unit/integration tests
-- `*.spec.ts` or `*.spec.tsx` - Specification tests
-- `__tests__/` directory - Co-located tests
-- `e2e/` directory - End-to-end tests
+- `*.test.ts` - Unit/integration tests
+- `*.test.tsx` - Component tests with JSX
+- `setup.ts` - Global test configuration
 
 ## Test Examples
 
-### API Route Test
+### Domain Logic Test
 ```typescript
-// app/api/predict/__tests__/route.test.ts
-import { POST, GET } from '../route'
+// tests/domain.test.ts
+import { describe, it, expect } from 'vitest'
+import { mapTreeStatus, mapActivityLogType } from '@/lib/domain/mappers'
 
-describe('/api/predict', () => {
-  test('POST creates prediction', async () => {
-    const request = new Request('http://localhost/api/predict', {
-      method: 'POST',
-      body: JSON.stringify({ question: 'Test question' }),
-      headers: { 'Content-Type': 'application/json' }
+describe('Domain Mappers', () => {
+  describe('mapTreeStatus', () => {
+    test('maps HEALTHY to correct display text', () => {
+      expect(mapTreeStatus('HEALTHY')).toBe('ปกติ')
     })
 
-    const response = await POST(request)
-    expect(response.status).toBe(200)
+    test('maps SICK to correct display text', () => {
+      expect(mapTreeStatus('SICK')).toBe('ป่วย')
+    })
 
-    const data = await response.json()
-    expect(data).toHaveProperty('jobId')
-    expect(data).toHaveProperty('status')
+    test('handles unknown status', () => {
+      expect(mapTreeStatus('UNKNOWN' as any)).toBe('ไม่ทราบสถานะ')
+    })
+  })
+
+  describe('mapActivityLogType', () => {
+    test('maps INDIVIDUAL to correct display text', () => {
+      expect(mapActivityLogType('INDIVIDUAL')).toBe('รายต้น')
+    })
+
+    test('maps BATCH to correct display text', () => {
+      expect(mapActivityLogType('BATCH')).toBe('ทั้งแปลง')
+    })
   })
 })
 ```
 
-### Component Test
+### Integration Test
 ```typescript
-// components/TarotCard/__tests__/TarotCard.test.tsx
-import { render, screen } from '@testing-library/react'
-import TarotCard from '../TarotCard'
+// tests/integration.test.ts
+import { describe, it, expect, beforeEach } from 'vitest'
+import { prisma } from '@/lib/prisma'
 
-describe('TarotCard', () => {
-  test('renders card name', () => {
-    render(<TarotCard name="The Sun" image="cards/sun.jpg" />)
-    expect(screen.getByText('The Sun')).toBeInTheDocument()
+describe('Database Operations', () => {
+  beforeEach(async () => {
+    // Clean up test data
+    await prisma.activityLog.deleteMany()
+    await prisma.tree.deleteMany()
+    await prisma.orchard.deleteMany()
   })
 
-  test('renders card image', () => {
-    render(<TarotCard name="The Sun" image="cards/sun.jpg" />)
-    const image = screen.getByRole('img')
-    expect(image).toHaveAttribute('src', 'cards/sun.jpg')
+  describe('Orchard Creation', () => {
+    test('should create orchard with default zones', async () => {
+      const orchard = await prisma.orchard.create({
+        data: {
+          ownerId: 'test-user-id',
+          name: 'Test Orchard',
+        },
+      })
+
+      expect(orchard).toBeDefined()
+      expect(orchard.name).toBe('Test Orchard')
+      expect(orchard.zones).toEqual([])
+    })
+  })
+
+  describe('Tree Management', () => {
+    test('should create tree with unique code in orchard', async () => {
+      // Create orchard first
+      const orchard = await prisma.orchard.create({
+        data: {
+          ownerId: 'test-user-id',
+          name: 'Test Orchard',
+        },
+      })
+
+      const tree = await prisma.tree.create({
+        data: {
+          orchardId: orchard.id,
+          code: 'A01',
+          zone: 'A',
+          type: 'ทุเรียน',
+          variety: 'หมอนทอง',
+          status: 'HEALTHY',
+        },
+      })
+
+      expect(tree).toBeDefined()
+      expect(tree.code).toBe('A01')
+      expect(tree.orchardId).toBe(orchard.id)
+    })
   })
 })
 ```
 
-### Utility Test
+### Server Action Test
 ```typescript
-// lib/cards/__tests__/shuffle.test.ts
-import { shuffleCards } from '../shuffle'
+// tests/server-actions.test.ts
+import { describe, it, expect, vi } from 'vitest'
+import { createTree } from '@/app/actions/createTree'
+import { prisma } from '@/lib/prisma'
 
-describe('shuffleCards', () => {
-  test('returns shuffled array with same length', () => {
-    const cards = ['card1', 'card2', 'card3', 'card4', 'card5']
-    const shuffled = shuffleCards(cards)
+// Mock Prisma
+vi.mock('@/lib/prisma', () => ({
+  prisma: {
+    tree: {
+      create: vi.fn(),
+    },
+  },
+}))
 
-    expect(shuffled).toHaveLength(5)
-    expect(shuffled).toContain('card1')
-    expect(shuffled).toContain('card5')
+describe('createTree Server Action', () => {
+  it('should create tree with valid data', async () => {
+    const mockTree = {
+      id: 'tree-id',
+      code: 'A01',
+      zone: 'A',
+      type: 'ทุเรียน',
+      variety: 'หมอนทอง',
+      status: 'HEALTHY',
+    }
+
+    vi.mocked(prisma.tree.create).mockResolvedValue(mockTree as any)
+
+    const result = await createTree({
+      orchardId: 'orchard-id',
+      code: 'A01',
+      zone: 'A',
+      type: 'ทุเรียน',
+      variety: 'หมอนทอง',
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.tree).toEqual(mockTree)
   })
 
-  test('returns different order', () => {
-    const cards = [1, 2, 3, 4, 5]
-    const shuffled = shuffleCards(cards)
+  it('should handle validation errors', async () => {
+    vi.mocked(prisma.tree.create).mockRejectedValue(new Error('Validation error'))
 
-    // Very small chance of false negative, but acceptable for tests
-    expect(shuffled).not.toEqual(cards)
+    const result = await createTree({
+      orchardId: '',
+      code: '',
+      zone: '',
+      type: '',
+      variety: '',
+    })
+
+    expect(result.success).toBe(false)
+    expect(result.error).toBeDefined()
   })
 })
 ```
@@ -200,72 +276,94 @@ describe('shuffleCards', () => {
 
 ### When Running `/run-test`:
 1. **Check Test Setup**:
-   - Verify package.json has test scripts
-   - Check for Jest/Vitest configuration
+   - Verify `vitest.config.ts` exists
+   - Check for test files in `tests/` directory
    - Confirm test dependencies are installed
 
-2. **If No Test Setup**:
-   - Suggest installing testing dependencies
-   - Provide configuration examples
-   - Recommend initial test structure
-
-3. **If Tests Exist**:
-   - Execute `npm test` or appropriate test script
+2. **Execute Tests**:
+   - Run `npm test` to execute all tests
    - Capture and display results
-   - Show coverage if available
+   - Show coverage if `--coverage` flag used
 
-4. **Report Results**:
+3. **Report Results**:
    - Number of tests run
    - Pass/fail status
-   - Coverage percentage (if configured)
-   - Any errors or warnings
+   - Test execution time
+   - Any errors or failures
 
 ### When Running `/run-test <type>`:
 1. **Validate Test Type**:
-   - Check if test type is supported
-   - Verify corresponding test script exists
+   - Check if test type is supported (unit, integration, component)
+   - Verify corresponding test files exist
 
-2. **Execute Specific Test**:
-   - Run targeted test command
+2. **Execute Specific Tests**:
+   - Run targeted test command with pattern matching
    - Filter results by test type
 
 3. **Report Results**:
    - Show results for specific test type
    - Indicate if no tests found for that type
 
-## Testing Best Practices
+## Testing Best Practices for Clurian
 
 ### 1. Test Structure
-- **Arrange**: Set up test data and mocks
+- **Arrange**: Set up test data (orchards, trees, activity logs)
 - **Act**: Execute the code being tested
 - **Assert**: Verify the expected outcome
 
-### 2. Component Testing
-- Test user behavior, not implementation details
-- Use React Testing Library queries
-- Mock external dependencies
+### 2. Database Testing
+- Use a separate test database or transactions
+- Clean up data between tests
+- Test domain-specific constraints (unique tree codes per orchard)
 
-### 3. API Testing
-- Test request/response cycle
-- Mock database operations
-- Test error scenarios
+### 3. Server Actions Testing
+- Mock external dependencies (Prisma, auth)
+- Test success and error scenarios
+- Validate input handling
 
-### 4. Test Coverage Goals
+### 4. Thai Language Support
+- Test Thai text rendering and input
+- Verify font loading (Kanit font)
+- Check date formatting for Thai locale
+
+### 5. Test Coverage Goals
 - Aim for 80%+ code coverage
-- Focus on critical paths
-- Test error handling
+- Focus on critical business logic:
+  - Tree status transitions
+  - Activity logging (individual vs batch)
+  - Dashboard statistics calculations
+  - Authentication flows
 
 ## Current Status
-- **Test Framework**: Not configured yet
-- **Test Dependencies**: Need to install
-- **Test Files**: 0 tests exist
-- **Configuration**: Need Jest/Playwright setup
-- **Ready for Testing**: ❌ Setup required first
+- **Test Framework**: ✅ Vitest configured
+- **Test Dependencies**: ✅ React Testing Library installed
+- **Test Files**: ✅ 3 test files exist
+- **Configuration**: ✅ Vitest setup with jsdom and dotenv
+- **Ready for Testing**: ✅ All tests passing
 
-## Next Steps to Enable Testing
-1. Install testing dependencies
-2. Configure Jest for unit/integration tests
-3. Set up Playwright for E2E tests
-4. Create initial test structure
-5. Add test scripts to package.json
-6. Start writing tests for critical features
+## Test Categories for Clurian
+
+### Domain Tests (`tests/domain.test.ts`)
+- Tree status mapping (HEALTHY → 'ปกติ')
+- Activity log type mapping
+- Date formatting for Thai locale
+- Zone management logic
+
+### Integration Tests (`tests/integration.test.ts`)
+- Prisma database operations
+- Server actions execution
+- API route handlers
+- LINE Login integration
+
+### Feature Tests
+- QR code generation and redirect
+- PDF generation for tree labels
+- Batch activity logging
+- Follow-up scheduling
+
+## Next Steps for Testing
+1. Add component tests for UI components
+2. Increase test coverage for dashboard features
+3. Add E2E tests with Playwright for critical user flows
+4. Test mobile responsiveness
+5. Add performance tests for large orchards

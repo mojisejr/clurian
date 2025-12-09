@@ -27,31 +27,33 @@ Creates comprehensive commit messages with detailed change tracking for easy rol
 
 3. **Quality Checks**
    ```bash
-   npm run build && npm run lint && npx tsc --noEmit
+   npm run build && npm run lint && npm test && npx tsc --noEmit
    ```
 
 ### Phase 2: Generate Commit Message
 
 1. **Categorize Changes**
    - 🎨 **UI**: Components, styles, layouts
-   - 🔧 **API**: Routes, workflows, database
+   - 🔧 **API**: Routes, server actions, database
    - ⚙️ **Config**: Dependencies, config files
    - 📚 **Docs**: README, documentation
+   - 🌳 **Domain**: Orchard, tree, activity log features
 
 2. **Create Comprehensive Message**
    ```bash
    # Example commit message structure:
    #
-   # feat(ui): add card flip animation with 3D effect
+   # feat(orchard): add tree health monitoring dashboard
    #
    # 📁 Changed Files:
-   # - components/Card.tsx: Add flip animation logic
-   # - app/globals.css: Add 3D transform styles
-   # - types/card.ts: Update Card interface
+   # - app/dashboard/trees/page.tsx: Add health status filters
+   # - components/dashboard/TreeHealthCard.tsx: New component for health display
+   # - lib/domain/tree-mappers.ts: Add health status mapping logic
+   # - prisma/schema.prisma: Add healthCheckDate field to Tree model
    #
    # 🔄 Rollback: git reset --hard HEAD~1
    #
-   # 🧪 Tests: Build ✅ Lint ✅ Types ✅
+   # 🧪 Tests: Build ✅ Lint ✅ Types ✅ Tests ✅
    #
    # Co-Authored-By: Claude <noreply@anthropic.com>
    ```
@@ -66,11 +68,11 @@ git commit -m "$GENERATED_MESSAGE"
 
 The commit message includes:
 1. **Conventional Type**: feat/fix/refactor/docs/etc
-2. **Scope**: ui/api/workflow/config/docs
+2. **Scope**: ui/api/domain/config/docs
 3. **Brief Description**: What changed
 4. **File List**: All modified files with descriptions
 5. **Rollback Command**: Easy rollback instruction
-6. **Quality Status**: Build/lint/type check results
+6. **Quality Status**: Build/lint/type/test check results
 
 ## Usage Examples
 
@@ -81,26 +83,27 @@ The commit message includes:
 
 ### With Custom Message
 ```bash
-/commit "fix(api): resolve tarot prediction timeout"
+/commit "fix(api): resolve activity log creation error"
 ```
 
 ## Sample Output
 
 ```
 🔍 Analyzing changes...
-📊 3 files changed (🎨 UI: 2, 📚 Docs: 1)
+📊 4 files changed (🌳 Domain: 2, 🎨 UI: 1, 📚 Docs: 1)
 ✅ Quality checks passed
 
 📝 Generated commit message:
-feat(ui): add tarot card selection with hover effects
+feat(orchard): add batch activity logging with zone targeting
 
 📁 Changed Files:
-- components/TarotCard.tsx: Add hover state and selection logic
-- components/CardGrid.tsx: Implement card selection handler
-- README.md: Update usage documentation
+- app/dashboard/batch/page.tsx: Add batch activity form
+- components/forms/BatchActivityForm.tsx: New form component
+- app/actions/createBatchLog.ts: Server action for batch logs
+- README.md: Update feature documentation
 
 🔄 Rollback: git reset --hard HEAD~1
-🧪 Tests: Build ✅ Lint ✅ Types ✅
+🧪 Tests: Build ✅ Lint ✅ Types ✅ Tests ✅
 
 Commit this message? (Y/n)
 ```
@@ -112,6 +115,7 @@ Commit this message? (Y/n)
 - **Progress Monitoring**: Quality status visible in git log
 - **Searchable**: Easy to find specific changes
 - **No Extra Files**: No scripts or temporary files needed
+- **Domain Context**: Orchard management specific categorization
 
 ---
 

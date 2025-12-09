@@ -37,15 +37,15 @@ ls -la .tmp/
 
 #### Determine Planning Approach
 1. **Page-Based Features** - Use Page-based TDD Planning
-   - New pages or major page updates
-   - Complex UI components with user interactions
+   - New pages or major page updates (dashboard trees, batch, followups)
+   - Complex UI components with user interactions (TreeCard, ActivityLog)
    - Features requiring routing or navigation
 
 2. **Non-Page Features** - Skip Page-based TDD Planning
-   - API endpoints only
-   - Utility functions
-   - Database schema changes
-   - Minor UI tweaks
+   - API endpoints only (activity logging, authentication)
+   - Utility functions (domain mappers, validators)
+   - Database schema changes (Prisma migrations)
+   - Minor UI tweaks (status badges, filters)
 
 #### Page-Based TDD Planning Workflow
 ```bash
@@ -54,19 +54,21 @@ cat > .tmp/tdd-plan.md << 'EOF'
 ## Page-Based TDD Plan
 
 ### 1. User Stories & Acceptance Criteria
-- **As a** [user type], **I want** [feature] **so that** [benefit]
+- **As a** farmer, **I want** to view tree health status **so that** I can identify sick trees quickly
 - **Acceptance Criteria**:
-  - Given [context]
-  - When [action]
-  - Then [expected outcome]
+  - Given I'm on the dashboard, when I view the trees tab, then I see tree health indicators
+  - Given a tree is sick, when I view its card, then I see a red health indicator
+  - Given I filter by sick trees, when I apply the filter, then only sick trees are shown
 
 ### 2. Page Structure & Components
 ```tsx
-// Page route: app/[route]/page.tsx
-export default function Page() {
+// Page route: app/dashboard/trees/page.tsx
+export default function TreesPage() {
   return (
     <main>
-      {/* Main components hierarchy */}
+      <TreeFilter />
+      <TreeGrid />
+      <Pagination />
     </main>
   )
 }
@@ -76,39 +78,38 @@ export default function Page() {
 
 #### 🔴 RED Phase - Failing Tests
 - [ ] Component rendering tests
-- [ ] User interaction tests
-- [ ] API integration tests
-- [ ] Accessibility tests
+- [ ] User interaction tests (filter, pagination)
+- [ ] API integration tests (tree data fetching)
+- [ ] Accessibility tests (Thai language support)
 
 #### 🟢 GREEN Phase - Minimal Implementation
 - [ ] Create page structure
 - [ ] Implement basic components
-- [ ] Connect to API (if needed)
+- [ ] Connect to Prisma via Server Actions
 - [ ] Make tests pass
 
 #### 🔵 REFACTOR Phase - Code Quality
-- [ ] Extract reusable components
-- [ ] Optimize performance
+- [ ] Extract reusable components (TreeCard, StatusBadge)
+- [ ] Optimize performance (pagination, filtering)
 - [ ] Improve code readability
 - [ ] Ensure all tests pass
 
 ### 4. Page Components Breakdown
-- **Main Component**: [Name]
-- **Sub Components**: [List]
-- **Custom Hooks**: [List]
-- **API Routes**: [List]
+- **Main Component**: TreesPage
+- **Sub Components**: TreeFilter, TreeGrid, TreeCard, Pagination
+- **Custom Hooks**: useTreeFilter, useTreePagination
+- **Server Actions**: getTrees, updateTreeStatus
 
 ### 5. File Structure
 ```
-app/[route]/
+app/dashboard/trees/
 ├── page.tsx              # Main page component
-├── layout.tsx            # Page-specific layout (optional)
-├── loading.tsx           # Loading state (optional)
-├── error.tsx             # Error boundary (optional)
+├── loading.tsx           # Loading state
+├── error.tsx             # Error boundary
 ├── components/           # Page-specific components
-│   ├── ComponentName.tsx
-│   └── __tests__/
-│       └── ComponentName.test.tsx
+│   ├── TreeFilter.tsx
+│   ├── TreeGrid.tsx
+│   └── TreeCard.tsx
 └── __tests__/            # Page-level tests
     └── page.test.tsx
 ```
@@ -125,7 +126,7 @@ EOF
 2. **Determine if Page-Based Feature**
    ```bash
    # Check if issue is page-related
-   if [[ "$title" =~ (page|component|UI|interface|view|screen) ]] || [[ "$description" =~ (new page|add.*page|create.*page|page.*feature) ]]; then
+   if [[ "$title" =~ (page|dashboard|component|UI|interface|view|screen|tab) ]] || [[ "$description" =~ (new page|add.*page|create.*page|page.*feature|dashboard.*tab) ]]; then
        USE_PAGE_TEMPLATE=true
    else
        USE_PAGE_TEMPLATE=false
@@ -138,10 +139,10 @@ EOF
    if [ "$USE_PAGE_TEMPLATE" = true ]; then
        # Use Page-Based Feature Template
        cat > .tmp/issue-content.md << 'EOF'
-   ## [Page Name] Feature Implementation
+   ## [Feature Name] Implementation
 
    ### 📋 User Story
-   **As a** [user type], **I want** [feature] **so that** [benefit]
+   **As a** farmer/orchard manager, **I want** [feature] **so that** [benefit]
 
    ### 🎯 Acceptance Criteria
    - [ ] Given [context], when [action], then [expected outcome]
@@ -154,36 +155,36 @@ EOF
    - **Route**: `app/[route]/page.tsx`
    - **Main Component**: [ComponentName]
    - **Key Features**:
-     - [Feature 1]
-     - [Feature 2]
-     - [Feature 3]
+     - [Feature 1 - e.g., Filter trees by health status]
+     - [Feature 2 - e.g., Batch activity logging]
+     - [Feature 3 - e.g., QR code generation]
 
    #### 🔴🟢🔵 TDD Implementation Strategy
 
    **Phase 1 - RED (Tests First)**
-   - [ ] Create test file: `app/[route]/__tests__/page.test.tsx`
+   - [ ] Create test file: `tests/[feature].test.ts`
    - [ ] Write failing tests for:
-     - Page renders correctly
+     - Page renders correctly with Thai language
      - User interactions work as expected
-     - API integration (if applicable)
+     - Prisma database operations (if applicable)
      - Error states and loading states
 
    **Phase 2 - GREEN (Minimal Implementation)**
    - [ ] Create page file: `app/[route]/page.tsx`
    - [ ] Implement minimal code to make tests pass
+   - [ ] Add Server Actions for data operations
    - [ ] No additional features beyond test requirements
 
    **Phase 3 - REFACTOR (Code Quality)**
    - [ ] Extract reusable components
-   - [ ] Implement proper TypeScript types
-   - [ ] Add accessibility features
-   - [ ] Optimize performance
+   - [ ] Implement proper TypeScript types using Prisma
+   - [ ] Add accessibility features for Thai users
+   - [ ] Optimize performance for mobile devices
 
    #### File Structure to Create
    ```
    app/[route]/
    ├── page.tsx              # Main page component
-   ├── layout.tsx            # Page-specific layout (if needed)
    ├── loading.tsx           # Loading skeleton
    ├── error.tsx             # Error boundary
    ├── components/           # Page-specific components
@@ -196,14 +197,17 @@ EOF
 
    #### Dependencies
    - **New npm packages**: [List if any]
-   - **API routes needed**: [List if any]
-   - **Database changes**: [List if any]
+   - **Server Actions needed**: [List if any]
+   - **Database changes**: Prisma migration files
+   - **LINE Login integration**: [If authentication needed]
 
    ### 🔗 Related Issues
    - [ ] #issue_number - [Related issue title]
 
    ### 📝 Notes
    - [Any additional notes about the implementation]
+   - [Mobile-first design considerations]
+   - [Thai language support requirements]
 
    ---
 
@@ -233,13 +237,17 @@ EOF
    ### Actual Behavior
    [What actually happens (if bug)]
 
+   ### Environment
+   - **Branch**: $(git branch --show-current)
+   - **Node.js**: $(node --version)
+   - **OS**: $(uname -s)
+
    ---
 
    ### Additional Information
 
    - **Command**: `/issue [arguments]`
    - **Created**: $(date)
-   - **Branch**: $(git branch --show-current)
    - **Priority**: [High/Medium/Low]
    EOF
    fi
@@ -264,6 +272,7 @@ if [ "$USE_PAGE_TEMPLATE" = true ]; then
         --label "enhancement" \
         --label "page-feature" \
         --label "tdd" \
+        --label "orchard-management" \
         --assignee @me
 else
     # Standard labels for non-page features
@@ -271,6 +280,7 @@ else
         --title "$title" \
         --body-file .tmp/issue-content.md \
         --label "enhancement" \
+        --label "orchard-management" \
         --assignee @me
 fi
 ```
@@ -300,6 +310,7 @@ gh issue create \
     --title "$title" \
     --body-file .tmp/issue-content.md \
     --label "enhancement" \
+    --label "orchard-management" \
     --assignee @me
 ```
 
@@ -326,12 +337,12 @@ fi
 
 ### Example 1: Page-Based Feature
 ```bash
-/issue "Add user profile page" "Create a new page for users to view and edit their profile information"
+/issue "Add tree health monitoring dashboard" "Create a dashboard page to monitor tree health status with filters for sick trees"
 ```
 
 **Execution Flow:**
 1. Setup `.tmp/` folder
-2. Detect page-related keywords ("page")
+2. Detect page-related keywords ("dashboard", "page")
 3. Use Page-Based Feature Template
 4. Create `.tmp/issue-content.md` with TDD plan
 5. Run `gh issue create --label page-feature --label tdd --body-file .tmp/issue-content.md`
@@ -339,7 +350,7 @@ fi
 
 ### Example 2: Non-Page Feature
 ```bash
-/issue "Add authentication to API" "Need to implement JWT authentication for the /api/predict endpoint"
+/issue "Add Prisma migration for tree health tracking" "Add healthCheckDate field to Tree model and create migration"
 ```
 
 **Execution Flow:**
@@ -366,12 +377,12 @@ fi
 
 ### Example 4: Component Feature
 ```bash
-/issue "Create card shuffle animation component" "New UI component for shuffling tarot cards with smooth animations"
+/issue "Create batch activity logging form" "New form component for logging activities across multiple trees or zones"
 ```
 
 **Execution Flow:**
 1. Setup `.tmp/` folder
-2. Detect component-related keywords ("component", "UI")
+2. Detect component-related keywords ("component", "form")
 3. Use Page-Based Feature Template
 4. Create `.tmp/issue-content.md` with TDD plan and component structure
 5. Run `gh issue create --label page-feature --label tdd --label component --body-file .tmp/issue-content.md`
@@ -431,7 +442,7 @@ fi
 ## [Page Name] Feature Implementation
 
 ### 📋 User Story
-**As a** [user type], **I want** [feature] **so that** [benefit]
+**As a** farmer/orchard manager, **I want** [feature] **so that** [benefit]
 
 ### 🎯 Acceptance Criteria
 - [ ] Given [context], when [action], then [expected outcome]
@@ -451,7 +462,7 @@ fi
 #### 🔴🟢🔵 TDD Implementation Strategy
 
 **Phase 1 - RED (Tests First)**
-- [ ] Create test file: `app/[route]/__tests__/page.test.tsx`
+- [ ] Create test file: `tests/[feature].test.ts`
 - [ ] Write failing tests for:
   - Page renders correctly
   - User interactions work as expected
@@ -486,14 +497,17 @@ app/[route]/
 
 #### Dependencies
 - **New npm packages**: [List if any]
-- **API routes needed**: [List if any]
-- **Database changes**: [List if any]
+- **Server Actions needed**: [List if any]
+- **Database changes**: [Prisma migration files]
+- **LINE Login integration**: [If authentication needed]
 
 ### 🔗 Related Issues
 - [ ] #issue_number - [Related issue title]
 
 ### 📝 Notes
 - [Any additional notes about the implementation]
+- [Mobile-first design considerations]
+- [Thai language support requirements]
 
 ---
 
@@ -531,6 +545,7 @@ app/[route]/
 - **GITIGNORE PROTECTION**: ALWAYS ensure `.tmp/` is in `.gitignore`
 - **VERIFICATION**: ALWAYS verify cleanup success before completion
 - **ERROR HANDLING**: ALWAYS preserve temporary files for debugging if cleanup fails
+- **ORCHARD CONTEXT**: Always consider orchard management domain when creating issues
 
 ## Success Criteria
 
@@ -540,3 +555,4 @@ app/[route]/
 - `.tmp/` folder added to `.gitignore` if not present
 - User receives clear feedback on operation status
 - Proper error handling with helpful messages
+- Issues include relevant orchard management context
