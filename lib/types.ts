@@ -34,6 +34,15 @@ export interface Log {
   note: string;
   status: LogStatus;
   followUpDate?: string; // ISO date string
+  materials?: Array<{
+    name: string;
+    quantity: string;
+    unit: string;
+  }>;
+  labor?: {
+    workers: number;
+    hours: number;
+  };
 }
 
 // Form data types
