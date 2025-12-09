@@ -11,7 +11,7 @@ import { PDFGeneratorModal } from "@/components/modals/pdf-generator-modal";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Sprout, PlusCircle, ClipboardList, Printer } from "lucide-react";
+import { Search, Sprout, PlusCircle, Printer } from "lucide-react";
 
 interface DashboardViewProps {
   onViewChange: (view: 'add_tree' | 'add_batch_log' | 'tree_detail') => void;
@@ -97,22 +97,13 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
         </Card>
       </div>
 
-      {/* Action Buttons */}
-      <div className="grid grid-cols-2 gap-3 mb-2">
-        <Button 
-            className="w-full gap-2" 
-            onClick={() => onViewChange('add_tree')}
-        >
-          <PlusCircle size={18} /> ลงทะเบียนต้นใหม่
-        </Button>
-        <Button 
-            variant="secondary" 
-            className="w-full gap-2"
-            onClick={() => onViewChange('add_batch_log')}
-        >
-          <ClipboardList size={18} /> บันทึกงานทั้งแปลง
-        </Button>
-      </div>
+      {/* Action Button */}
+      <Button
+          className="w-full gap-2"
+          onClick={() => onViewChange('add_tree')}
+      >
+        <PlusCircle size={18} /> ลงทะเบียนต้นใหม่
+      </Button>
 
       {/* Filter & Search */}
       <Card className="p-3 space-y-3">
