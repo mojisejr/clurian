@@ -36,6 +36,8 @@ function DashboardContent() {
   const [view, setView] = useState<ViewState>('dashboard');
   const [selectedTreeId, setSelectedTreeId] = useState<string | null>(null);
   const [loadingTreeId, setLoadingTreeId] = useState<string | null>(null);
+  const [isAddingTree, setIsAddingTree] = useState(false);
+  const [isAddingBatchLog, setIsAddingBatchLog] = useState(false);
 
   const selectedTree = trees.find(t => t.id === selectedTreeId);
 
@@ -65,6 +67,12 @@ function DashboardContent() {
   };
 
   const handleBackToDashboard = () => {
+    // Clear state immediately to prevent race conditions and dead clicks
+    setView('dashboard');
+    setSelectedTreeId(null);
+    setLoadingTreeId(null);
+
+    // Then update URL
     router.replace('/dashboard', { scroll: false });
   };
 
@@ -75,7 +83,7 @@ function DashboardContent() {
        }
   };
 
-  const handleAddTree = (data: Partial<Tree>) => {
+  const handleAddTree = async (data: Partial<Tree>) => {
     const newTree: Tree = {
       id: `uuid-${Date.now()}`,
       orchardId: currentOrchardId,
@@ -88,24 +96,40 @@ function DashboardContent() {
       ...data
     } as Tree;
 
-    addTree(newTree);
-    setView('dashboard');
+    setIsAddingTree(true);
+    try {
+      await addTree(newTree);
+      setView('dashboard');
+    } catch (error) {
+      console.error('Failed to add tree:', error);
+      alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
+    } finally {
+      setIsAddingTree(false);
+    }
   };
 
-  const handleAddBatchLog = (data: AddLogFormData) => {
-     addLog({
-        id: Date.now(),
-        orchardId: currentOrchardId,
-        date: data.date || new Date().toISOString().split('T')[0],
-        action: data.action || '',
-        note: data.note || '',
-        status: data.followUpDate ? 'in-progress' : 'completed',
-        followUpDate: data.followUpDate,
-        type: 'batch',
-        zone: data.targetZone,
-     } as Log);
-     
-     setView('dashboard');
+  const handleAddBatchLog = async (data: AddLogFormData) => {
+     setIsAddingBatchLog(true);
+     try {
+        await addLog({
+           id: Date.now(),
+           orchardId: currentOrchardId,
+           date: data.date || new Date().toISOString().split('T')[0],
+           action: data.action || '',
+           note: data.note || '',
+           status: data.followUpDate ? 'in-progress' : 'completed',
+           followUpDate: data.followUpDate,
+           type: 'batch',
+           zone: data.targetZone,
+        } as Log);
+
+        setView('dashboard');
+     } catch (error) {
+        console.error('Failed to add batch log:', error);
+        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
+     } finally {
+        setIsAddingBatchLog(false);
+     }
   };
 
   // --- Loading State ---
@@ -123,10 +147,11 @@ function DashboardContent() {
 
   if (view === 'add_tree') {
      viewContent = (
-      <AddTreeForm 
+      <AddTreeForm
         onCancel={() => setView('dashboard')}
         onSubmit={handleAddTree}
         zones={currentOrchard.zones}
+        isLoading={isAddingTree}
       />
     );
   } else if (view === 'add_batch_log') {
@@ -136,6 +161,7 @@ function DashboardContent() {
             onSubmit={handleAddBatchLog}
             zones={currentOrchard.zones}
             isBatch={true}
+            isLoading={isAddingBatchLog}
         />
     );
   } else if (view === 'tree_detail' && selectedTree) {
@@ -148,10 +174,11 @@ function DashboardContent() {
   } else {
      // Default Dashboard View
      viewContent = (
-        <DashboardView 
+        <DashboardView
             onViewChange={setView}
             onIdentifyTree={handleIdentifyTree}
             loadingTreeId={loadingTreeId}
+            isAddingNewTree={isAddingTree}
         />
      );
   }
