@@ -37,6 +37,7 @@ function DashboardContent() {
   const [selectedTreeId, setSelectedTreeId] = useState<string | null>(null);
   const [loadingTreeId, setLoadingTreeId] = useState<string | null>(null);
   const [isAddingTree, setIsAddingTree] = useState(false);
+  const [isAddingBatchLog, setIsAddingBatchLog] = useState(false);
 
   const selectedTree = trees.find(t => t.id === selectedTreeId);
 
@@ -107,20 +108,28 @@ function DashboardContent() {
     }
   };
 
-  const handleAddBatchLog = (data: AddLogFormData) => {
-     addLog({
-        id: Date.now(),
-        orchardId: currentOrchardId,
-        date: data.date || new Date().toISOString().split('T')[0],
-        action: data.action || '',
-        note: data.note || '',
-        status: data.followUpDate ? 'in-progress' : 'completed',
-        followUpDate: data.followUpDate,
-        type: 'batch',
-        zone: data.targetZone,
-     } as Log);
-     
-     setView('dashboard');
+  const handleAddBatchLog = async (data: AddLogFormData) => {
+     setIsAddingBatchLog(true);
+     try {
+        await addLog({
+           id: Date.now(),
+           orchardId: currentOrchardId,
+           date: data.date || new Date().toISOString().split('T')[0],
+           action: data.action || '',
+           note: data.note || '',
+           status: data.followUpDate ? 'in-progress' : 'completed',
+           followUpDate: data.followUpDate,
+           type: 'batch',
+           zone: data.targetZone,
+        } as Log);
+
+        setView('dashboard');
+     } catch (error) {
+        console.error('Failed to add batch log:', error);
+        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
+     } finally {
+        setIsAddingBatchLog(false);
+     }
   };
 
   // --- Loading State ---
@@ -152,6 +161,7 @@ function DashboardContent() {
             onSubmit={handleAddBatchLog}
             zones={currentOrchard.zones}
             isBatch={true}
+            isLoading={isAddingBatchLog}
         />
     );
   } else if (view === 'tree_detail' && selectedTree) {

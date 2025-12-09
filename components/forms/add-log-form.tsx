@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Leaf, Sprout } from "lucide-react";
+import { Leaf, Sprout, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,9 +26,10 @@ export interface AddLogFormProps {
   isBatch: boolean;
   treeCode?: string;
   zones?: string[];
-  onSubmit: (data: AddLogFormData) => void;
+  onSubmit: (data: AddLogFormData) => Promise<void>;
   onCancel: () => void;
   className?: string;
+  isLoading?: boolean;
 }
 
 export interface AddLogFormData {
@@ -49,6 +50,7 @@ export function AddLogForm({
   onSubmit,
   onCancel,
   className,
+  isLoading = false,
 }: AddLogFormProps) {
   const [isCustomAction, setIsCustomAction] = useState(false);
 
@@ -57,15 +59,18 @@ export function AddLogForm({
     : `บันทึกงานต้น ${treeCode}`;
   const Icon = isBatch ? Sprout : Leaf;
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (isLoading) return; // Prevent multiple submissions
+
     const formData = new FormData(e.currentTarget);
 
     const action = isCustomAction
       ? (formData.get("customAction") as string)
       : (formData.get("action") as string);
 
-    onSubmit({
+    await onSubmit({
       targetZone: isBatch ? (formData.get("targetZone") as string) : undefined,
       action,
       date: formData.get("date") as string,
@@ -88,7 +93,7 @@ export function AddLogForm({
           {isBatch && (
             <div className="space-y-2">
               <Label htmlFor="targetZone">โซนเป้าหมาย *</Label>
-              <Select name="targetZone" required>
+              <Select name="targetZone" required disabled={isLoading}>
                 <SelectTrigger>
                   <SelectValue placeholder="เลือกโซน" />
                 </SelectTrigger>
@@ -113,6 +118,7 @@ export function AddLogForm({
                 size="sm"
                 onClick={() => setIsCustomAction(!isCustomAction)}
                 className="text-xs h-auto p-0"
+                disabled={isLoading}
               >
                 {isCustomAction ? "เลือกจากรายการ" : "+ กำหนดเอง"}
               </Button>
@@ -122,9 +128,10 @@ export function AddLogForm({
                 name="customAction"
                 placeholder="ระบุกิจกรรม"
                 required
+                disabled={isLoading}
               />
             ) : (
-              <Select name="action" required>
+              <Select name="action" required disabled={isLoading}>
                 <SelectTrigger>
                   <SelectValue placeholder="เลือกกิจกรรม" />
                 </SelectTrigger>
@@ -148,6 +155,7 @@ export function AddLogForm({
               type="date"
               defaultValue={new Date().toISOString().split("T")[0]}
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -159,6 +167,7 @@ export function AddLogForm({
               name="note"
               placeholder="รายละเอียดเพิ่มเติม..."
               rows={3}
+              disabled={isLoading}
             />
           </div>
 
@@ -168,7 +177,12 @@ export function AddLogForm({
               วันนัดติดตามผล{" "}
               <span className="text-muted-foreground text-xs">(ถ้ามี)</span>
             </Label>
-            <Input id="followUpDate" name="followUpDate" type="date" />
+            <Input
+              id="followUpDate"
+              name="followUpDate"
+              type="date"
+              disabled={isLoading}
+            />
           </div>
 
           {/* Actions */}
@@ -178,11 +192,19 @@ export function AddLogForm({
               variant="outline"
               onClick={onCancel}
               className="flex-1"
+              disabled={isLoading}
             >
               ยกเลิก
             </Button>
-            <Button type="submit" className="flex-1">
-              บันทึก
+            <Button type="submit" className="flex-1" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  กำลังบันทึก...
+                </>
+              ) : (
+                "บันทึก"
+              )}
             </Button>
           </div>
         </form>

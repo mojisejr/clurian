@@ -100,16 +100,21 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
     followUpDate?: string;
   }
 
-  const handleAddLogSubmit = (data: LogSubmissionData) => {
-    addLog({ 
-        ...data, 
-        id: Date.now(),
-        status: data.followUpDate ? 'in-progress' : 'completed',
-        type: 'individual', 
-        treeId: tree.id,
-        orchardId: currentOrchardId
-    } as Log);
-    setIsAddingLog(false);
+  const handleAddLogSubmit = async (data: LogSubmissionData) => {
+    try {
+      await addLog({
+          ...data,
+          id: Date.now(),
+          status: data.followUpDate ? 'in-progress' : 'completed',
+          type: 'individual',
+          treeId: tree.id,
+          orchardId: currentOrchardId
+      } as Log);
+      setIsAddingLog(false);
+    } catch (error) {
+      console.error('Failed to add log:', error);
+      alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
+    }
   };
 
   // --- Render ---
@@ -124,6 +129,7 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
               zones={[]}
               isBatch={false}
               treeCode={tree.code}
+              isLoading={true}
           />
       );
   }
