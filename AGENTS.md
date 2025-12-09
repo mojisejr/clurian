@@ -1,12 +1,12 @@
 ## Project Overview
 
-**Project Name**: Clurian  - Durian Management system
+**Project Name**: Clurian - Orchard Manager
 
-**Repository**: https://github.com/mojisejr/clurian 
+**Repository**: https://github.com/mojisejr/clurian
 
 **Author**: mojisejr
 
-**Description**: Serverless tarot reading application built with Next.js, featuring AI-powered tarot readings through Vercel Workflow orchestration. This document provides critical information for AI agents working on this project.
+**Description**: A modern web application for managing fruit orchards, tracking tree health, and maintaining activity logs. Built with Next.js 16, TypeScript, and PostgreSQL, featuring LINE Login authentication and comprehensive orchard management capabilities.
 
 ---
 
@@ -18,11 +18,11 @@
 - ✅ **ALLOWED to commit and push to staging branch** - For iterative development
 - ✅ **ALLOWED to create PRs to staging** - After successful implementation and QA
 - ❌ **NEVER work on main branch** - Always use staging or feature branches
-- ❌ **NEVER delete critical files** (.env, .git/, node_modules/, package.json, next.config.ts)
+- ❌ **NEVER delete critical files** (.env, .git/, node_modules/, package.json, next.config.ts, prisma/schema.prisma)
 - ❌ **NEVER commit sensitive data** (API keys, passwords, secrets) - Use environment variables
 - ❌ **NEVER skip 100% validation** (build, lint, test) - Must pass completely
 - ❌ **NEVER use git push --force** - Only use --force-with-lease when absolutely necessary
-- ❌ **NEVER implement without proper testing** - Follow TDD Red-Green-Refactor cycle
+- ❌ **NEVER implement without proper testing** - Follow TDD/TDD-lite cycle
 
 ### 📁 MANDATORY TEMPORARY FILE MANAGEMENT (CRITICAL)
 
@@ -62,59 +62,73 @@ All operations MUST:
    - API routes: `app/api/*/route.ts`
    - Pages: `app/*/page.tsx`
    - Layouts: `app/*/layout.tsx`
+   - Server Actions: `app/actions/` or component-level
 
 2. **TypeScript Requirements**:
-   - Always use strict mode
-   - Define interfaces for all data structures
-   - Use proper typing for API responses
-   - Leverage Next.js built-in types
+   - Strict mode enabled
+   - Leverage Prisma generated types
+   - Use proper typing for server actions
+   - Import domain types from `@/types` or generate from Prisma
 
 3. **React Best Practices**:
    - Server Components by default
    - Client Components with `'use client'` directive
-   - Proper state management patterns
-   - Accessibility considerations
+   - Use Radix UI primitives for accessibility
+   - Follow Tailwind CSS v4 patterns
 
 ### For Database/Backend Agents
 
-1. **Neon PostgreSQL Integration**:
-   - Use connection pooling
-   - Parameterized queries only
-   - Handle connection errors gracefully
-   - Use JSONB for flexible data storage
+1. **PostgreSQL with Prisma**:
+   - Always use Prisma Client for database operations
+   - Generate Prisma client after schema changes: `npx prisma generate`
+   - Run migrations: `npx prisma migrate dev`
+   - Use transactions for multi-step operations
 
-2. **Vercel Workflow Integration**:
-   - Workflow files in `app/workflows/`
-   - Handle long-running AI tasks
-   - Implement proper error handling
-   - Use job tracking with unique IDs
+2. **Better Auth Integration**:
+   - Auth configuration in `lib/auth.ts`
+   - LINE Login provider setup
+   - Session management via Better Auth
+   - Protected routes with middleware
 
-### For AI/ML Integration Agents
+3. **Server Actions**:
+   - Export async functions from `'use server'` modules
+   - Validate inputs with Zod or similar
+   - Return proper error messages
+   - Use revalidation for cache updates
 
-1. **Vercel AI SDK Usage**:
-   - Import from `ai` package
-   - Use AI Gateway for model access
-   - Implement proper streaming for long responses
-   - Handle rate limiting gracefully
+### For Frontend/UI Agents
 
-2. **Model Selection Guidelines**:
-   - Gatekeeper/Analyst: `google-gemini-flash`
-   - Mystic (Main Reading): `google-gemini-pro` or `gpt-4o`
-   - Always use AI Gateway for cost control
+1. **Component Structure**:
+   - Reusable UI components in `components/ui/`
+   - Feature components in appropriate subdirectories
+   - Use Lucide React for icons
+   - Follow existing naming conventions
+
+2. **Styling**:
+   - Tailwind CSS v4 with CSS-in-JS
+   - Mobile-first responsive design
+   - Thai language support (Kanit font)
+   - Consistent color scheme (green/orange theme)
+
+3. **State Management**:
+   - React built-in state
+   - Server state via Server Actions
+   - Form state with React hooks
+   - URL params for filtering/pagination
 
 ### For Testing Agents
 
-1. **Testing Framework**:
-   - Jest for unit/integration tests
-   - React Testing Library for components
-   - Playwright for E2E tests
+1. **Vitest Framework**:
+   - Unit tests in `tests/` directory
+   - Integration tests for API routes
+   - Component tests with React Testing Library
    - Mock external dependencies
 
 2. **Test Organization**:
-   - Co-locate tests: `__tests__/` directories
-   - Test naming: `*.test.ts` or `*.test.tsx`
-   - Coverage goal: 80%+
-   - Test critical paths thoroughly
+   - Domain logic tests: `tests/domain.test.ts`
+   - Integration tests: `tests/integration.test.ts`
+   - Feature-specific tests as needed
+   - Setup file: `tests/setup.ts`
 
 ---
 
@@ -126,18 +140,15 @@ All operations MUST:
 - **User asks in English** → Respond in Thai
 - **User asks in Thai** → Respond in Thai
 - **User asks in any language** → Respond in Thai
-- **Technical terms** → Keep English terms in parentheses (Next.js, TypeScript, Neon, etc.)
+- **Technical terms** → Keep English terms in parentheses (Next.js, TypeScript, Prisma, etc.)
 
 ### ตัวอย่าง / Examples
 
-**User (English)**: "Why is the AI pipeline failing?"
-**Agent (Thai)**: "จากการวิเคราะห์ AI pipeline ใน `app/workflows/` พบว่า..."
+**User (English)**: "How do I add a new tree to the orchard?"
+**Agent (Thai)**: "การเพิ่มต้นไม้ใหม่ในสวน สามารถทำได้ผ่านฟอร์ม AddTree ใน `components/forms/AddTree.tsx` โดย..."
 
-**User (Thai)**: "ทำไม AI pipeline ถึง fail ?"
-**Agent (Thai)**: "จากการวิเคราะห์ AI pipeline ใน `app/workflows/` พบว่า..."
-
-**User (Japanese)**: "AIパイプラインが失敗するのはなぜですか？"
-**Agent (Thai)**: "จากการวิเคราะห์ AI pipeline ใน `app/workflows/` พบว่า..."
+**User (Thai)**: "จะเพิ่มต้นไม้ใหม่ยังไง?"
+**Agent (Thai)**: "การเพิ่มต้นไม้ใหม่ในสวน สามารถทำได้ผ่านฟอร์ม AddTree ใน `components/forms/AddTree.tsx` โดย..."
 
 ---
 
@@ -149,20 +160,23 @@ All operations MUST:
 2. **Show Context**: Explain why specific approaches are chosen
 3. **Provide Examples**: Include code snippets when helpful
 4. **Security First**: Always consider security implications
+5. **Agricultural Domain Awareness**: Understand orchard management concepts
 
 ### Code Reviews
 
 1. **Check TypeScript Types**: Ensure all code is properly typed
 2. **Validate Next.js Patterns**: Ensure App Router best practices
-3. **Verify Error Handling**: Check for proper error boundaries
-4. **Performance Considerations**: Ensure efficient rendering
+3. **Verify Prisma Usage**: Check for proper database operations
+4. **Test Coverage**: Ensure adequate test coverage
+5. **UI/UX Consistency**: Follow existing design patterns
 
 ### Task Completion
 
 1. **Full Implementation**: Complete all requested features
-2. **Testing Included**: Provide tests for new code
-3. **Documentation**: Update relevant documentation
-4. **Verification**: Ensure build/lint/tests pass
+2. **Database Migrations**: Include Prisma migrations if needed
+3. **Testing Included**: Provide tests for new code
+4. **Documentation**: Update relevant documentation
+5. **Verification**: Ensure build/lint/tests pass
 
 ---
 
@@ -171,45 +185,73 @@ All operations MUST:
 ### Current Tech Stack
 - **Frontend**: Next.js 16 + React 19 + TypeScript 5
 - **Styling**: Tailwind CSS 4
-- **Database**: Neon (PostgreSQL) with Vercel integration
-- **AI**: Vercel AI Gateway + AI SDK (Google Gemini)
-- **Orchestration**: Vercel Workflows
-- **Deployment**: Vercel
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: Better Auth with LINE Login
+- **UI Components**: Radix UI + Lucide React
+- **Testing**: Vitest + React Testing Library
+- **PDF Generation**: @react-pdf/renderer
+- **QR Code**: qrcode library
+- **Deployment**: Vercel (recommended)
 
 ### Project Status
-- ✅ Project initialized with Next.js
-- ✅ PRD documented and finalized
-- ✅ Commands updated for Next.js ecosystem
-- ⏳ Database schema designed (not yet implemented)
-- ⏳ AI pipeline architecture defined (not yet implemented)
-- ⏳ Testing framework to be set up
+- ✅ Core authentication system implemented
+- ✅ Orchard and tree management features complete
+- ✅ Activity logging system (individual and batch)
+- ✅ Dashboard with statistics and filtering
+- ✅ Follow-up tracking for sick trees
+- ✅ QR code generation for trees
+- ✅ PDF generation capabilities
+- ✅ Mobile-responsive design
+- ✅ Thai language interface
 
 ### Key Files to Understand
-- `docs/PRD.md` - Complete product requirements
+- `prisma/schema.prisma` - Complete database schema
+- `docs/feature.md` - Detailed feature specifications (Thai)
+- `docs/database.md` - Database design documentation
+- `README.md` - Project overview and setup
 - `package.json` - Current dependencies and scripts
-- `next.config.ts` - Next.js configuration
-- `tsconfig.json` - TypeScript strict mode configuration
+- `lib/auth.ts` - Authentication configuration
+- `app/dashboard/page.tsx` - Main dashboard implementation
+
+### Domain Models
+```typescript
+// Core entities managed by the system
+User - Orchard owners with LINE Login
+Orchard - Fruit orchards with zones
+Tree - Individual trees with health tracking
+ActivityLog - Individual and batch activity records
+```
 
 ---
 
 ## 🚀 Agent Task Examples
 
-### When Asked to "Implement API Endpoint":
+### When Asked to "Add New Feature":
 
 ```typescript
-// Expected pattern for app/api/predict/route.ts
-import { NextRequest, NextResponse } from 'next/server'
+// Expected pattern for Server Actions
+'use server'
 
-export async function POST(request: NextRequest) {
+import { z } from 'zod'
+import { prisma } from '@/lib/prisma'
+
+const CreateTreeSchema = z.object({
+  orchardId: z.string().uuid(),
+  code: z.string().min(1),
+  zone: z.string(),
+  type: z.string(),
+  variety: z.string(),
+})
+
+export async function createTree(data: z.infer<typeof CreateTreeSchema>) {
   try {
-    const body = await request.json()
-    // Validation and processing logic
-    return NextResponse.json({ jobId: 'uuid-here' })
+    const validated = CreateTreeSchema.parse(data)
+    const tree = await prisma.tree.create({
+      data: validated,
+    })
+    return { success: true, tree }
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Invalid request' },
-      { status: 400 }
-    )
+    return { success: false, error: error.message }
   }
 }
 ```
@@ -217,36 +259,29 @@ export async function POST(request: NextRequest) {
 ### When Asked to "Create Component":
 
 ```tsx
-// Expected pattern for components/TarotCard.tsx
-interface TarotCardProps {
-  name: string
-  image: string
-  interpretation?: string
+// Expected pattern for components
+interface TreeCardProps {
+  tree: Tree & { orchard: Orchard }
+  onStatusChange?: (treeId: string, status: TreeStatus) => void
 }
 
-export default function TarotCard({ name, image, interpretation }: TarotCardProps) {
+export default function TreeCard({ tree, onStatusChange }: TreeCardProps) {
   return (
-    <div className="tarot-card">
-      <img src={image} alt={name} />
-      <h3>{name}</h3>
-      {interpretation && <p>{interpretation}</p>}
+    <div className="tree-card">
+      {/* Tree information display */}
+      {/* Status indicator */}
+      {/* Action buttons */}
     </div>
   )
 }
 ```
 
-### When Asked to "Set Up Database":
+### When Asked to "Update Database":
 
-```typescript
-// Expected pattern for lib/db.ts
-import { neon } from '@neondatabase/serverless'
-
-const sql = neon(process.env.NEON_DATABASE_URL!)
-
-export async function getPredictions() {
-  const data = await sql`SELECT * FROM predictions ORDER BY created_at DESC`
-  return data
-}
+```bash
+# Always use Prisma migrations
+npx prisma migrate dev --name add_new_feature
+npx prisma generate  # Update client types
 ```
 
 ---
@@ -258,31 +293,47 @@ export async function getPredictions() {
 // Next.js
 import { NextRequest, NextResponse } from 'next/server'
 import { headers, cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
 // Database
-import { neon } from '@neondatabase/serverless'
+import { prisma } from '@/lib/prisma'
+import { TreeStatus, LogType } from '@prisma/client'
 
-// AI SDK
-import { generateText } from 'ai'
-import { google } from '@ai-sdk/google'
+// Authentication
+import { auth } from '@/lib/auth'
+import { headers } from 'next/headers'
+
+// UI Components
+import { Button } from '@/components/ui/button'
+import { Dialog } from '@/components/ui/dialog'
+import { Select } from '@/components/ui/select'
+
+// Utilities
+import { clsx } from 'clsx'
+import { toast } from 'react-hot-toast'
 
 // Testing
 import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
 ```
 
 ### Environment Variables
-- `NEON_DATABASE_URL` - Neon database connection
-- `GOOGLE_GENERATIVE_AI_API_KEY` - Google AI API key
-- `AI_GATEWAY_SECRET` - Vercel AI Gateway (optional)
+```bash
+DATABASE_URL=postgresql://...
+BETTER_AUTH_SECRET=...
+BETTER_AUTH_URL=http://localhost:3000
+LINE_CHANNEL_ID=...
+LINE_CHANNEL_SECRET=...
+```
 
 ### Package Scripts
 ```json
 {
   "dev": "next dev",
-  "build": "next build",
+  "build": "prisma generate && next build",
   "start": "next start",
-  "lint": "next lint",
-  "test": "jest"
+  "lint": "eslint",
+  "test": "vitest run"
 }
 ```
 
@@ -299,10 +350,11 @@ import { render, screen } from '@testing-library/react'
 ```bash
 # After implementation is complete
 git add .
-git commit -m "type(scope): description
+git commit -m "feat(scope): description
 
 - What was changed
 - Why it was changed
+- Database migrations if any
 - Tests added/updated
 - QA results: ✓build ✓lint ✓test ✓types"
 
@@ -315,11 +367,12 @@ gh pr create --base staging
 
 ### Task Completion
 1. **Full Implementation**: Complete all requested features
-2. **Testing Included**: Provide tests for new code
-3. **QA Verified**: Ensure build/lint/tests pass
-4. **Committed**: Push changes to staging branch
-5. **Optional PR**: Create PR if requested or for complex changes
+2. **Database Changes**: Include Prisma migrations
+3. **Testing Included**: Provide tests for new code
+4. **QA Verified**: Ensure build/lint/tests pass
+5. **Committed**: Push changes to staging branch
+6. **Optional PR**: Create PR if requested or for complex changes
 
 ---
 
-_This document provides essential context for AI agents to work effectively on the MiMiVibe tarot reading application._
+_This document provides essential context for AI agents to work effectively on the Clurian orchard management system._

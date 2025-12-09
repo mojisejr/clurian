@@ -1,13 +1,12 @@
 ## Project Overview
 
+**Project Name**: Clurian - Orchard Manager
 
-**Project Name**: Clurian  - Durian Management system
-
-**Repository**: https://github.com/mojisejr/clurian 
+**Repository**: https://github.com/mojisejr/clurian
 
 **Author**: mojisejr
 
-**Description**: Serverless tarot reading application built with Next.js, featuring AI-powered tarot readings through Vercel Workflow orchestration. The application uses a "fire-and-forget" architecture to handle long-running AI processing without requiring users to keep their browsers open.
+**Description**: A modern web application for managing fruit orchards, tracking tree health, and maintaining activity logs. Built with Next.js 16, TypeScript, and PostgreSQL, featuring LINE Login authentication and comprehensive orchard management capabilities.
 
 ---
 
@@ -19,11 +18,11 @@
 - ✅ **ALLOWED to commit and push to staging branch** - For iterative development
 - ✅ **ALLOWED to create PRs to staging** - After successful implementation and QA
 - ❌ **NEVER work on main branch** - Always use staging or feature branches
-- ❌ **NEVER delete critical files** (.env, .git/, node_modules/, package.json, next.config.ts)
+- ❌ **NEVER delete critical files** (.env, .git/, node_modules/, package.json, next.config.ts, prisma/schema.prisma)
 - ❌ **NEVER commit sensitive data** (API keys, passwords, secrets) - Use environment variables
 - ❌ **NEVER skip 100% validation** (build, lint, test) - Must pass completely
 - ❌ **NEVER use git push --force** - Only use --force-with-lease when absolutely necessary
-- ❌ **NEVER implement without proper testing** - Follow TDD Red-Green-Refactor cycle
+- ❌ **NEVER implement without proper testing** - Follow TDD/TDD-lite cycle
 
 ### 📁 MANDATORY TEMPORARY FILE MANAGEMENT (CRITICAL)
 
@@ -122,67 +121,93 @@ All operations MUST:
 - **User asks in English** → Respond in Thai
 - **User asks in Thai** → Respond in Thai
 - **User asks in any language** → Respond in Thai
-- **Technical terms** → Keep English terms in parentheses (Next.js, TypeScript, Neon, etc.)
+- **Technical terms** → Keep English terms in parentheses (Next.js, TypeScript, Prisma, etc.)
 
 ### ตัวอย่าง / Examples
 
-**User (English)**: "Why is the AI pipeline failing?"
-**Agent (Thai)**: "จากการวิเคราะห์ AI pipeline ใน `app/workflows/` พบว่า..."
+**User (English)**: "How do I add a new tree to the orchard?"
+**Agent (Thai)**: "การเพิ่มต้นไม้ใหม่ในสวน สามารถทำได้ผ่านฟอร์ม AddTree ใน `components/forms/AddTree.tsx` โดย..."
 
-**User (Thai)**: "ทำไม AI pipeline ถึง fail ?"
-**Agent (Thai)**: "จากการวิเคราะห์ AI pipeline ใน `app/workflows/` พบว่า..."
-
-**User (Japanese)**: "AIパイプラインが失敗するのはなぜですか？"
-**Agent (Thai)**: "จากการวิเคราะห์ AI pipeline ใน `app/workflows/` พบว่า..."
+**User (Thai)**: "จะเพิ่มต้นไม้ใหม่ยังไง?"
+**Agent (Thai)**: "การเพิ่มต้นไม้ใหม่ในสวน สามารถทำได้ผ่านฟอร์ม AddTree ใน `components/forms/AddTree.tsx` โดย..."
 
 ---
 
 ## 🏗️ Technical Architecture
 
 ### Core Stack
-**Language**: TypeScript • **Framework**: Next.js (App Router) • **Database**: Neon (PostgreSQL) • **AI**: Vercel AI Gateway + AI SDK • **Orchestration**: Vercel Workflow • **Deploy**: Vercel
+**Language**: TypeScript • **Framework**: Next.js 16 (App Router) • **Database**: PostgreSQL + Prisma ORM • **Authentication**: Better Auth with LINE Login • **UI**: Radix UI + Tailwind CSS v4 • **Testing**: Vitest + React Testing Library • **Deployment**: Vercel
 
 ### Project Structure
 
 ```
-mmv-tarots/
-├── README.md                   # Project overview and quick start
-├── docs/
-│   └── PRD.md                  # Product Requirements Document
-├── app/                        # Next.js App Router
-│   ├── api/                    # API routes
-│   │   └── predict/            # Tarot prediction endpoints
-│   ├── workflows/              # Vercel Workflow definitions
-│   │   └── tarot.ts           # AI pipeline workflow
-│   ├── layout.tsx             # Root layout
-│   ├── page.tsx               # Home page
-│   └── globals.css            # Global styles
-├── components/                 # React components
-├── lib/                       # Utilities and configurations
-├── public/                    # Static assets
-│   └── cards/                 # Tarot card images
-├── .env.example               # Environment variables template
-├── package.json               # Dependencies and scripts
-├── next.config.ts             # Next.js configuration
-├── tsconfig.json              # TypeScript configuration
-└── tailwind.config.ts         # Tailwind CSS configuration
+clurian/
+├── README.md                      # Project overview and setup
+├── AGENTS.md                      # Agent-specific guidelines
+├── CLAUDE.md                      # This file - Claude-specific instructions
+├── docs/                          # Documentation
+│   ├── feature.md                 # Feature specifications (Thai)
+│   ├── database.md                # Database design documentation
+│   ├── tech.md                    # Technology stack details
+│   └── api.md                     # API documentation
+├── app/                           # Next.js App Router
+│   ├── api/                       # API routes
+│   │   └── auth/[...better-auth]/ # Better Auth endpoints
+│   ├── dashboard/                 # Main dashboard pages
+│   │   ├── page.tsx              # Dashboard with tabs
+│   │   ├── trees/page.tsx        # Tree management tab
+│   │   ├── batch/page.tsx        # Batch activities tab
+│   │   └── followups/page.tsx    # Follow-up tracking tab
+│   ├── login/                     # Login page
+│   ├── actions/                   # Server actions
+│   ├── layout.tsx                # Root layout
+│   └── globals.css               # Global styles
+├── components/                    # React components
+│   ├── dashboard/                # Dashboard-specific components
+│   ├── forms/                    # Form components (AddTree, AddLog)
+│   ├── modals/                   # Modal components
+│   ├── pdf/                      # PDF generation components
+│   ├── ui/                       # Reusable UI primitives
+│   └── providers/                # Context providers
+├── lib/                          # Utilities and configurations
+│   ├── auth.ts                   # Better Auth configuration
+│   ├── prisma.ts                 # Prisma client
+│   ├── domain/                   # Business logic mappers
+│   ├── errors/                   # Error definitions
+│   └── services/                 # Service layer
+├── prisma/                       # Database schema and migrations
+│   └── schema.prisma             # Complete database schema
+├── tests/                        # Test files
+│   ├── setup.ts                  # Test setup
+│   ├── domain.test.ts            # Domain logic tests
+│   ├── integration.test.ts       # Integration tests
+│   └── qr-redirect.test.ts       # QR code redirect tests
+├── public/                       # Static assets
+└── .env                          # Environment variables (git-ignored)
 ```
 
-### Database Schema
+### Database Schema (Simplified)
 
 ```sql
-CREATE TABLE predictions (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_identifier TEXT,
-  question TEXT NOT NULL,
-  job_id TEXT,
-  status TEXT DEFAULT 'PENDING',
-  analysis_result JSONB,
-  selected_cards JSONB,
-  final_reading JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  completed_at TIMESTAMPTZ
-);
+-- Authentication (Better Auth)
+User, Session, Account, Verification
+
+-- Domain Models
+Orchard {
+  id, ownerId, name, zones (JSON), createdAt
+}
+
+Tree {
+  id, orchardId, code, zone, type, variety,
+  plantedDate, status (HEALTHY|SICK|DEAD|ARCHIVED),
+  replacement tracking
+}
+
+ActivityLog {
+  id, orchardId, logType (INDIVIDUAL|BATCH),
+  treeId (for individual), targetZone (for batch),
+  action, note, performDate, status, followUpDate
+}
 ```
 
 ### Git Branch Strategy
@@ -195,75 +220,74 @@ staging ←───────   ←─ FEATURE BRANCHES (PRs)
 feature/*         ←─ Development work
 ```
 
-### Key Features
+### Key Features Implemented
 
-- **AI Tarot Readings**: 4-step Agent Pipeline (Gatekeeper → Analyst → Dealer → Mystic)
-- **Async Processing**: Vercel Workflow handles long-running AI tasks
-- **Fire-and-Forget**: Submit question, get job ID, check results later
-- **Serverless Architecture**: Fully scalable with Vercel and Neon
-- **Type-Safe**: Full TypeScript implementation
+- **Authentication**: LINE Login integration with Better Auth
+- **Orchard Management**: Multi-orchard support with zone management
+- **Tree Management**: Complete CRUD with status tracking and replanting
+- **Activity Logging**: Individual and batch activity logging
+- **Dashboard**: Statistics, filtering, search, pagination
+- **Follow-up Tracking**: Health monitoring with scheduled follow-ups
+- **QR Code Generation**: Tree identification with PDF export
+- **Mobile-First UI**: Responsive design with Thai language support
 
 ### Development Commands
 
 ```bash
 npm run dev           # Development server (http://localhost:3000)
-npm run build         # Production build
+npm run build         # Production build (includes prisma generate)
 npm run start         # Start production server
 npm run lint          # ESLint checks
 npx tsc --noEmit      # TypeScript type checking
-npm test              # Run tests (when configured)
+npm test              # Run tests (Vitest)
+npx prisma generate   # Generate Prisma client
+npx prisma migrate dev # Run database migrations
+npx prisma studio     # Open database GUI
 ```
 
-### Performance Metrics
+### Environment Setup
 
-- **API Response Time**: < 200ms (p95)
-- **AI Processing**: 1-2 minutes (async via Vercel Workflow)
-- **Concurrent Users**: 100+ (serverless scaling)
-- **Database**: Neon PostgreSQL with auto-scaling
-- **Monthly Cost**: ~$50-100 (Vercel + Neon + AI Gateway)
+```bash
+# Required environment variables
+DATABASE_URL=postgresql://user:password@localhost:5432/clurian
+BETTER_AUTH_SECRET=your-secret-key
+BETTER_AUTH_URL=http://localhost:3000
+LINE_CHANNEL_ID=your-line-channel-id
+LINE_CHANNEL_SECRET=your-line-channel-secret
+```
 
 ---
 
-## 🧪 Test-Driven Development (TDD) System
+## 🧪 Testing System
 
-### 🔴🟢🔵 Red-Green-Refactor Cycle (MANDATORY)
+### Vitest Framework
 
-#### 🔴 Red Phase (Tests First)
-- **Write failing tests** for functionality
-- Tests document expected behavior before code exists
-- Run: `npm test` → tests FAIL (no implementation yet)
+- **Unit Tests**: Domain logic, utilities, pure functions
+- **Integration Tests**: API routes, database operations
+- **Component Tests**: React components with Testing Library
+- **E2E Tests**: (Future) Playwright for full user flows
 
-#### 🟢 Green Phase (Minimal Implementation)
-- **Write minimal code** to make tests pass
-- Don't implement extra features
-- Run: `npm test` → tests PASS
+### Test Structure
 
-#### 🔵 Refactor Phase (Improve Code)
-- **Refactor for clarity and maintainability**
-- Keep tests passing while improving
-- Run: `npm test` → tests still PASS
-- Run: `npm run lint` → zero warnings
-- Run: `npx tsc --noEmit` → no type errors
+```
+tests/
+├── setup.ts              # Global test setup
+├── domain.test.ts        # Business logic tests
+├── integration.test.ts   # API/database tests
+└── qr-redirect.test.ts   # Feature-specific tests
+```
 
-### Testing Framework (To Be Set Up)
+### Running Tests
 
 ```bash
-# Install testing dependencies
-npm install -D jest @testing-library/react @testing-library/jest-dom
-npm install -D @types/jest jest-environment-jsdom ts-jest
-```
+# Run all tests once
+npm test
 
-### Test Organization
+# Run tests in watch mode
+npm test -- --watch
 
-```
-app/
-├── api/
-│   └── __tests__/          # API route tests
-├── __tests__/              # Page/layout tests
-components/
-└── __tests__/              # Component tests
-lib/
-└── __tests__/              # Utility tests
+# Run tests with coverage
+npm test -- --coverage
 ```
 
 ---
@@ -272,27 +296,26 @@ lib/
 
 ### Code Quality Requirements
 
-- **TypeScript**: Strict mode enabled (eliminates entire classes of bugs)
+- **TypeScript**: Strict mode enabled
 - **ESLint**: Zero warnings (enforced)
 - **Build**: 100% success rate before commit
-- **Tests**: Unit tests for critical paths (API, utilities)
+- **Tests**: Unit tests for critical paths
 - **React**: Follow Next.js App Router best practices
 
-### API Quality Standards
+### Database Standards
 
-- **Response Times**: p95 < 200ms for all endpoints
-- **Error Handling**: Structured JSON errors with proper status codes
-- **Input Validation**: Validate all user inputs
-- **Environment Variables**: Use Vercel-managed secrets
-- **HTTPS Only**: Automatic in production
+- **Prisma**: Type-safe database operations
+- **Migrations**: Version-controlled schema changes
+- **Transactions**: For multi-step operations
+- **Indexing**: Optimized queries for performance
 
 ### Security Standards
 
-- **Secrets Management**: Use Vercel Environment Variables
-- **Database Access**: Use connection pooling with Neon
-- **Input Validation**: Comprehensive validation for all inputs
-- **AI Gateway**: Use Vercel AI Gateway for model access control
-- **Rate Limiting**: Implement per-user limits
+- **Authentication**: Better Auth with LINE Login
+- **Session Management**: Secure token-based sessions
+- **Input Validation**: Zod schemas for server actions
+- **Environment Variables**: No hardcoded secrets
+- **SQL Injection Prevention**: Prisma ORM protection
 
 ---
 
@@ -301,8 +324,8 @@ lib/
 ### Implementation Commands
 
 ```bash
-/impl [task description]        # Implementation workflow with TDD
-/run-test [type]               # Run tests (api, component, unit, e2e)
+/impl [task description]        # Implementation workflow with testing
+/run-test [type]               # Run specific test types
 ```
 
 ### Command Execution Flow
@@ -311,16 +334,16 @@ lib/
 1. Check current branch (must be staging)
 2. Create feature branch
 3. Phase 0: Analysis & Planning
-4. Phase 1: RED - Write failing tests
-5. Phase 2: GREEN - Minimal implementation
-6. Phase 3: REFACTOR - Improve code quality
-7. Phase 4: QA - Build + Lint + Type check + Tests
+4. Phase 1: Write tests
+5. Phase 2: Implement feature
+6. Phase 3: Refactor & optimize
+7. Phase 4: QA (build, lint, test, types)
 8. Commit with conventional format
 
 **When using /run-test:**
-1. Check if testing framework is configured
-2. Execute appropriate npm script
-3. Report test results and coverage
+1. Check testing framework status
+2. Execute appropriate test command
+3. Report results and coverage
 
 ---
 
@@ -343,6 +366,7 @@ git add .
 git commit -m "feat(scope): description
 
 - Changes made
+- Database migrations if any
 - Tests added/updated
 - QA checks passed (build, lint, test, types)
 
@@ -359,10 +383,34 @@ gh pr create --base staging --title "Feature Title" --body "Description of chang
 
 ## 📚 Key Documentation
 
-- **PRD**: `docs/PRD.md` - Complete product requirements
-- **Implementation Guide**: `.claude/commands/impl.md`
-- **Testing Guide**: `.claude/commands/run-test.md`
+- **README**: Project overview and setup instructions
+- **PRD**: `docs/feature.md` - Complete feature specifications (Thai)
+- **Database Design**: `docs/database.md` - Schema and relationships
+- **API Documentation**: `docs/api.md` - Endpoint documentation
+- **Tech Stack**: `docs/tech.md` - Technology details
 
 ---
 
-_This document focuses on agent-critical information for efficient Next.js development workflow execution and safe development practices._
+## 🚨 Important Notes for Claude
+
+### Domain Knowledge
+- This is an **orchard management system**, NOT a tarot reading app
+- Focus on agricultural domain: trees, orchards, activities, health tracking
+- Understand Thai language requirements for UI
+- Mobile-first design is crucial for field use
+
+### Technical Constraints
+- Always use Prisma for database operations
+- Server Actions are preferred over API routes for form submissions
+- LINE Login is the primary authentication method
+- All UI must support Thai language (Kanit font)
+
+### Common Pitfalls to Avoid
+- Don't reference AI/ML features (they don't exist)
+- Don't mention Vercel Workflows or AI Gateway
+- Don't assume tarot-related functionality
+- Always check actual file structure before referencing files
+
+---
+
+_This document focuses on Claude-specific instructions for efficient development of the Clurian orchard management system._
