@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { Log } from '@/lib/types';
 import {
   isToday,
   isOverdue,

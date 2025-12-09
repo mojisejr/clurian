@@ -20,17 +20,23 @@ interface OrchardContextType {
   currentOrchard: Orchard;
   setCurrentOrchardId: (id: string) => void;
   addOrchard: (name: string) => void;
-  
+
   trees: Tree[];
   isLoadingOrchardData: boolean;
   setTrees: React.Dispatch<React.SetStateAction<Tree[]>>;
   addTree: (tree: Tree) => Promise<Tree | null>;
   updateTree: (treeId: string, updates: Partial<Tree>) => Promise<void>;
-  
+
   logs: Log[];
   setLogs: React.Dispatch<React.SetStateAction<Log[]>>;
   addLog: (log: Log) => void;
   updateLogs: (logs: Log[]) => void;
+
+  // Computed values for activity counts
+  batchActivityCount: number;
+  scheduledActivityCount: number;
+  inProgressLogsCount: number;
+  completedLogsCount: number;
 }
 
 const OrchardContext = createContext<OrchardContextType | undefined>(undefined);
@@ -45,6 +51,28 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
   const [logs, setLogs] = useState<Log[]>([]);
 
   const currentOrchard = orchards.find((o) => o.id === currentOrchardId) || orchards[0];
+
+  // Computed values for activity counts
+  const batchActivityCount = logs.filter(log =>
+    log.orchardId === currentOrchardId &&
+    log.logType === 'BATCH'
+  ).length;
+
+  const scheduledActivityCount = logs.filter(log =>
+    log.orchardId === currentOrchardId &&
+    log.followUpDate &&
+    log.status === 'IN_PROGRESS'
+  ).length;
+
+  const inProgressLogsCount = logs.filter(log =>
+    log.orchardId === currentOrchardId &&
+    log.status === 'IN_PROGRESS'
+  ).length;
+
+  const completedLogsCount = logs.filter(log =>
+    log.orchardId === currentOrchardId &&
+    log.status === 'COMPLETED'
+  ).length;
 
   // 1. Initial Load: Get Orchards
   useEffect(() => {
@@ -200,7 +228,11 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
         logs,
         setLogs,
         addLog: handleAddLog,
-        updateLogs: handleUpdateLogs
+        updateLogs: handleUpdateLogs,
+        batchActivityCount,
+        scheduledActivityCount,
+        inProgressLogsCount,
+        completedLogsCount
       }}
     >
       {children}

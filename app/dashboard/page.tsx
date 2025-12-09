@@ -17,20 +17,23 @@ import { ScheduledActivitiesView } from '@/components/dashboard/views/scheduled-
 import { DashboardSkeleton } from '@/components/dashboard/skeleton-loader';
 import { AddTreeForm } from "@/components/forms/add-tree-form";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 // Types
 type ViewState = 'dashboard' | 'add_tree' | 'add_batch_log' | 'tree_detail' | 'batch_activities' | 'scheduled_activities';
 
 function DashboardContent() {
-  const { 
-    currentOrchardId, 
-    currentOrchard, 
-    trees, 
-    addTree, 
-    addLog, 
+  const {
+    currentOrchardId,
+    currentOrchard,
+    trees,
+    addTree,
+    addLog,
     addOrchard,
     isLoadingOrchards,
-    isLoadingOrchardData
+    isLoadingOrchardData,
+    batchActivityCount,
+    scheduledActivityCount
   } = useOrchard();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -211,12 +214,22 @@ function DashboardContent() {
               onClick={() => handleTabChange('batch_activities')}
             >
               งานทั้งแปลง
+              {batchActivityCount > 0 && (
+                <Badge variant="secondary" className="ml-2 text-xs px-1.5 py-0">
+                  {batchActivityCount}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger
               isActive={activeTab === 'scheduled_activities'}
               onClick={() => handleTabChange('scheduled_activities')}
             >
               งานที่ต้องทำ
+              {scheduledActivityCount > 0 && (
+                <Badge variant="secondary" className="ml-2 text-xs px-1.5 py-0">
+                  {scheduledActivityCount}
+                </Badge>
+              )}
             </TabsTrigger>
           </TabsList>
 
