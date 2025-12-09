@@ -12,8 +12,10 @@ export async function getOrchards(userId: string): Promise<Orchard[]> {
 
       return orchards.map(o => ({
           id: o.id,
+          ownerId: o.ownerId,
           name: o.name,
-          zones: o.zones as string[]
+          zones: o.zones as string[],
+          createdAt: o.createdAt.toISOString()
       }));
   } catch (error) {
       handleServiceError(error, 'getOrchards');
@@ -32,8 +34,10 @@ export async function createOrchard(userId: string, name: string): Promise<Orcha
       });
       return {
           id: orchard.id,
+          ownerId: orchard.ownerId,
           name: orchard.name,
-          zones: orchard.zones as string[]
+          zones: orchard.zones as string[],
+          createdAt: orchard.createdAt.toISOString()
       };
   } catch (error) {
       handleServiceError(error, 'createOrchard');

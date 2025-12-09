@@ -1,9 +1,9 @@
-// Tree status types
-export type TreeStatus = "healthy" | "sick" | "dead" | "archived";
+// Tree status types (matching Prisma schema)
+export type TreeStatus = "HEALTHY" | "SICK" | "DEAD" | "ARCHIVED";
 
-// Log types
-export type LogType = "batch" | "individual";
-export type LogStatus = "completed" | "in-progress";
+// Log types (matching Prisma schema)
+export type LogType = "INDIVIDUAL" | "BATCH";
+export type LogStatus = "COMPLETED" | "IN_PROGRESS";
 
 // Core data models
 export interface Tree {
@@ -13,27 +13,33 @@ export interface Tree {
   zone: string;
   type: string; // e.g., 'ทุเรียน', 'มังคุด'
   variety: string; // e.g., 'หมอนทอง', 'ก้านยาว'
-  plantedDate: string; // ISO date string
+  plantedDate?: string; // ISO date string, optional in schema
   status: TreeStatus;
+  replacedTreeId?: string;
+  createdAt: string; // ISO datetime string
+  updatedAt: string; // ISO datetime string
 }
 
 export interface Orchard {
   id: string;
+  ownerId: string;
   name: string;
   zones: string[];
+  createdAt: string; // ISO datetime string
 }
 
 export interface Log {
-  id: number | string;
+  id: string;
   orchardId: string;
-  type: LogType;
-  zone?: string; // for batch logs
+  logType: LogType;
   treeId?: string; // for individual logs
+  targetZone?: string; // for batch logs
   action: string;
-  date: string; // ISO date string
-  note: string;
+  note?: string;
+  performDate: string; // ISO date string
   status: LogStatus;
   followUpDate?: string; // ISO date string
+  createdAt: string; // ISO datetime string
 }
 
 // Form data types

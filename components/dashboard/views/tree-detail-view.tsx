@@ -35,23 +35,24 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
      const newTree: Tree = {
          ...oldTree,
          id: `uuid-${Date.now()}`,
-         status: 'healthy',
+         status: 'HEALTHY',
          plantedDate: new Date().toISOString().split('T')[0]
      };
 
-     await updateTree(oldTree.id, { status: 'archived', code: `${oldTree.code}_HIST_${Date.now()}` });
+     await updateTree(oldTree.id, { status: 'ARCHIVED', code: `${oldTree.code}_HIST_${Date.now()}` });
      const savedTree = await addTree(newTree);
      
      if (savedTree) {
         addLog({
-            id: Date.now(),
+            id: `temp-${Date.now()}`,
             orchardId: currentOrchardId,
-            type: 'individual',
+            logType: 'INDIVIDUAL',
             treeId: savedTree.id,
-            date: new Date().toISOString().split('T')[0],
+            performDate: new Date().toISOString().split('T')[0],
             action: 'ปลูกซ่อม (Replant)',
             note: `ปลูกแทนต้นเดิม (Ref: ${oldTree.id})`,
-            status: 'completed'
+            status: 'COMPLETED',
+            createdAt: new Date().toISOString()
         } as Log);
         
         onBack(); 
@@ -61,33 +62,35 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
   const handleFollowUpSubmit = (result: { type: 'cured' | 'continue', note: string, nextDate?: string }) => {
     if (!followUpLog) return;
     const today = new Date().toISOString().split('T')[0];
-    const updatedAllLogs = logs.map(l => l.id === followUpLog.id ? { ...l, status: 'completed' as const } : l);
+    const updatedAllLogs = logs.map(l => l.id === followUpLog.id ? { ...l, status: 'COMPLETED' as const } : l);
 
     if (result.type === 'cured') {
         const cureLog: Log = {
-            id: Date.now(),
+            id: `temp-${Date.now()}`,
             orchardId: currentOrchardId,
-            type: 'individual',
+            logType: 'INDIVIDUAL',
             treeId: followUpLog.treeId,
-            date: today,
+            performDate: today,
             action: `ติดตามอาการ: ${followUpLog.action}`,
             note: `[จบเคส] อาการดีขึ้น/หายแล้ว - ${result.note}`,
-            status: 'completed'
+            status: 'COMPLETED',
+            createdAt: new Date().toISOString()
         } as Log;
-        
-        if (followUpLog.treeId) updateTree(followUpLog.treeId, { status: 'healthy' });
+
+        if (followUpLog.treeId) updateTree(followUpLog.treeId, { status: 'HEALTHY' });
         updateLogs([cureLog, ...updatedAllLogs]);
     } else {
         const continueLog: Log = {
-            id: Date.now(),
+            id: `temp-${Date.now()}`,
             orchardId: currentOrchardId,
-            type: 'individual',
+            logType: 'INDIVIDUAL',
             treeId: followUpLog.treeId,
-            date: today,
+            performDate: today,
             action: `รักษาต่อเนื่อง: ${followUpLog.action}`,
             note: `[ยังไม่หาย] ${result.note}`,
-            status: 'in-progress',
-            followUpDate: result.nextDate
+            status: 'IN_PROGRESS',
+            followUpDate: result.nextDate,
+            createdAt: new Date().toISOString()
         } as Log;
         updateLogs([continueLog, ...updatedAllLogs]);
     }
@@ -105,12 +108,16 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
     setIsSubmittingLog(true);
     try {
       await addLog({
-          ...data,
-          id: Date.now(),
-          status: data.followUpDate ? 'in-progress' : 'completed',
-          type: 'individual',
+          id: `temp-${Date.now()}`,
+          logType: 'INDIVIDUAL',
           treeId: tree.id,
-          orchardId: currentOrchardId
+          orchardId: currentOrchardId,
+          action: data.action,
+          note: data.note,
+          performDate: data.date,
+          status: data.followUpDate ? 'IN_PROGRESS' : 'COMPLETED',
+          followUpDate: data.followUpDate,
+          createdAt: new Date().toISOString()
       } as Log);
       setIsAddingLog(false);
     } catch (error) {

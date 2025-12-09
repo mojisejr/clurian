@@ -2,7 +2,6 @@ import { prisma } from '@/lib/prisma';
 import { Tree, TreeStatus } from '@/lib/types';
 import { addZoneToOrchard } from './orchard-service';
 import { handleServiceError } from '@/lib/errors';
-import { TreeStatus as PrismaTreeStatus } from '@prisma/client';
 
 export async function createTree(data: Tree): Promise<Tree | null> {
   try {
@@ -16,8 +15,8 @@ export async function createTree(data: Tree): Promise<Tree | null> {
               zone: data.zone,
               type: data.type,
               variety: data.variety,
-              plantedDate: new Date(data.plantedDate),
-              status: data.status.toUpperCase() as PrismaTreeStatus
+              plantedDate: data.plantedDate ? new Date(data.plantedDate) : null,
+              status: data.status
           }
       });
       
@@ -35,7 +34,7 @@ export async function updateTreeStatus(treeId: string, status: TreeStatus) {
     try {
         await prisma.tree.update({
             where: { id: treeId },
-            data: { status: status.toUpperCase() as PrismaTreeStatus }
+            data: { status: status }
         });
     } catch (error) {
         handleServiceError(error, 'updateTreeStatus');

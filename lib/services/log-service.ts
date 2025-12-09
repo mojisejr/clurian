@@ -1,27 +1,27 @@
 import { prisma } from '@/lib/prisma';
 import { Log } from '@/lib/types';
 import { handleServiceError } from '@/lib/errors';
-import { LogType as PrismaLogType, LogStatus as PrismaLogStatus } from '@prisma/client';
 
 export async function createLog(data: Log): Promise<Log | null> {
     try {
         const log = await prisma.activityLog.create({
             data: {
                 orchardId: data.orchardId,
-                logType: data.type.toUpperCase() as PrismaLogType,
+                logType: data.logType,
                 treeId: data.treeId,
-                targetZone: data.zone,
+                targetZone: data.targetZone,
                 action: data.action,
                 note: data.note,
-                performDate: new Date(data.date),
-                status: (data.status === 'in-progress' ? 'IN_PROGRESS' : 'COMPLETED') as PrismaLogStatus,
+                performDate: new Date(data.performDate),
+                status: data.status,
                 followUpDate: data.followUpDate ? new Date(data.followUpDate) : null
             }
         });
-        
+
         return {
             ...data,
-            id: log.id
+            id: log.id,
+            createdAt: log.createdAt.toISOString()
         };
     } catch (error) {
         handleServiceError(error, 'createLog');
@@ -32,10 +32,12 @@ export async function createLog(data: Log): Promise<Log | null> {
 export async function updateLog(log: Log) {
     try {
         await prisma.activityLog.update({
-            where: { id: String(log.id) },
+            where: { id: log.id },
             data: {
-                status: (log.status === 'in-progress' ? 'IN_PROGRESS' : 'COMPLETED'),
+                status: log.status,
                 note: log.note,
+                action: log.action,
+                followUpDate: log.followUpDate ? new Date(log.followUpDate) : null
                 // Add other fields as needed
             }
         });

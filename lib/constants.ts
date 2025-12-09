@@ -4,7 +4,7 @@ import type { TreeStatus, LogStatus } from "./types";
 export const ITEMS_PER_PAGE = 10;
 
 // Tree statuses with display configuration
-export const TREE_STATUSES = ["healthy", "sick", "dead", "archived"] as const;
+export const TREE_STATUSES = ["HEALTHY", "SICK", "DEAD", "ARCHIVED"] as const;
 
 export const STATUS_CONFIG: Record<
   TreeStatus,
@@ -13,10 +13,10 @@ export const STATUS_CONFIG: Record<
     variant: "secondary" | "accent" | "destructive" | "muted";
   }
 > = {
-  healthy: { label: "ปกติ", variant: "secondary" },
-  sick: { label: "ป่วย/ดูแล", variant: "accent" },
-  dead: { label: "ตาย", variant: "destructive" },
-  archived: { label: "Archive", variant: "muted" },
+  HEALTHY: { label: "ปกติ", variant: "secondary" },
+  SICK: { label: "ป่วย/ดูแล", variant: "accent" },
+  DEAD: { label: "ตาย", variant: "destructive" },
+  ARCHIVED: { label: "Archive", variant: "muted" },
 };
 
 export const LOG_STATUS_CONFIG: Record<
@@ -26,8 +26,8 @@ export const LOG_STATUS_CONFIG: Record<
     variant: "success" | "warning";
   }
 > = {
-  completed: { label: "เสร็จสิ้น", variant: "success" },
-  "in-progress": { label: "รอติดตาม", variant: "warning" },
+  COMPLETED: { label: "เสร็จสิ้น", variant: "success" },
+  IN_PROGRESS: { label: "รอติดตาม", variant: "warning" },
 };
 
 // Tree types (fruit types)

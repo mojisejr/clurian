@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
-import type { Tree, Log } from "@/lib/types";
+import type { Tree } from "@/lib/types";
 import { useSearchParams, useRouter } from 'next/navigation';
 
 // Context
@@ -11,23 +11,29 @@ import { useOrchard } from "@/components/providers/orchard-provider";
 import { DashboardView } from '@/components/dashboard/views/dashboard-view';
 import { TreeDetailView } from '@/components/dashboard/views/tree-detail-view';
 import { EmptyDashboardView } from '@/components/dashboard/views/empty-dashboard-view';
+import { AddLogForm, type AddLogFormData } from "@/components/forms/add-log-form";
+import { BatchActivitiesView } from '@/components/dashboard/views/batch-activities-view';
+import { ScheduledActivitiesView } from '@/components/dashboard/views/scheduled-activities-view';
 import { DashboardSkeleton } from '@/components/dashboard/skeleton-loader';
 import { AddTreeForm } from "@/components/forms/add-tree-form";
-import { AddLogForm, type AddLogFormData } from "@/components/forms/add-log-form";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 // Types
-type ViewState = 'dashboard' | 'add_tree' | 'add_batch_log' | 'tree_detail';
+type ViewState = 'dashboard' | 'add_tree' | 'add_batch_log' | 'tree_detail' | 'batch_activities' | 'scheduled_activities';
 
 function DashboardContent() {
-  const { 
-    currentOrchardId, 
-    currentOrchard, 
-    trees, 
-    addTree, 
-    addLog, 
+  const {
+    currentOrchardId,
+    currentOrchard,
+    trees,
+    addTree,
+    addLog,
     addOrchard,
     isLoadingOrchards,
-    isLoadingOrchardData
+    isLoadingOrchardData,
+    batchActivityCount,
+    scheduledActivityCount
   } = useOrchard();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -38,6 +44,7 @@ function DashboardContent() {
   const [loadingTreeId, setLoadingTreeId] = useState<string | null>(null);
   const [isAddingTree, setIsAddingTree] = useState(false);
   const [isAddingBatchLog, setIsAddingBatchLog] = useState(false);
+  const [activeTab, setActiveTab] = useState<'trees' | 'batch_activities' | 'scheduled_activities'>('trees');
 
   const selectedTree = trees.find(t => t.id === selectedTreeId);
 
@@ -112,18 +119,21 @@ function DashboardContent() {
      setIsAddingBatchLog(true);
      try {
         await addLog({
-           id: Date.now(),
+           id: `temp-${Date.now()}`,
            orchardId: currentOrchardId,
-           date: data.date || new Date().toISOString().split('T')[0],
+           logType: 'BATCH',
+           treeId: undefined,
+           targetZone: data.targetZone,
            action: data.action || '',
            note: data.note || '',
-           status: data.followUpDate ? 'in-progress' : 'completed',
+           performDate: data.date || new Date().toISOString().split('T')[0],
+           status: data.followUpDate ? 'IN_PROGRESS' : 'COMPLETED',
            followUpDate: data.followUpDate,
-           type: 'batch',
-           zone: data.targetZone,
-        } as Log);
+           createdAt: new Date().toISOString(),
+        });
 
         setView('dashboard');
+        setActiveTab('trees');
      } catch (error) {
         console.error('Failed to add batch log:', error);
         alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
@@ -132,6 +142,18 @@ function DashboardContent() {
      }
   };
 
+  const handleTabChange = (tab: 'trees' | 'batch_activities' | 'scheduled_activities') => {
+    setActiveTab(tab);
+    if (tab === 'batch_activities') {
+      setView('batch_activities');
+    } else if (tab === 'scheduled_activities') {
+      setView('scheduled_activities');
+    } else {
+      setView('dashboard');
+    }
+  };
+
+  
   // --- Loading State ---
   if (isLoadingOrchards || isLoadingOrchardData) {
       return <DashboardSkeleton />;
@@ -154,32 +176,80 @@ function DashboardContent() {
         isLoading={isAddingTree}
       />
     );
-  } else if (view === 'add_batch_log') {
-    viewContent = (
-        <AddLogForm
-            onCancel={() => setView('dashboard')}
-            onSubmit={handleAddBatchLog}
-            zones={currentOrchard.zones}
-            isBatch={true}
-            isLoading={isAddingBatchLog}
-        />
-    );
   } else if (view === 'tree_detail' && selectedTree) {
       viewContent = (
-          <TreeDetailView 
-              tree={selectedTree} 
-              onBack={handleBackToDashboard} 
+          <TreeDetailView
+              tree={selectedTree}
+              onBack={handleBackToDashboard}
           />
       );
+  } else if (view === 'add_batch_log') {
+      viewContent = (
+        <div className="min-h-screen bg-gray-50 p-4 pb-24 md:pb-8 max-w-md mx-auto">
+          <AddLogForm
+            isBatch={true}
+            zones={currentOrchard.zones}
+            onCancel={() => {
+              setView('batch_activities');
+              setActiveTab('batch_activities');
+            }}
+            onSubmit={handleAddBatchLog}
+            isLoading={isAddingBatchLog}
+          />
+        </div>
+      );
   } else {
-     // Default Dashboard View
+     // Default Dashboard View with Tabs
      viewContent = (
-        <DashboardView
-            onViewChange={setView}
-            onIdentifyTree={handleIdentifyTree}
-            loadingTreeId={loadingTreeId}
-            isAddingNewTree={isAddingTree}
-        />
+        <Tabs>
+          <TabsList>
+            <TabsTrigger
+              isActive={activeTab === 'trees'}
+              onClick={() => handleTabChange('trees')}
+            >
+              ต้นไม้
+            </TabsTrigger>
+            <TabsTrigger
+              isActive={activeTab === 'batch_activities'}
+              onClick={() => handleTabChange('batch_activities')}
+            >
+              งานทั้งแปลง
+              {batchActivityCount > 0 && (
+                <Badge variant="secondary" className="ml-2 text-xs px-1.5 py-0">
+                  {batchActivityCount}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger
+              isActive={activeTab === 'scheduled_activities'}
+              onClick={() => handleTabChange('scheduled_activities')}
+            >
+              งานที่ต้องทำ
+              {scheduledActivityCount > 0 && (
+                <Badge variant="secondary" className="ml-2 text-xs px-1.5 py-0">
+                  {scheduledActivityCount}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent>
+            {activeTab === 'trees' && (
+              <DashboardView
+                onViewChange={setView}
+                onIdentifyTree={handleIdentifyTree}
+                loadingTreeId={loadingTreeId}
+                isAddingNewTree={isAddingTree}
+              />
+            )}
+            {activeTab === 'batch_activities' && (
+              <BatchActivitiesView
+                onAddBatchLog={() => setView('add_batch_log')}
+              />
+            )}
+            {activeTab === 'scheduled_activities' && <ScheduledActivitiesView />}
+          </TabsContent>
+        </Tabs>
      );
   }
   
