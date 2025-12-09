@@ -1,24 +1,32 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ClipboardList, PlusCircle, Search, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useOrchard } from "@/components/providers/orchard-provider";
 import { BatchActivityItem } from "@/components/dashboard/batch/batch-activity-item";
+import { LogDetailModal } from "@/components/modals/log-detail-modal";
+import { FollowUpModal, type FollowUpResult } from "@/components/modals/follow-up-modal";
 import { cn } from "@/lib/utils";
+import type { Log } from "@/lib/types";
 
 interface BatchActivitiesViewProps {
   onAddBatchLog: () => void;
 }
 
 export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps) {
-  const { logs, currentOrchardId } = useOrchard();
+  const { logs, currentOrchardId, updateLogs } = useOrchard();
 
   // Filter and sort state
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [sortOrder, setSortOrder] = React.useState<'desc' | 'asc'>('desc');
-  const [statusFilter, setStatusFilter] = React.useState<'all' | 'completed' | 'in-progress'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'in-progress'>('all');
+
+  // Modal state
+  const [selectedLog, setSelectedLog] = useState<Log | null>(null);
+  const [showLogDetail, setShowLogDetail] = useState(false);
+  const [showFollowUp, setShowFollowUp] = useState(false);
 
   // Filter and sort batch logs
   const filteredBatchLogs = useMemo(() => {
@@ -55,6 +63,67 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
   }, [logs, currentOrchardId, statusFilter, searchTerm, sortOrder]);
 
   const hasActiveFilters = statusFilter !== 'all' || searchTerm;
+
+  // --- Handlers ---
+  const handleLogClick = (log: Log) => {
+    setSelectedLog(log);
+    setShowLogDetail(true);
+  };
+
+  const handleLogDetailClose = () => {
+    setShowLogDetail(false);
+    setSelectedLog(null);
+  };
+
+  const handleFollowUp = () => {
+    setShowLogDetail(false);
+    setShowFollowUp(true);
+  };
+
+  const handleFollowUpSubmit = async (result: FollowUpResult) => {
+    if (!selectedLog) return;
+
+    const today = new Date().toISOString().split('T')[0];
+
+    // Mark the original log as completed
+    const updatedLogs = logs.map(l =>
+      l.id === selectedLog.id ? { ...l, status: 'completed' as const } : l
+    );
+
+    if (result.type === 'cured') {
+      // Create a cured log
+      const curedLog: Log = {
+        id: Date.now(),
+        orchardId: currentOrchardId,
+        type: 'batch',
+        zone: selectedLog.zone,
+        action: `ติดตามผล: ${selectedLog.action}`,
+        note: `[จบเคส] อาการดีขึ้น/หายแล้ว - ${result.note}`,
+        date: today,
+        status: 'completed',
+      };
+
+      updateLogs([curedLog, ...updatedLogs]);
+    } else {
+      // Create a continue treatment log
+      const continueLog: Log = {
+        id: Date.now(),
+        orchardId: currentOrchardId,
+        type: 'batch',
+        zone: selectedLog.zone,
+        action: `ดำเนินการต่อ: ${selectedLog.action}`,
+        note: `[ยังไม่หาย] ${result.note}`,
+        date: today,
+        status: 'in-progress',
+        followUpDate: result.nextDate,
+      };
+
+      updateLogs([continueLog, ...updatedLogs]);
+    }
+
+    setShowFollowUp(false);
+    setSelectedLog(null);
+  };
 
   return (
     <div className="space-y-4">
@@ -154,10 +223,7 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
               <BatchActivityItem
                 key={log.id}
                 log={log}
-                onClick={(log) => {
-                  // TODO: Implement modal or navigation to log details
-                  console.log('Batch log clicked:', log);
-                }}
+                onClick={handleLogClick}
               />
             ))}
           </div>
@@ -173,6 +239,29 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
           </span>
         )}
       </div>
+
+      {/* Log Detail Modal */}
+      {selectedLog && (
+        <LogDetailModal
+          log={selectedLog}
+          open={showLogDetail}
+          onClose={handleLogDetailClose}
+          onFollowUp={selectedLog.status === 'in-progress' ? handleFollowUp : undefined}
+        />
+      )}
+
+      {/* Follow Up Modal */}
+      {selectedLog && (
+        <FollowUpModal
+          log={selectedLog}
+          open={showFollowUp}
+          onClose={() => {
+            setShowFollowUp(false);
+            setSelectedLog(null);
+          }}
+          onSubmit={handleFollowUpSubmit}
+        />
+      )}
     </div>
   );
 }
