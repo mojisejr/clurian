@@ -15,9 +15,10 @@ import { Search, Sprout, PlusCircle, ClipboardList, Printer } from "lucide-react
 interface DashboardViewProps {
   onViewChange: (view: 'add_tree' | 'add_batch_log' | 'tree_detail') => void;
   onIdentifyTree: (treeId: string) => void;
+  loadingTreeId?: string | null;
 }
 
-export function DashboardView({ onViewChange, onIdentifyTree }: DashboardViewProps) {
+export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId }: DashboardViewProps) {
   const { trees, currentOrchardId, currentOrchard } = useOrchard();
   
   const [filterZone, setFilterZone] = useState(ZONE_FILTER_ALL);
@@ -154,7 +155,10 @@ export function DashboardView({ onViewChange, onIdentifyTree }: DashboardViewPro
         ) : (
             paginatedTrees.data.map(tree => (
                 <div key={tree.id} onClick={() => onIdentifyTree(tree.id)}>
-                    <TreeCard tree={tree} />
+                    <TreeCard 
+                        tree={tree} 
+                        isLoading={loadingTreeId === tree.id}
+                    />
                 </div>
             ))
         )}

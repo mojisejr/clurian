@@ -8,6 +8,7 @@ import type { Tree } from "@/lib/types";
 export interface TreeCardProps {
   tree: Tree;
   onClick?: () => void;
+  isLoading?: boolean;
   className?: string;
 }
 
@@ -18,26 +19,33 @@ export interface TreeCardProps {
  * <TreeCard
  *   tree={tree}
  *   onClick={() => router.push(`/tree/${tree.id}`)}
+ *   isLoading={loadingTreeId === tree.id}
  * />
  */
-export function TreeCard({ tree, onClick, className }: TreeCardProps) {
+export function TreeCard({ tree, onClick, isLoading, className }: TreeCardProps) {
   const age = getTreeAge(tree.plantedDate);
 
   return (
     <button
       onClick={onClick}
+      disabled={isLoading}
       className={cn(
         "w-full bg-card hover:bg-muted/50 p-4 rounded-xl shadow-sm border border-border",
         "flex items-center justify-between gap-3",
         "transition-colors cursor-pointer text-left",
         "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+        "disabled:opacity-70 disabled:cursor-not-allowed",
         className
       )}
     >
       <div className="flex items-center gap-3 min-w-0">
         {/* Tree code badge */}
         <div className="bg-primary text-primary-foreground rounded-lg w-12 h-12 flex items-center justify-center font-bold text-sm shrink-0">
-          {tree.code}
+          {isLoading ? (
+            <div className="animate-spin h-5 w-5 border-2 border-primary-foreground border-t-transparent rounded-full" />
+          ) : (
+            tree.code
+          )}
         </div>
 
         {/* Tree info */}
@@ -58,7 +66,10 @@ export function TreeCard({ tree, onClick, className }: TreeCardProps) {
       </div>
 
       {/* Arrow indicator */}
-      <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+      <ChevronRight className={cn(
+        "h-5 w-5 text-muted-foreground shrink-0",
+        isLoading && "opacity-50"
+      )} />
     </button>
   );
 }

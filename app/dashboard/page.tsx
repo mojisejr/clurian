@@ -35,6 +35,7 @@ function DashboardContent() {
   // --- State ---
   const [view, setView] = useState<ViewState>('dashboard');
   const [selectedTreeId, setSelectedTreeId] = useState<string | null>(null);
+  const [loadingTreeId, setLoadingTreeId] = useState<string | null>(null);
 
   const selectedTree = trees.find(t => t.id === selectedTreeId);
 
@@ -45,18 +46,21 @@ function DashboardContent() {
       if (trees.some(t => t.id === treeId)) {
         setSelectedTreeId(treeId);
         setView('tree_detail');
+        setLoadingTreeId(null); // Clear loading state when view is shown
       }
     } else if (!treeId && view === 'tree_detail') {
       // If no treeId in URL but view is tree_detail, go back to dashboard
       setView('dashboard');
       setSelectedTreeId(null);
+      setLoadingTreeId(null);
     }
-  }, [searchParams, trees]);
+  }, [searchParams, trees, view]);
 
 
   // --- Actions ---
 
   const handleIdentifyTree = (treeId: string) => {
+    setLoadingTreeId(treeId);
     router.replace(`/dashboard?treeId=${treeId}`, { scroll: false });
   };
 
@@ -147,6 +151,7 @@ function DashboardContent() {
         <DashboardView 
             onViewChange={setView}
             onIdentifyTree={handleIdentifyTree}
+            loadingTreeId={loadingTreeId}
         />
      );
   }
