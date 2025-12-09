@@ -72,7 +72,7 @@ DashboardPage
 
 ## 4. Implementation Details
 
-### 4.1 Phase 1: Tab Navigation
+### 4.1 Phase 1: Tab Navigation DONE
 
 #### 4.1.1 Create Tab Navigation Component
 **File**: `/components/ui/tabs.tsx`
@@ -87,7 +87,7 @@ DashboardPage
 - Update ViewState type
 - Replace conditional view rendering with tab-based rendering
 
-### 4.2 Phase 2: Batch Activities View
+### 4.2 Phase 2: Batch Activities View DONE
 
 #### 4.2.1 Create Batch Activities View
 **File**: `/components/dashboard/views/batch-activities-view.tsx`
