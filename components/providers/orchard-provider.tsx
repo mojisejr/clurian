@@ -72,11 +72,8 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
   // 2. When Orchard Changes, Get Data
   useEffect(() => {
       if (!currentOrchardId) {
-          if (trees.length > 0 || logs.length > 0) {
-              // eslint-disable-next-line react-hooks/set-state-in-effect
-              setTrees([]);
-              setLogs([]);
-          }
+          setTrees([]);
+          setLogs([]);
           return;
       }
       const fetchData = async () => {

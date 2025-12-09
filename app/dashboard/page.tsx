@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -65,6 +66,12 @@ function DashboardContent() {
   };
 
   const handleBackToDashboard = () => {
+    // Clear state immediately to prevent race conditions and dead clicks
+    setView('dashboard');
+    setSelectedTreeId(null);
+    setLoadingTreeId(null);
+
+    // Then update URL
     router.replace('/dashboard', { scroll: false });
   };
 

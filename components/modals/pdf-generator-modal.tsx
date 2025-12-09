@@ -1,9 +1,10 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, X, AlertCircle } from "lucide-react";
+import { Loader2, Download, AlertCircle } from "lucide-react";
 import { generatePDFBlob } from "@/lib/utils/pdf-generator";
 import type { Tree } from "@/lib/types";
 
@@ -23,21 +24,7 @@ export function PDFGeneratorModal({ isOpen, onClose, trees, orchardName, logoBas
   const [error, setError] = useState<string>('');
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
 
-  useEffect(() => {
-    if (isOpen && trees.length > 0) {
-      generatePDF();
-    }
-    
-    return () => {
-      // Cleanup
-      setState('idle');
-      setProgress(0);
-      setError('');
-      setPdfBlob(null);
-    };
-  }, [isOpen]);
-
-  const generatePDF = async () => {
+  const generatePDF = useCallback(async () => {
     setState('generating');
     setProgress(0);
     setError('');
@@ -48,19 +35,29 @@ export function PDFGeneratorModal({ isOpen, onClose, trees, orchardName, logoBas
         orchardName,
         logoBase64,
         (current, total) => {
-          setProgress(Math.round((current / total) * 100));
+          setProgress((current / total) * 100);
         }
       );
-
       setPdfBlob(blob);
       setState('ready');
-      setProgress(100);
-    } catch (err) {
-      console.error('PDF Generation Error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to generate PDF');
+    } catch {
+      setError('Failed to generate PDF');
       setState('error');
     }
-  };
+  }, [trees, orchardName, logoBase64]);
+
+  useEffect(() => {
+    if (isOpen && trees.length > 0) {
+      generatePDF();
+    }
+
+    return () => {
+      setState('idle');
+      setProgress(0);
+      setError('');
+      setPdfBlob(null);
+    };
+  }, [isOpen, trees.length, generatePDF]);
 
   const handleDownload = () => {
     if (!pdfBlob) return;
