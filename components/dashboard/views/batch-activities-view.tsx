@@ -31,15 +31,15 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
   // Filter and sort batch logs
   const filteredBatchLogs = useMemo(() => {
     let result = logs.filter(log =>
-      log.type === 'batch' &&
+      log.logType === 'BATCH' &&
       log.orchardId === currentOrchardId
     );
 
     // Apply status filter
     if (statusFilter === 'completed') {
-      result = result.filter(log => log.status === 'completed');
+      result = result.filter(log => log.status === 'COMPLETED');
     } else if (statusFilter === 'in-progress') {
-      result = result.filter(log => log.status === 'in-progress');
+      result = result.filter(log => log.status === 'IN_PROGRESS');
     }
 
     // Apply search filter
@@ -47,15 +47,15 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
       const q = searchTerm.toLowerCase();
       result = result.filter(log =>
         log.action.toLowerCase().includes(q) ||
-        log.note.toLowerCase().includes(q) ||
-        (log.zone && log.zone.toLowerCase().includes(q))
+        (log.note && log.note.toLowerCase().includes(q)) ||
+        (log.targetZone && log.targetZone.toLowerCase().includes(q))
       );
     }
 
     // Apply sorting
     result.sort((a, b) => {
-      const timeA = new Date(a.date).getTime();
-      const timeB = new Date(b.date).getTime();
+      const timeA = new Date(a.performDate).getTime();
+      const timeB = new Date(b.performDate).getTime();
       return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
     });
 
@@ -87,35 +87,37 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
 
     // Mark the original log as completed
     const updatedLogs = logs.map(l =>
-      l.id === selectedLog.id ? { ...l, status: 'completed' as const } : l
+      l.id === selectedLog.id ? { ...l, status: 'COMPLETED' as const } : l
     );
 
     if (result.type === 'cured') {
       // Create a cured log
       const curedLog: Log = {
-        id: Date.now(),
+        id: `temp-${Date.now()}`,
         orchardId: currentOrchardId,
-        type: 'batch',
-        zone: selectedLog.zone,
+        logType: 'BATCH',
+        targetZone: selectedLog.targetZone,
         action: `ติดตามผล: ${selectedLog.action}`,
         note: `[จบเคส] อาการดีขึ้น/หายแล้ว - ${result.note}`,
-        date: today,
-        status: 'completed',
+        performDate: today,
+        status: 'COMPLETED',
+        createdAt: new Date().toISOString(),
       };
 
       updateLogs([curedLog, ...updatedLogs]);
     } else {
       // Create a continue treatment log
       const continueLog: Log = {
-        id: Date.now(),
+        id: `temp-${Date.now()}`,
         orchardId: currentOrchardId,
-        type: 'batch',
-        zone: selectedLog.zone,
+        logType: 'BATCH',
+        targetZone: selectedLog.targetZone,
         action: `ดำเนินการต่อ: ${selectedLog.action}`,
         note: `[ยังไม่หาย] ${result.note}`,
-        date: today,
-        status: 'in-progress',
+        performDate: today,
+        status: 'IN_PROGRESS',
         followUpDate: result.nextDate,
+        createdAt: new Date().toISOString(),
       };
 
       updateLogs([continueLog, ...updatedLogs]);
@@ -171,7 +173,7 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
             )}
           >
             รอติดตาม
-            {logs.filter(l => l.type === 'batch' && l.status === 'in-progress').length > 0 && (
+            {logs.filter(l => l.logType === 'BATCH' && l.status === 'IN_PROGRESS').length > 0 && (
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
             )}
           </button>
@@ -246,7 +248,7 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
           log={selectedLog}
           open={showLogDetail}
           onClose={handleLogDetailClose}
-          onFollowUp={selectedLog.status === 'in-progress' ? handleFollowUp : undefined}
+          onFollowUp={selectedLog.status === 'IN_PROGRESS' ? handleFollowUp : undefined}
         />
       )}
 

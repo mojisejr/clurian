@@ -24,25 +24,26 @@ export function TreeProfileCard({ tree, onAddLog, onReplant }: TreeProfileCardPr
   const handleChangeStatus = (newStatus: TreeStatus) => {
       updateTree(tree.id, { status: newStatus });
       
-      const statusLabels: Record<string, string> = { healthy: 'ปกติ', sick: 'ป่วย', dead: 'ตาย' };
+      const statusLabels: Record<string, string> = { HEALTHY: 'ปกติ', SICK: 'ป่วย', DEAD: 'ตาย' };
       
       addLog({
-          id: Date.now(),
+          id: `temp-${Date.now()}`,
           orchardId: currentOrchardId,
-          type: 'individual',
+          logType: 'INDIVIDUAL',
           treeId: tree.id,
-          date: new Date().toISOString().split('T')[0],
+          performDate: new Date().toISOString().split('T')[0],
           action: `อัพเดทสถานะ: ${statusLabels[newStatus] || newStatus}`,
           note: 'ปรับปรุงสถานะผ่านหน้าข้อมูลต้นไม้',
-          status: 'completed'
+          status: 'COMPLETED',
+          createdAt: new Date().toISOString()
       } as Log);
   };
 
   const getStatusBadge = (status: string) => {
      switch(status) {
-         case 'healthy': return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200 shadow-sm px-2.5 py-0.5"><div className="w-2 h-2 rounded-full bg-green-500 mr-1.5" /> ปกติ</Badge>;
-         case 'sick': return <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-orange-200 shadow-sm px-2.5 py-0.5"><div className="w-2 h-2 rounded-full bg-orange-500 mr-1.5" /> ป่วย/ดูแลพิเศษ</Badge>;
-         case 'dead': return <Badge className="bg-red-100 text-red-700 hover:bg-red-200 border-red-200 shadow-sm px-2.5 py-0.5"><div className="w-2 h-2 rounded-full bg-red-500 mr-1.5" /> ตาย</Badge>;
+         case 'HEALTHY': return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200 shadow-sm px-2.5 py-0.5"><div className="w-2 h-2 rounded-full bg-green-500 mr-1.5" /> ปกติ</Badge>;
+         case 'SICK': return <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-orange-200 shadow-sm px-2.5 py-0.5"><div className="w-2 h-2 rounded-full bg-orange-500 mr-1.5" /> ป่วย/ดูแลพิเศษ</Badge>;
+         case 'DEAD': return <Badge className="bg-red-100 text-red-700 hover:bg-red-200 border-red-200 shadow-sm px-2.5 py-0.5"><div className="w-2 h-2 rounded-full bg-red-500 mr-1.5" /> ตาย</Badge>;
          default: return <Badge variant="outline">{status}</Badge>;
      }
   };
@@ -82,13 +83,13 @@ export function TreeProfileCard({ tree, onAddLog, onReplant }: TreeProfileCardPr
                                     <span className="text-xs font-bold text-gray-600">เปลี่ยนสถานะ:</span>
                                     <X size={12} className="text-gray-400" />
                               </div>
-                              <DropdownMenuItem onClick={() => handleChangeStatus('healthy')} className="px-3 py-2.5 text-sm hover:bg-green-50 text-gray-700 font-medium rounded-md flex items-center gap-2 mb-1 cursor-pointer">
+                              <DropdownMenuItem onClick={() => handleChangeStatus('HEALTHY')} className="px-3 py-2.5 text-sm hover:bg-green-50 text-gray-700 font-medium rounded-md flex items-center gap-2 mb-1 cursor-pointer">
                                   <div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-sm"></div> ปกติ
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleChangeStatus('sick')} className="px-3 py-2.5 text-sm hover:bg-orange-50 text-gray-700 font-medium rounded-md flex items-center gap-2 mb-1 cursor-pointer">
+                              <DropdownMenuItem onClick={() => handleChangeStatus('SICK')} className="px-3 py-2.5 text-sm hover:bg-orange-50 text-gray-700 font-medium rounded-md flex items-center gap-2 mb-1 cursor-pointer">
                                   <div className="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-sm"></div> ป่วย/ดูแลพิเศษ
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleChangeStatus('dead')} className="px-3 py-2.5 text-sm hover:bg-red-50 text-gray-700 font-medium rounded-md flex items-center gap-2 cursor-pointer">
+                              <DropdownMenuItem onClick={() => handleChangeStatus('DEAD')} className="px-3 py-2.5 text-sm hover:bg-red-50 text-gray-700 font-medium rounded-md flex items-center gap-2 cursor-pointer">
                                    <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm"></div> ตาย
                               </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -112,7 +113,7 @@ export function TreeProfileCard({ tree, onAddLog, onReplant }: TreeProfileCardPr
               >
                   <Plus size={18} /> บันทึกกิจกรรม
               </button>
-              {tree.status === 'dead' && (
+              {tree.status === 'DEAD' && (
                   <button 
                       onClick={onReplant} 
                       className="flex-1 px-4 py-2 bg-secondary text-secondary-foreground border border-secondary-foreground/20 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:opacity-80 shadow-md transition-opacity"

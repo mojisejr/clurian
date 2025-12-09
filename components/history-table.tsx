@@ -42,21 +42,21 @@ export function HistoryTable({
     .filter((log) => {
       // Tab filter
       if (activeTab === "followup") {
-        if (log.status !== "in-progress" && !log.followUpDate) return false;
+        if (log.status !== "IN_PROGRESS" && !log.followUpDate) return false;
       }
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         return (
           log.action.toLowerCase().includes(query) ||
-          log.note.toLowerCase().includes(query)
+          (log.note && log.note.toLowerCase().includes(query))
         );
       }
       return true;
     })
     .sort((a, b) => {
-      const dateA = new Date(a.date).getTime();
-      const dateB = new Date(b.date).getTime();
+      const dateA = new Date(a.performDate).getTime();
+      const dateB = new Date(b.performDate).getTime();
       return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
     });
 
@@ -153,16 +153,16 @@ export function HistoryTable({
                     onClick={() => onRowClick?.(log.id)}
                   >
                     <TableCell className="text-sm">
-                      {formatThaiDate(log.date)}
+                      {formatThaiDate(log.performDate)}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium truncate max-w-[150px]">
                           {log.action}
                         </span>
-                        {log.type === "batch" && (
+                        {log.logType === "BATCH" && (
                           <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                            โซน {log.zone}
+                            โซน {log.targetZone}
                           </span>
                         )}
                       </div>

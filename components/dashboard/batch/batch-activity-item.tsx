@@ -27,7 +27,7 @@ export function BatchActivityItem({ log, onClick }: BatchActivityItemProps) {
           <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
             {log.action}
           </span>
-          {log.status === 'in-progress' && (
+          {log.status === 'IN_PROGRESS' && (
             <Badge variant="outline" className="text-[10px] h-5 px-1 bg-yellow-50 text-yellow-700 border-yellow-200">
               รอติดตาม
             </Badge>
@@ -37,15 +37,15 @@ export function BatchActivityItem({ log, onClick }: BatchActivityItemProps) {
           </Badge>
         </div>
         <span className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1">
-          <Clock size={12} /> {log.date}
+          <Clock size={12} /> {log.performDate}
         </span>
       </div>
 
-      {log.zone && (
+      {log.targetZone && (
         <div className="flex items-center gap-1 mb-1">
           <MapPin size={12} className="text-muted-foreground" />
           <span className="text-xs text-muted-foreground">
-            โซน: {log.zone}
+            โซน: {log.targetZone}
           </span>
         </div>
       )}

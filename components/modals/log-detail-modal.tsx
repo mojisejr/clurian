@@ -30,7 +30,7 @@ export function LogDetailModal({
 }: LogDetailModalProps) {
   if (!log) return null;
 
-  const isFollowUp = log.status === "in-progress";
+  const isFollowUp = log.status === "IN_PROGRESS";
   const daysRemaining = log.followUpDate ? getDaysRemaining(log.followUpDate) : null;
 
   return (
@@ -45,7 +45,7 @@ export function LogDetailModal({
             </DialogTitle>
           </DialogHeader>
           <p className="text-lg font-bold mt-3">{log.action}</p>
-          <p className="text-sm opacity-80">{formatThaiDate(log.date)}</p>
+          <p className="text-sm opacity-80">{formatThaiDate(log.performDate)}</p>
         </div>
 
         {/* Content */}
@@ -65,7 +65,7 @@ export function LogDetailModal({
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">ประเภท</span>
             <span className="text-sm font-medium">
-              {log.type === "batch" ? `งานเหมา (โซน ${log.zone})` : "งานรายต้น"}
+              {log.logType === "BATCH" ? `งานเหมา (โซน ${log.targetZone})` : "งานรายต้น"}
             </span>
           </div>
 

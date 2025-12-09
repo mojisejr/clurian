@@ -29,28 +29,28 @@ export function TreeHistorySection({ tree, onLogClick }: TreeHistorySectionProps
 
   // --- Derived Data ---
   const filteredHistory = useMemo(() => {
-    let result = logs.filter(l => 
-        (l.type === 'individual' && l.treeId === tree.id) ||
-        (l.type === 'batch' && l.zone === tree.zone && l.orchardId === currentOrchardId)
+    let result = logs.filter(l =>
+        (l.logType === 'INDIVIDUAL' && l.treeId === tree.id) ||
+        (l.logType === 'BATCH' && l.targetZone === tree.zone && l.orchardId === currentOrchardId)
     );
 
     if (historyTab === 'followup') {
-        result = result.filter(l => l.status === 'in-progress');
+        result = result.filter(l => l.status === 'IN_PROGRESS');
     } else if (historyTab === 'batch') {
-        result = result.filter(l => l.type === 'batch');
+        result = result.filter(l => l.logType === 'BATCH');
     }
 
     if (historySearch) {
         const q = historySearch.toLowerCase();
-        result = result.filter(l => 
-            l.action.toLowerCase().includes(q) || 
-            l.note.toLowerCase().includes(q)
+        result = result.filter(l =>
+            l.action.toLowerCase().includes(q) ||
+            (l.note && l.note.toLowerCase().includes(q))
         );
     }
 
     result.sort((a,b) => {
-        const timeA = new Date(a.date).getTime();
-        const timeB = new Date(b.date).getTime();
+        const timeA = new Date(a.performDate).getTime();
+        const timeB = new Date(b.performDate).getTime();
         return historySort === 'desc' ? timeB - timeA : timeA - timeB;
     });
 
@@ -98,7 +98,7 @@ export function TreeHistorySection({ tree, onLogClick }: TreeHistorySectionProps
                    )}
                >
                    ⏰ ติดตาม/นัดหมาย 
-                   {logs.some(l => l.treeId === tree.id && l.status === 'in-progress') && (
+                   {logs.some(l => l.treeId === tree.id && l.status === 'IN_PROGRESS') && (
                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
                    )}
                </button>
@@ -145,19 +145,21 @@ export function TreeHistorySection({ tree, onLogClick }: TreeHistorySectionProps
                                        <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
                                            {log.action}
                                        </span>
-                                       {log.status === 'in-progress' && (
+                                       {log.status === 'IN_PROGRESS' && (
                                            <Badge variant="outline" className="text-[10px] h-5 px-1 bg-yellow-50 text-yellow-700 border-yellow-200">
                                                รอติดตาม
                                            </Badge>
                                        )}
                                    </div>
                                    <span className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1">
-                                       <Clock size={12} /> {log.date}
+                                       <Clock size={12} /> {log.performDate}
                                    </span>
                                </div>
-                                <p className="text-sm text-muted-foreground line-clamp-2">
-                                    {log.note}
-                                </p>
+                                {log.note && (
+                                   <p className="text-sm text-muted-foreground line-clamp-2">
+                                        {log.note}
+                                   </p>
+                                )}
                            </div>
                        ))}
                    </div>

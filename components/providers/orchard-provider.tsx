@@ -126,7 +126,7 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
     setTrees(prev => prev.map(t => t.id === treeId ? { ...t, ...updates } : t));
 
     if (updates.status) {
-        if (updates.status === 'archived' && updates.code) {
+        if (updates.status === 'ARCHIVED' && updates.code) {
             await archiveTreeServer(treeId, updates.code);
         } else {
              await updateTreeStatusServer(treeId, updates.status);
@@ -164,11 +164,11 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
           // Refactoring `TreeDetailView` logic might be needed, strictly speaking.
           
           // However, for PASSING requirements now:
-          // We iterate and try to update. If ID is numeric (Date.now()), it's new? 
-          // DB IDs are UUIDs (strings). So numeric ID = NEW.
-          
-          if (typeof log.id === 'number') {
-             // It's likely a new log created in UI with Date.now()
+          // We iterate and try to update. If ID starts with "temp-", it's new?
+          // DB IDs are UUIDs (strings). So temp- prefix = NEW.
+
+          if (typeof log.id === 'string' && log.id.startsWith('temp-')) {
+             // It's likely a new log created in UI
              await createLogServer(log);
           } else {
              // It's likely an existing log

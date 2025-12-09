@@ -116,16 +116,17 @@ function DashboardContent() {
      setIsAddingBatchLog(true);
      try {
         await addLog({
-           id: Date.now(),
+           id: `temp-${Date.now()}`,
            orchardId: currentOrchardId,
-           type: 'batch',
+           logType: 'BATCH',
            treeId: undefined,
-           zone: data.targetZone,
+           targetZone: data.targetZone,
            action: data.action || '',
            note: data.note || '',
-           date: data.date || new Date().toISOString().split('T')[0],
-           status: data.followUpDate ? 'in-progress' : 'completed',
+           performDate: data.date || new Date().toISOString().split('T')[0],
+           status: data.followUpDate ? 'IN_PROGRESS' : 'COMPLETED',
            followUpDate: data.followUpDate,
+           createdAt: new Date().toISOString(),
         });
 
         setView('dashboard');
