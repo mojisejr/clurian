@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, TreePine } from "lucide-react";
+import { ArrowLeft, TreePine, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,9 +23,10 @@ import { TREE_TYPES, DURIAN_VARIETIES } from "@/lib/constants";
 
 export interface AddTreeFormProps {
   zones: string[];
-  onSubmit: (data: AddTreeFormData) => void;
+  onSubmit: (data: AddTreeFormData) => Promise<void>;
   onCancel: () => void;
   className?: string;
+  isLoading?: boolean;
 }
 
 export interface AddTreeFormData {
@@ -44,14 +45,18 @@ export function AddTreeForm({
   onSubmit,
   onCancel,
   className,
+  isLoading = false,
 }: AddTreeFormProps) {
   const [isNewZone, setIsNewZone] = useState(false);
   const [isCustomType, setIsCustomType] = useState(false);
   const [isCustomVariety, setIsCustomVariety] = useState(false);
   const [selectedType, setSelectedType] = useState<string>("ทุเรียน");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (isLoading) return; // Prevent multiple submissions
+
     const formData = new FormData(e.currentTarget);
 
     const zone = isNewZone
@@ -71,7 +76,7 @@ export function AddTreeForm({
       return;
     }
 
-    onSubmit({
+    await onSubmit({
       code: formData.get("code") as string,
       zone,
       type: type || "ทุเรียน",
@@ -95,6 +100,7 @@ export function AddTreeForm({
         variant="ghost"
         onClick={onCancel}
         className="mb-4 text-muted-foreground hover:text-primary"
+        disabled={isLoading}
       >
         <ArrowLeft className="h-4 w-4 mr-1" />
         ยกเลิก
@@ -117,6 +123,7 @@ export function AddTreeForm({
                 name="code"
                 placeholder="เช่น A01, B02"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -130,14 +137,20 @@ export function AddTreeForm({
                   size="sm"
                   onClick={() => setIsNewZone(!isNewZone)}
                   className="text-xs h-auto p-0"
+                  disabled={isLoading}
                 >
                   {isNewZone ? "เลือกโซนเดิม" : "+ สร้างโซนใหม่"}
                 </Button>
               </div>
               {isNewZone ? (
-                <Input name="newZone" placeholder="ชื่อโซนใหม่" required />
+                <Input
+                  name="newZone"
+                  placeholder="ชื่อโซนใหม่"
+                  required
+                  disabled={isLoading}
+                />
               ) : (
-                <Select name="zone" required>
+                <Select name="zone" required disabled={isLoading}>
                   <SelectTrigger>
                     <SelectValue placeholder="เลือกโซน" />
                   </SelectTrigger>
@@ -162,17 +175,23 @@ export function AddTreeForm({
                   size="sm"
                   onClick={() => setIsCustomType(!isCustomType)}
                   className="text-xs h-auto p-0"
+                  disabled={isLoading}
                 >
                   {isCustomType ? "เลือกจากรายการ" : "+ กำหนดเอง"}
                 </Button>
               </div>
               {isCustomType ? (
-                <Input name="customType" placeholder="ระบุประเภทต้นไม้" />
+                <Input
+                  name="customType"
+                  placeholder="ระบุประเภทต้นไม้"
+                  disabled={isLoading}
+                />
               ) : (
                 <Select
                   name="type"
                   defaultValue="ทุเรียน"
                   onValueChange={setSelectedType}
+                  disabled={isLoading}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -198,14 +217,23 @@ export function AddTreeForm({
                   size="sm"
                   onClick={() => setIsCustomVariety(!isCustomVariety)}
                   className="text-xs h-auto p-0"
+                  disabled={isLoading}
                 >
                   {isCustomVariety ? "เลือกจากรายการ" : "+ กำหนดเอง"}
                 </Button>
               </div>
               {isCustomVariety ? (
-                <Input name="customVariety" placeholder="ระบุพันธุ์" />
+                <Input
+                  name="customVariety"
+                  placeholder="ระบุพันธุ์"
+                  disabled={isLoading}
+                />
               ) : (
-                <Select name="variety" defaultValue="หมอนทอง">
+                <Select
+                  name="variety"
+                  defaultValue="หมอนทอง"
+                  disabled={isLoading}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -228,12 +256,20 @@ export function AddTreeForm({
                 name="plantedDate"
                 type="date"
                 defaultValue={new Date().toISOString().split("T")[0]}
+                disabled={isLoading}
               />
             </div>
 
             {/* Submit */}
-            <Button type="submit" className="w-full">
-              บันทึกต้นไม้
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  กำลังบันทึก...
+                </>
+              ) : (
+                "บันทึกต้นไม้"
+              )}
             </Button>
           </form>
         </CardContent>

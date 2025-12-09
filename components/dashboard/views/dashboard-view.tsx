@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { ITEMS_PER_PAGE, ZONE_FILTER_ALL } from "@/lib/constants";
 import { useOrchard } from "@/components/providers/orchard-provider";
 import { TreeCard } from "@/components/tree-card";
+import { TreeCardSkeleton } from "@/components/ui/tree-card-skeleton";
 import { Pagination } from "@/components/pagination";
 import { ZoneFilter } from "@/components/zone-filter";
 import { PDFGeneratorModal } from "@/components/modals/pdf-generator-modal";
@@ -16,9 +17,10 @@ interface DashboardViewProps {
   onViewChange: (view: 'add_tree' | 'add_batch_log' | 'tree_detail') => void;
   onIdentifyTree: (treeId: string) => void;
   loadingTreeId?: string | null;
+  isAddingNewTree?: boolean;
 }
 
-export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId }: DashboardViewProps) {
+export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isAddingNewTree = false }: DashboardViewProps) {
   const { trees, currentOrchardId, currentOrchard } = useOrchard();
   
   const [filterZone, setFilterZone] = useState(ZONE_FILTER_ALL);
@@ -147,20 +149,39 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId }: D
 
       {/* Tree List */}
       <div className="space-y-2">
-        {paginatedTrees.data.length === 0 ? (
+        {paginatedTrees.data.length === 0 && !isAddingNewTree ? (
             <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-xl">
                 <Sprout className="mx-auto mb-2 opacity-50" size={48} />
                 <p>ไม่พบข้อมูลต้นไม้</p>
             </div>
         ) : (
-            paginatedTrees.data.map(tree => (
-                <div key={tree.id} onClick={() => onIdentifyTree(tree.id)}>
-                    <TreeCard 
-                        tree={tree} 
-                        isLoading={loadingTreeId === tree.id}
-                    />
+            <>
+              {/* Show skeleton when adding new tree */}
+              {isAddingNewTree && (
+                <>
+                  <TreeCardSkeleton />
+                  <TreeCardSkeleton />
+                  <TreeCardSkeleton />
+                </>
+              )}
+
+              {/* Render actual trees */}
+              {paginatedTrees.data.map(tree => (
+                  <div key={tree.id} onClick={() => onIdentifyTree(tree.id)}>
+                      <TreeCard
+                          tree={tree}
+                          isLoading={loadingTreeId === tree.id}
+                      />
+                  </div>
+              ))}
+
+              {/* Show empty state if no trees but loading */}
+              {paginatedTrees.data.length === 0 && isAddingNewTree && (
+                <div className="text-center py-4 text-muted-foreground text-sm">
+                  กำลังเพิ่มต้นไม้ใหม่...
                 </div>
-            ))
+              )}
+            </>
         )}
       </div>
 
