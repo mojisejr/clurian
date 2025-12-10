@@ -29,7 +29,7 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
   const [logoBase64, setLogoBase64] = useState<string>('');
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
 
-  const orchardZones = currentOrchard.zones;
+  const orchardZones = currentOrchard?.zones || [];
 
   const processedTrees = useMemo(() => {
     let result = trees.filter(t => t.orchardId === currentOrchardId && t.status !== 'ARCHIVED');

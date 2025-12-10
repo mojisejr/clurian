@@ -117,7 +117,8 @@ model Tree {
   logs          ActivityLog[]
 
   @@unique([orchardId, code], name: "orchard_code_unique") // Ensure unique code within an orchard
-  @@index([orchardId, status])
+  @@index([orchardId, status, zone]) // For filtering trees by orchard, status, and zone
+  @@index([orchardId, status]) // Existing index
   @@map("trees")
 }
 
@@ -154,6 +155,8 @@ model ActivityLog {
   orchard      Orchard   @relation(fields: [orchardId], references: [id])
 
   @@index([treeId, performDate(sort: Desc)])
-  @@index([orchardId, status, followUpDate])
+  @@index([orchardId, performDate(sort: Desc)]) // For sorting activity logs by date in dashboard
+  @@index([orchardId, status, followUpDate]) // For follow-up activities
+  @@index([status, followUpDate]) // For general follow-up queries across orchards
   @@map("activity_logs")
 }

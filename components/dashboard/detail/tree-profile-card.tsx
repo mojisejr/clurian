@@ -65,7 +65,7 @@ export function TreeProfileCard({ tree, onAddLog, onReplant }: TreeProfileCardPr
                       โซน: {tree.zone} | ปลูกเมื่อ: {tree.plantedDate}
                   </p>
                   <p className="text-xs text-primary font-medium mt-2 bg-muted inline-block px-2 py-1 rounded-md border border-border">
-                      {currentOrchard.name}
+                      {currentOrchard?.name || 'ไม่พบข้อมูลสวน'}
                   </p>
               </div>
               
