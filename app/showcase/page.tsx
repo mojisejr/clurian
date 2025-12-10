@@ -14,6 +14,45 @@ import {
   Settings
 } from 'lucide-react';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Theme Colors - Converted from OKLCH to RGB for inline styles
+const theme = {
+  // Light mode colors
+  light: {
+    primary: { rgb: 'rgb(64, 122, 81)', rgba: 'rgba(64, 122, 81, 0.9)' },      // Deep Forest Green
+    primaryForeground: { rgb: 'rgb(255, 255, 255)', rgba: 'rgba(255, 255, 255, 0.9)' },
+    secondary: { rgb: 'rgb(219, 234, 224)', rgba: 'rgba(219, 234, 224, 0.9)' }, // Sage Green
+    secondaryForeground: { rgb: 'rgb(85, 107, 94)', rgba: 'rgba(85, 107, 94, 0.9)' },
+    background: { rgb: 'rgb(250, 249, 247)', rgba: 'rgba(250, 249, 247, 0.95)' }, // Warm Stone
+    foreground: { rgb: 'rgb(62, 78, 68)', rgba: 'rgba(62, 78, 68, 0.9)' },
+    accent: { rgb: 'rgb(243, 223, 211)', rgba: 'rgba(243, 223, 211, 0.9)' },   // Muted Terracotta
+    accentForeground: { rgb: 'rgb(124, 84, 68)', rgba: 'rgba(124, 84, 68, 0.9)' },
+    success: { rgb: 'rgb(178, 222, 190)', rgba: 'rgba(178, 222, 190, 0.9)' }, // Light Green
+    warning: { rgb: 'rgb(248, 213, 156)', rgba: 'rgba(248, 213, 156, 0.9)' }, // Orange
+    destructive: { rgb: 'rgb(225, 122, 116)', rgba: 'rgba(225, 122, 116, 0.9)' }, // Red
+    border: { rgb: 'rgb(221, 229, 225)', rgba: 'rgba(221, 229, 225, 0.3)' },      // Light Border
+    muted: { rgb: 'rgb(244, 247, 245)', rgba: 'rgba(244, 247, 245, 0.5)' },     // Muted background
+    mutedForeground: { rgb: 'rgb(107, 114, 128)', rgba: 'rgba(107, 114, 128, 0.9)' }, // Muted text
+  },
+  // Dark mode colors
+  dark: {
+    primary: { rgb: 'rgb(174, 213, 190)', rgba: 'rgba(174, 213, 190, 0.9)' },    // Light Forest Green
+    primaryForeground: { rgb: 'rgb(45, 56, 50)', rgba: 'rgba(45, 56, 50, 0.9)' },
+    secondary: { rgb: 'rgb(68, 91, 80)', rgba: 'rgba(68, 91, 80, 0.9)' },       // Dark Sage
+    secondaryForeground: { rgb: 'rgb(232, 242, 236)', rgba: 'rgba(232, 242, 236, 0.9)' },
+    background: { rgb: 'rgb(44, 56, 50)', rgba: 'rgba(44, 56, 50, 0.95)' },      // Dark Background
+    foreground: { rgb: 'rgb(241, 245, 242)', rgba: 'rgba(241, 245, 242, 0.9)' },
+    accent: { rgb: 'rgb(198, 168, 148)', rgba: 'rgba(198, 168, 148, 0.9)' },     // Dark Terracotta
+    accentForeground: { rgb: 'rgb(233, 239, 234)', rgba: 'rgba(233, 239, 234, 0.9)' },
+    success: { rgb: 'rgb(158, 195, 170)', rgba: 'rgba(158, 195, 170, 0.9)' },     // Dark Success
+    warning: { rgb: 'rgb(219, 180, 120)', rgba: 'rgba(219, 180, 120, 0.9)' },     // Dark Warning
+    destructive: { rgb: 'rgb(207, 102, 96)', rgba: 'rgba(207, 102, 96, 0.9)' },    // Dark Red
+    border: { rgb: 'rgb(76, 91, 83)', rgba: 'rgba(76, 91, 83, 0.3)' },           // Dark Border
+    muted: { rgb: 'rgb(68, 91, 80)', rgba: 'rgba(68, 91, 80, 0.3)' },             // Dark Muted
+    mutedForeground: { rgb: 'rgb(156, 163, 175)', rgba: 'rgba(156, 163, 175, 0.9)' } // Dark Muted text
+  }
+};
+
 // Mock Data
 const mockTrees = [
   {
@@ -83,14 +122,47 @@ interface GlassCardProps {
   children: React.ReactNode;
   className?: string;
   onClick?: () => void;
+  variant?: 'default' | 'primary' | 'secondary' | 'accent'
 }
 
-const GlassCard = ({ children, className = '', onClick }: GlassCardProps) => {
+const GlassCard = ({ children, className = '', onClick, variant = 'default' }: GlassCardProps) => {
+  // Detect dark mode
+  const isDarkMode = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
+  const currentTheme = isDarkMode ? theme.dark : theme.light;
+
+  // Define colors based on variant
+  const getCardColors = () => {
+    switch (variant) {
+      case 'primary':
+        return {
+          bg: `rgba(${currentTheme.primary.rgb.slice(4, -1)}, 0.1)`,
+          border: `rgba(${currentTheme.primary.rgb.slice(4, -1)}, 0.2)`
+        };
+      case 'secondary':
+        return {
+          bg: `rgba(${currentTheme.secondary.rgb.slice(4, -1)}, 0.1)`,
+          border: `rgba(${currentTheme.secondary.rgb.slice(4, -1)}, 0.2)`
+        };
+      case 'accent':
+        return {
+          bg: `rgba(${currentTheme.accent.rgb.slice(4, -1)}, 0.1)`,
+          border: `rgba(${currentTheme.accent.rgb.slice(4, -1)}, 0.2)`
+        };
+      default:
+        return {
+          bg: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.15)',
+          border: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)'
+        };
+    }
+  };
+
+  const colors = getCardColors();
+
   const cardStyle = {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: colors.bg,
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
-    border: '1px solid rgba(255, 255, 255, 0.2)'
+    border: `1px solid ${colors.border}`
   };
 
   return (
@@ -121,6 +193,7 @@ const GlassCard = ({ children, className = '', onClick }: GlassCardProps) => {
 interface GlassButtonProps {
   children: React.ReactNode;
   variant?: 'solid' | 'glass' | 'outline';
+  color?: 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'destructive';
   onClick?: () => void;
   className?: string;
   disabled?: boolean;
@@ -130,30 +203,40 @@ interface GlassButtonProps {
 const GlassButton = ({
   children,
   variant = 'solid',
+  color = 'primary',
   onClick,
   className = '',
   disabled = false,
   icon: Icon
 }: GlassButtonProps) => {
+  // Detect dark mode
+  const isDarkMode = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
+  const currentTheme = isDarkMode ? theme.dark : theme.light;
+
   const getStyle = () => {
+    const themeColor = currentTheme[color as keyof typeof currentTheme];
+
     switch (variant) {
       case 'solid':
         return {
-          backgroundColor: 'rgba(34, 197, 94, 0.9)',
-          color: '#ffffff',
-          border: 'none'
+          backgroundColor: themeColor.rgba,
+          color: color === 'primary' ? currentTheme.primaryForeground.rgb : '#ffffff',
+          border: 'none',
+          opacity: disabled ? 0.5 : 1
         };
       case 'glass':
         return {
-          backgroundColor: 'rgba(255, 255, 255, 0.2)',
-          color: '#ffffff',
-          border: '1px solid rgba(255, 255, 255, 0.3)'
+          backgroundColor: `rgba(${themeColor.rgb.slice(4, -1)}, 0.2)`,
+          color: currentTheme.foreground.rgb,
+          border: `1px solid ${themeColor.rgba}`,
+          opacity: disabled ? 0.5 : 1
         };
       case 'outline':
         return {
           backgroundColor: 'transparent',
-          color: '#ffffff',
-          border: '1px solid rgba(255, 255, 255, 0.2)'
+          color: themeColor.rgb,
+          border: `1px solid ${themeColor.rgb}`,
+          opacity: disabled ? 0.5 : 1
         };
       default:
         return {};
@@ -197,12 +280,16 @@ const GlassInput = ({
   icon: Icon,
   className = ''
 }: GlassInputProps) => {
+  // Detect dark mode
+  const isDarkMode = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
+  const currentTheme = isDarkMode ? theme.dark : theme.light;
+
   const inputStyle = {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.1)',
     backdropFilter: 'blur(4px)',
     WebkitBackdropFilter: 'blur(4px)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    color: '#ffffff'
+    border: `1px solid ${currentTheme.border.rgba}`,
+    color: currentTheme.foreground.rgb
   };
 
   return (
@@ -235,31 +322,35 @@ interface GlassBadgeProps {
 }
 
 const GlassBadge = ({ status, text }: GlassBadgeProps) => {
+  // Detect dark mode
+  const isDarkMode = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
+  const currentTheme = isDarkMode ? theme.dark : theme.light;
+
   const getStyle = () => {
     switch (status) {
       case 'healthy':
         return {
-          backgroundColor: 'rgba(34, 197, 94, 0.2)',
-          color: '#bbf7d0',
-          border: '1px solid rgba(74, 222, 128, 0.3)'
+          backgroundColor: currentTheme.success.rgba,
+          color: isDarkMode ? 'rgb(34, 59, 46)' : 'rgb(21, 128, 61)',
+          border: `1px solid ${isDarkMode ? 'rgba(158, 195, 170, 0.5)' : 'rgba(178, 222, 190, 0.5)'}`
         };
       case 'sick':
         return {
-          backgroundColor: 'rgba(239, 68, 68, 0.2)',
-          color: '#fecaca',
-          border: '1px solid rgba(248, 113, 113, 0.3)'
+          backgroundColor: currentTheme.destructive.rgba,
+          color: isDarkMode ? 'rgb(64, 25, 23)' : 'rgb(185, 28, 28)',
+          border: `1px solid ${isDarkMode ? 'rgba(207, 102, 96, 0.5)' : 'rgba(225, 122, 116, 0.5)'}`
         };
       case 'dead':
         return {
-          backgroundColor: 'rgba(107, 114, 128, 0.2)',
-          color: '#e5e7eb',
-          border: '1px solid rgba(156, 163, 175, 0.3)'
+          backgroundColor: isDarkMode ? 'rgba(156, 163, 175, 0.2)' : 'rgba(156, 163, 175, 0.2)',
+          color: isDarkMode ? 'rgb(209, 213, 219)' : 'rgb(75, 85, 99)',
+          border: `1px solid ${isDarkMode ? 'rgba(156, 163, 175, 0.3)' : 'rgba(209, 213, 219, 0.3)'}`
         };
       case 'archived':
         return {
-          backgroundColor: 'rgba(59, 130, 246, 0.2)',
-          color: '#dbeafe',
-          border: '1px solid rgba(96, 165, 250, 0.3)'
+          backgroundColor: currentTheme.accent.rgba,
+          color: isDarkMode ? 'rgb(91, 67, 50)' : 'rgb(124, 58, 237)',
+          border: `1px solid ${isDarkMode ? 'rgba(198, 168, 148, 0.5)' : 'rgba(243, 223, 211, 0.5)'}`
         };
       default:
         return {};
@@ -531,8 +622,13 @@ export default function ShowcasePage() {
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  const isDarkMode = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
+  const currentTheme = isDarkMode ? theme.dark : theme.light;
+
   const backgroundStyle = {
-    background: 'linear-gradient(to bottom right, rgba(34, 197, 94, 0.1), rgba(168, 85, 247, 0.05), rgba(59, 130, 246, 0.08))'
+    background: isDarkMode
+      ? `linear-gradient(to bottom right, ${currentTheme.primary.rgba}, ${currentTheme.secondary.rgba}, ${currentTheme.accent.rgba})`
+      : `linear-gradient(to bottom right, ${currentTheme.primary.rgba}, ${currentTheme.secondary.rgba}, ${currentTheme.background.rgba})`
   };
 
   const glassTextureStyle = {
@@ -541,11 +637,11 @@ export default function ShowcasePage() {
   };
 
   const selectStyle = {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.1)',
     backdropFilter: 'blur(4px)',
     WebkitBackdropFilter: 'blur(4px)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    color: '#ffffff'
+    border: `1px solid ${currentTheme.border.rgba}`,
+    color: currentTheme.foreground.rgb
   };
 
   return (
@@ -571,10 +667,10 @@ export default function ShowcasePage() {
       <div className="relative z-10 p-4 pb-24 md:pb-8 max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: currentTheme.foreground.rgb }}>
             Modern Liquid Glass UI
           </h1>
-          <p className="text-lg opacity-80 max-w-2xl mx-auto">
+          <p className="text-lg max-w-2xl mx-auto" style={{ color: currentTheme.mutedForeground.rgb, opacity: 0.8 }}>
             ตัวอย่างการออกแบบ UI แบบ Glass Morphism สำหรับระบบจัดการสวนทุเรียน
           </p>
         </div>
@@ -605,16 +701,16 @@ export default function ShowcasePage() {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-3 mb-8">
-          <GlassButton variant="solid" icon={Plus}>
+          <GlassButton variant="solid" color="primary" icon={Plus}>
             เพิ่มต้นไม้
           </GlassButton>
-          <GlassButton variant="glass" icon={Droplets}>
+          <GlassButton variant="glass" color="secondary" icon={Droplets}>
             บันทึกกิจกรรม
           </GlassButton>
-          <GlassButton variant="outline" icon={Filter}>
+          <GlassButton variant="outline" color="accent" icon={Filter}>
             ตัวกรอง
           </GlassButton>
-          <GlassButton onClick={() => setShowModal(true)}>
+          <GlassButton variant="glass" onClick={() => setShowModal(true)}>
             เปิด Modal
           </GlassButton>
         </div>
@@ -623,7 +719,7 @@ export default function ShowcasePage() {
         <div className="grid lg:grid-cols-2 gap-6 mb-8">
           {/* Trees Section */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: currentTheme.foreground.rgb }}>
               <TreePine className="w-6 h-6" />
               รายการต้นไม้
             </h2>
@@ -631,7 +727,7 @@ export default function ShowcasePage() {
               {mockTrees.map((tree) => (
                 <TreeCardGlass
                   key={tree.id}
-                  tree={tree}
+                  tree={tree as TreeCardGlassProps['tree']}
                   onClick={() => console.log('Clicked tree:', tree.code)}
                 />
               ))}
@@ -640,13 +736,13 @@ export default function ShowcasePage() {
 
           {/* Activities Section */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: currentTheme.foreground.rgb }}>
               <Calendar className="w-6 h-6" />
               กิจกรรมล่าสุด
             </h2>
             <div className="space-y-3">
               {mockActivities.map((activity) => (
-                <ActivityCardGlass key={activity.id} activity={activity} />
+                <ActivityCardGlass key={activity.id} activity={activity as ActivityCardGlassProps['activity']} />
               ))}
             </div>
           </div>
@@ -655,25 +751,25 @@ export default function ShowcasePage() {
         {/* Stats Cards */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'ต้นไม้ทั้งหมด', value: '156', icon: TreePine, color: '#4ade80' },
-            { label: 'สุขภาพดี', value: '142', icon: CheckCircle, color: '#60a5fa' },
-            { label: 'กำลังป่วย', value: '8', icon: AlertCircle, color: '#facc15' },
-            { label: 'กิจกรรมวันนี้', value: '12', icon: Calendar, color: '#c084fc' }
+            { label: 'ต้นไม้ทั้งหมด', value: '156', icon: TreePine, color: 'primary' },
+            { label: 'สุขภาพดี', value: '142', icon: CheckCircle, color: 'success' },
+            { label: 'กำลังป่วย', value: '8', icon: AlertCircle, color: 'warning' },
+            { label: 'กิจกรรมวันนี้', value: '12', icon: Calendar, color: 'accent' }
           ].map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <GlassCard key={index} className="p-4 text-center">
-                <Icon className="w-8 h-8 mx-auto mb-2" style={{ color: stat.color }} />
-                <div className="text-2xl font-bold text-white">{stat.value}</div>
-                <div className="text-sm opacity-70">{stat.label}</div>
+              <GlassCard key={index} variant="secondary" className="p-4 text-center">
+                <Icon className="w-8 h-8 mx-auto mb-2" style={{ color: currentTheme[stat.color as keyof typeof currentTheme].rgb }} />
+                <div className="text-2xl font-bold" style={{ color: currentTheme.foreground.rgb }}>{stat.value}</div>
+                <div className="text-sm" style={{ color: currentTheme.mutedForeground.rgb }}>{stat.label}</div>
               </GlassCard>
             );
           })}
         </div>
 
         {/* Form Demo */}
-        <GlassCard className="p-6">
-          <h2 className="text-2xl font-bold text-white mb-4">ฟอร์มตัวอย่าง</h2>
+        <GlassCard variant="accent" className="p-6">
+          <h2 className="text-2xl font-bold mb-4" style={{ color: currentTheme.foreground.rgb }}>ฟอร์มตัวอย่าง</h2>
           <div className="grid md:grid-cols-2 gap-4">
             <GlassInput
               placeholder="รหัสต้นไม้"
