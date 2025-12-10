@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Kanit, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { QueryProvider } from "@/components/providers/query-client-provider";
 
 const kanit = Kanit({
   variable: "--font-kanit",
@@ -28,7 +29,9 @@ export default function RootLayout({
       <body
         className={`${kanit.variable} ${geistMono.variable} antialiased pb-16 md:pb-0`}
       >
-        {children}
+        <QueryProvider>
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );
