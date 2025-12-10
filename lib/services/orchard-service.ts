@@ -2,21 +2,11 @@ import { prisma } from '@/lib/prisma';
 import { Orchard, Tree, Log } from '@/lib/types';
 import { mapPrismaTreeToDomain, mapPrismaLogToDomain } from '@/lib/domain/mappers';
 import { handleServiceError } from '@/lib/errors';
+import { getCachedOrchards } from './cached-services';
 
 export async function getOrchards(userId: string): Promise<Orchard[]> {
   try {
-      const orchards = await prisma.orchard.findMany({
-          where: { ownerId: userId },
-          orderBy: { createdAt: 'desc' }
-      });
-
-      return orchards.map(o => ({
-          id: o.id,
-          ownerId: o.ownerId,
-          name: o.name,
-          zones: o.zones as string[],
-          createdAt: o.createdAt.toISOString()
-      }));
+      return await getCachedOrchards(userId);
   } catch (error) {
       handleServiceError(error, 'getOrchards');
       return [];
@@ -32,6 +22,9 @@ export async function createOrchard(userId: string, name: string): Promise<Orcha
               zones: ["A"] // Default zone
           }
       });
+
+      // Cache invalidation will be handled by the cache tags and revalidation times
+
       return {
           id: orchard.id,
           ownerId: orchard.ownerId,
@@ -47,15 +40,48 @@ export async function createOrchard(userId: string, name: string): Promise<Orcha
 
 export async function getOrchardData(orchardId: string) {
   try {
-      const trees = await prisma.tree.findMany({
-          where: { orchardId },
-          orderBy: { createdAt: 'desc' }
-      });
-
-      const logs = await prisma.activityLog.findMany({
-          where: { orchardId },
-          orderBy: { performDate: 'desc' }
-      });
+      // Use parallel queries instead of sequential
+      const [trees, logs] = await Promise.all([
+          prisma.tree.findMany({
+              where: { orchardId },
+              select: {
+                  id: true,
+                  orchardId: true,
+                  code: true,
+                  zone: true,
+                  type: true,
+                  variety: true,
+                  plantedDate: true,
+                  status: true,
+                  replacedTreeId: true,
+                  createdAt: true,
+                  updatedAt: true
+              },
+              orderBy: [
+                  { status: 'asc' }, // Show sick trees first
+                  { createdAt: 'desc' }
+              ],
+              take: 100 // Limit to prevent memory issues
+          }),
+          prisma.activityLog.findMany({
+              where: { orchardId },
+              select: {
+                  id: true,
+                  orchardId: true,
+                  logType: true,
+                  treeId: true,
+                  targetZone: true,
+                  action: true,
+                  note: true,
+                  performDate: true,
+                  status: true,
+                  followUpDate: true,
+                  createdAt: true
+              },
+              orderBy: { performDate: 'desc' },
+              take: 50 // Limit recent logs
+          })
+      ]);
 
       return {
           trees: trees.map(mapPrismaTreeToDomain) as Tree[],
@@ -76,6 +102,8 @@ export async function addZoneToOrchard(orchardId: string, zone: string) {
                 where: { id: orchardId },
                 data: { zones: [...currentZones, zone].sort() }
             });
+
+            // Cache invalidation will be handled by the cache tags and revalidation times
         }
     }
 }

@@ -19,7 +19,9 @@ export async function createTree(data: Tree): Promise<Tree | null> {
               status: data.status
           }
       });
-      
+
+      // Cache invalidation will be handled by the cache tags and revalidation times
+
       return {
           ...data,
           id: tree.id
@@ -36,6 +38,8 @@ export async function updateTreeStatus(treeId: string, status: TreeStatus) {
             where: { id: treeId },
             data: { status: status }
         });
+
+        // Cache invalidation will be handled by the cache tags and revalidation times
     } catch (error) {
         handleServiceError(error, 'updateTreeStatus');
     }
@@ -45,12 +49,109 @@ export async function archiveTree(treeId: string, newCode: string) {
     try {
         await prisma.tree.update({
             where: { id: treeId },
-            data: { 
+            data: {
                 status: 'ARCHIVED',
-                code: newCode 
+                code: newCode
             }
         });
+
+        // Cache invalidation will be handled by the cache tags and revalidation times
     } catch (error) {
         handleServiceError(error, 'archiveTree');
+    }
+}
+
+export async function getOrchardTrees(
+    orchardId: string,
+    page: number = 1,
+    limit: number = 20,
+    filters?: {
+        status?: TreeStatus;
+        zone?: string;
+        searchTerm?: string;
+    }
+) {
+    try {
+        const skip = (page - 1) * limit;
+
+        // Build where clause
+        const where: Record<string, unknown> = { orchardId };
+
+        if (filters?.status) {
+            where.status = filters.status;
+        }
+
+        if (filters?.zone) {
+            where.zone = filters.zone;
+        }
+
+        if (filters?.searchTerm) {
+            (where as Record<string, unknown>).OR = [
+                { code: { contains: filters.searchTerm, mode: 'insensitive' } },
+                { variety: { contains: filters.searchTerm, mode: 'insensitive' } }
+            ];
+        }
+
+        // Execute queries in parallel for efficiency
+        const [trees, total] = await Promise.all([
+            prisma.tree.findMany({
+                where,
+                select: {
+                    id: true,
+                    orchardId: true,
+                    code: true,
+                    zone: true,
+                    type: true,
+                    variety: true,
+                    plantedDate: true,
+                    status: true,
+                    createdAt: true
+                },
+                orderBy: [
+                    { status: 'asc' }, // Show sick trees first
+                    { code: 'asc' }
+                ],
+                skip,
+                take: limit
+            }),
+            prisma.tree.count({ where })
+        ]);
+
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+            trees: trees.map(tree => ({
+                id: tree.id,
+                orchardId: tree.orchardId,
+                code: tree.code,
+                zone: tree.zone,
+                type: tree.type,
+                variety: tree.variety,
+                plantedDate: tree.plantedDate?.toISOString().split('T')[0] || null,
+                status: tree.status.toLowerCase() as Tree['status'],
+                createdAt: tree.createdAt.toISOString()
+            })) as Tree[],
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages,
+                hasNext: page < totalPages,
+                hasPrev: page > 1
+            }
+        };
+    } catch (error) {
+        handleServiceError(error, 'getOrchardTrees');
+        return {
+            trees: [],
+            pagination: {
+                page,
+                limit,
+                total: 0,
+                totalPages: 0,
+                hasNext: false,
+                hasPrev: false
+            }
+        };
     }
 }
