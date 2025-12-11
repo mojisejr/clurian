@@ -35,11 +35,11 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
      const newTree: Tree = {
          ...oldTree,
          id: `uuid-${Date.now()}`,
-         status: 'HEALTHY',
+         status: 'healthy',
          plantedDate: new Date().toISOString().split('T')[0]
      };
 
-     await updateTree(oldTree.id, { status: 'ARCHIVED', code: `${oldTree.code}_HIST_${Date.now()}` });
+     await updateTree(oldTree.id, { status: 'archived', code: `${oldTree.code}_HIST_${Date.now()}` });
      const savedTree = await addTree(newTree);
      
      if (savedTree) {
@@ -77,7 +77,7 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
             createdAt: new Date().toISOString()
         } as Log;
 
-        if (followUpLog.treeId) updateTree(followUpLog.treeId, { status: 'HEALTHY' });
+        if (followUpLog.treeId) updateTree(followUpLog.treeId, { status: 'healthy' });
         updateLogs([cureLog, ...updatedAllLogs]);
     } else {
         const continueLog: Log = {

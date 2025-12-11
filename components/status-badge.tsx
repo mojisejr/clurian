@@ -1,7 +1,8 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import type { TreeStatus } from "@/lib/types";
+import type { TreeStatus, UITreeStatus } from "@/lib/types";
 import { STATUS_CONFIG } from "@/lib/constants";
+import { treeStatusFromUI } from "@/lib/domain/mappers";
 
 const statusBadgeVariants = cva(
   "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border whitespace-nowrap",
@@ -37,7 +38,7 @@ const statusBadgeVariants = cva(
 export interface StatusBadgeProps
   extends React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof statusBadgeVariants> {
-  status?: TreeStatus;
+  status?: TreeStatus | UITreeStatus; // Accept both formats
 }
 
 /**
@@ -60,8 +61,9 @@ export function StatusBadge({
   children,
   ...props
 }: StatusBadgeProps) {
-  // If status is provided, use STATUS_CONFIG for variant and label
-  const config = status ? STATUS_CONFIG[status] : null;
+  // If status is provided, convert to TreeStatus and use STATUS_CONFIG for variant and label
+  const normalizedStatus = status ? treeStatusFromUI(status as UITreeStatus) : undefined;
+  const config = normalizedStatus ? STATUS_CONFIG[normalizedStatus] : null;
   const resolvedVariant = variant ?? config?.variant ?? "secondary";
   const label = children ?? config?.label ?? "";
 

@@ -1,17 +1,17 @@
-import type { Tree, Orchard, Log, TreeStatus } from "@/lib/types";
+import type { Tree, Orchard, Log, UITreeStatus } from "@/lib/types";
 
 export const generateMockTrees = (): Tree[] => {
   const trees: Tree[] = [];
-  const statuses: TreeStatus[] = ['HEALTHY', 'SICK', 'DEAD'];
+  const statuses: UITreeStatus[] = ['healthy', 'sick', 'dead']; // Use UI-friendly lowercase
   const varieties = ['หมอนทอง', 'ก้านยาว', 'ชะนี', 'พวงมณี', 'นกหยิบ'];
 
-  trees.push({ id: 'uuid-1', orchardId: 'orchard-1', code: 'A01', zone: 'A', type: 'ทุเรียน', variety: 'หมอนทอง', plantedDate: '2020-05-15', status: 'HEALTHY', createdAt: '2020-05-15T00:00:00.000Z', updatedAt: '2020-05-15T00:00:00.000Z' });
-  trees.push({ id: 'uuid-2', orchardId: 'orchard-1', code: 'A02', zone: 'A', type: 'ทุเรียน', variety: 'หมอนทอง', plantedDate: '2020-05-15', status: 'SICK', createdAt: '2020-05-15T00:00:00.000Z', updatedAt: '2020-05-15T00:00:00.000Z' });
-  trees.push({ id: 'uuid-3', orchardId: 'orchard-1', code: 'A03', zone: 'A', type: 'ทุเรียน', variety: 'ก้านยาว', plantedDate: '2021-06-20', status: 'HEALTHY', createdAt: '2021-06-20T00:00:00.000Z', updatedAt: '2021-06-20T00:00:00.000Z' });
-  trees.push({ id: 'uuid-4', orchardId: 'orchard-1', code: 'B01', zone: 'B', type: 'ทุเรียน', variety: 'หมอนทอง', plantedDate: '2019-04-10', status: 'HEALTHY', createdAt: '2019-04-10T00:00:00.000Z', updatedAt: '2019-04-10T00:00:00.000Z' });
-  trees.push({ id: 'uuid-5', orchardId: 'orchard-1', code: 'B02', zone: 'B', type: 'ทุเรียน', variety: 'พวงมณี', plantedDate: '2019-04-10', status: 'DEAD', createdAt: '2019-04-10T00:00:00.000Z', updatedAt: '2019-04-10T00:00:00.000Z' });
-  trees.push({ id: 'uuid-6', orchardId: 'orchard-2', code: 'X01', zone: 'ริมน้ำ', type: 'ทุเรียน', variety: 'นกหยิบ', plantedDate: '2022-01-10', status: 'HEALTHY', createdAt: '2022-01-10T00:00:00.000Z', updatedAt: '2022-01-10T00:00:00.000Z' });
-  trees.push({ id: 'uuid-7', orchardId: 'orchard-2', code: 'M01', zone: 'ริมน้ำ', type: 'มังคุด', variety: 'พื้นเมือง', plantedDate: '2018-05-20', status: 'HEALTHY', createdAt: '2018-05-20T00:00:00.000Z', updatedAt: '2018-05-20T00:00:00.000Z' });
+  trees.push({ id: 'uuid-1', orchardId: 'orchard-1', code: 'A01', zone: 'A', type: 'ทุเรียน', variety: 'หมอนทอง', plantedDate: '2020-05-15', status: 'healthy', createdAt: '2020-05-15T00:00:00.000Z', updatedAt: '2020-05-15T00:00:00.000Z' });
+  trees.push({ id: 'uuid-2', orchardId: 'orchard-1', code: 'A02', zone: 'A', type: 'ทุเรียน', variety: 'หมอนทอง', plantedDate: '2020-05-15', status: 'sick', createdAt: '2020-05-15T00:00:00.000Z', updatedAt: '2020-05-15T00:00:00.000Z' });
+  trees.push({ id: 'uuid-3', orchardId: 'orchard-1', code: 'A03', zone: 'A', type: 'ทุเรียน', variety: 'ก้านยาว', plantedDate: '2021-06-20', status: 'healthy', createdAt: '2021-06-20T00:00:00.000Z', updatedAt: '2021-06-20T00:00:00.000Z' });
+  trees.push({ id: 'uuid-4', orchardId: 'orchard-1', code: 'B01', zone: 'B', type: 'ทุเรียน', variety: 'หมอนทอง', plantedDate: '2019-04-10', status: 'healthy', createdAt: '2019-04-10T00:00:00.000Z', updatedAt: '2019-04-10T00:00:00.000Z' });
+  trees.push({ id: 'uuid-5', orchardId: 'orchard-1', code: 'B02', zone: 'B', type: 'ทุเรียน', variety: 'พวงมณี', plantedDate: '2019-04-10', status: 'dead', createdAt: '2019-04-10T00:00:00.000Z', updatedAt: '2019-04-10T00:00:00.000Z' });
+  trees.push({ id: 'uuid-6', orchardId: 'orchard-2', code: 'X01', zone: 'ริมน้ำ', type: 'ทุเรียน', variety: 'นกหยิบ', plantedDate: '2022-01-10', status: 'healthy', createdAt: '2022-01-10T00:00:00.000Z', updatedAt: '2022-01-10T00:00:00.000Z' });
+  trees.push({ id: 'uuid-7', orchardId: 'orchard-2', code: 'M01', zone: 'ริมน้ำ', type: 'มังคุด', variety: 'พื้นเมือง', plantedDate: '2018-05-20', status: 'healthy', createdAt: '2018-05-20T00:00:00.000Z', updatedAt: '2018-05-20T00:00:00.000Z' });
 
   for (let i = 1; i <= 25; i++) {
       trees.push({

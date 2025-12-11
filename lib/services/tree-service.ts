@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { Tree, TreeStatus } from '@/lib/types';
+import { treeStatusToUI, treeStatusFromUI } from '@/lib/domain/mappers';
 import { addZoneToOrchard } from './orchard-service';
 import { handleServiceError } from '@/lib/errors';
 
@@ -16,7 +17,7 @@ export async function createTree(data: Tree): Promise<Tree | null> {
               type: data.type,
               variety: data.variety,
               plantedDate: data.plantedDate ? new Date(data.plantedDate) : null,
-              status: data.status
+              status: treeStatusFromUI(data.status) // Convert UI status to DB status
           }
       });
 
@@ -24,7 +25,8 @@ export async function createTree(data: Tree): Promise<Tree | null> {
 
       return {
           ...data,
-          id: tree.id
+          id: tree.id,
+          status: data.status // Keep UI status in response
       };
   } catch (error) {
       handleServiceError(error, 'createTree');
@@ -128,7 +130,7 @@ export async function getOrchardTrees(
                 type: tree.type,
                 variety: tree.variety,
                 plantedDate: tree.plantedDate?.toISOString().split('T')[0] || null,
-                status: tree.status.toLowerCase() as Tree['status'],
+                status: treeStatusToUI(tree.status),
                 createdAt: tree.createdAt.toISOString()
             })) as Tree[],
             pagination: {
