@@ -32,7 +32,7 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
   const orchardZones = currentOrchard?.zones || [];
 
   const processedTrees = useMemo(() => {
-    let result = trees.filter(t => t.orchardId === currentOrchardId && t.status !== 'ARCHIVED');
+    let result = trees.filter(t => t.orchardId === currentOrchardId && t.status !== 'archived');
     
     if (filterZone !== ZONE_FILTER_ALL) {
       result = result.filter(t => t.zone === filterZone);
@@ -62,8 +62,8 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
   }, [processedTrees, currentPage]);
 
   const currentOrchardTrees = trees.filter(t => t.orchardId === currentOrchardId);
-  const sickTreesCount = currentOrchardTrees.filter(t => t.status === 'SICK').length;
-  const activeTreesCount = currentOrchardTrees.filter(t => t.status !== 'ARCHIVED').length;
+  const sickTreesCount = currentOrchardTrees.filter(t => t.status === 'sick').length;
+  const activeTreesCount = currentOrchardTrees.filter(t => t.status !== 'archived').length;
 
   // --- Load Logo (Once) ---
   useEffect(() => {

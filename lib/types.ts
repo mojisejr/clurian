@@ -1,5 +1,11 @@
-// Tree status types (matching Prisma schema)
-export type TreeStatus = "HEALTHY" | "SICK" | "DEAD" | "ARCHIVED";
+// Import TreeStatus from Prisma to ensure consistency
+import { TreeStatus as PrismaTreeStatus } from '@prisma/client';
+
+// Use Prisma's TreeStatus enum directly
+export type TreeStatus = PrismaTreeStatus;
+
+// UI-friendly lowercase status values
+export type UITreeStatus = 'healthy' | 'sick' | 'dead' | 'archived';
 
 // Log types (matching Prisma schema)
 export type LogType = "INDIVIDUAL" | "BATCH";
@@ -14,10 +20,25 @@ export interface Tree {
   type: string; // e.g., 'ทุเรียน', 'มังคุด'
   variety: string; // e.g., 'หมอนทอง', 'ก้านยาว'
   plantedDate?: string; // ISO date string, optional in schema
-  status: TreeStatus;
+  status: UITreeStatus; // UI-friendly lowercase status
   replacedTreeId?: string;
   createdAt: string; // ISO datetime string
   updatedAt: string; // ISO datetime string
+}
+
+// Database Tree model (for internal use)
+export interface TreeDB {
+  id: string;
+  orchardId: string;
+  code: string;
+  zone: string;
+  type: string;
+  variety: string;
+  plantedDate?: string;
+  status: TreeStatus; // Database uppercase status
+  replacedTreeId?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Orchard {

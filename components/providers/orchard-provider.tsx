@@ -106,7 +106,7 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
 
   const handleUpdateTree = async (treeId: string, updates: Partial<Tree>) => {
     if (updates.status) {
-      if (updates.status === 'ARCHIVED' && updates.code) {
+      if (updates.status === 'archived' && updates.code) {
         await mutations.archiveTree.mutateAsync({ treeId, newCode: updates.code });
       } else {
         await mutations.updateTreeStatus.mutateAsync({ treeId, status: updates.status });

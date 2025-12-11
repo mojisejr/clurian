@@ -14,7 +14,7 @@ import {
   Settings
 } from 'lucide-react';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 // Theme Colors - Converted from OKLCH to RGB for inline styles
 const theme = {
   // Light mode colors
