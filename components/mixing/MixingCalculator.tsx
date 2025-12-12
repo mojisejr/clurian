@@ -11,15 +11,10 @@ import { Trash2, Plus, Save, Calculator } from 'lucide-react';
 import { calculateMixingOrder } from '@/lib/mixing-calculator';
 import type { ChemicalInput, MixingOrderResult } from '@/lib/mixing-calculator';
 
-const CHEMICAL_TYPES = [
-  { value: 'chelator', label: 'สาร Chelator' },
-  { value: 'suspended', label: 'สารแขวนตะกอน' },
-  { value: 'liquid', label: 'สารละลายน้ำ' },
-  { value: 'fertilizer', label: 'ปุ๋ย' },
-  { value: 'adjuvant', label: 'สารควบคุม' },
-  { value: 'oil_concentrate', label: 'น้ำมันเข้มข้น' },
-  { value: 'oil', label: 'น้ำมัน' }
-] as const;
+import { getAllChemicalTypes } from '@/lib/chemical-types';
+
+// Get all available chemical types with labels
+const CHEMICAL_TYPES = getAllChemicalTypes();
 
 interface MixingCalculatorProps {
   orchardId: string;
@@ -30,9 +25,9 @@ interface MixingCalculatorProps {
   }) => Promise<void>;
 }
 
-export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: MixingCalculatorProps) {
+export function MixingCalculator({ orchardId, onSaveFormula }: MixingCalculatorProps) {
   const [chemicals, setChemicals] = useState<ChemicalInput[]>([
-    { name: '', type: 'liquid', quantity: 0, unit: 'มล.' }
+    { name: '', type: 'SL', quantity: 0, unit: 'มล.' }
   ]);
   const [result, setResult] = useState<MixingOrderResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -42,7 +37,7 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
   const [showSaveForm, setShowSaveForm] = useState(false);
 
   const addChemical = () => {
-    setChemicals([...chemicals, { name: '', type: 'liquid', quantity: 0, unit: 'มล.' }]);
+    setChemicals([...chemicals, { name: '', type: 'SL', quantity: 0, unit: 'มล.' }]);
   };
 
   const removeChemical = (index: number) => {
@@ -109,19 +104,7 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
     }
   };
 
-  const getStepLabel = (step: number) => {
-    const steps = [
-      '1. ใส่สาร Chelator',
-      '2. ใส่สารแขวนตะกอน (เรียงจากน้อยไปมาก)',
-      '3. ใส่สารละลายน้ำ',
-      '4. ใส่ปุ๋ย',
-      '5. ใส่สารควบคุม',
-      '6. ใส่น้ำมันเข้มข้น',
-      '7. ใส่น้ำมัน'
-    ];
-    return steps[step - 1] || `ขั้นที่ ${step}`;
-  };
-
+  
   return (
     <div className="space-y-6" data-testid="mixing-calculator-form">
       {/* Input Section */}
@@ -278,7 +261,7 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
                 {result.steps.map((step, index) => (
                   <div key={index} className="border-l-4 border-green-500 pl-4 py-2">
                     <div className="font-medium text-green-800 mb-1">
-                      {getStepLabel(step.step)}
+                      {step.description}
                     </div>
                     <div className="space-y-1">
                       {step.chemicals.map((chemical, chemIndex) => (
@@ -286,7 +269,7 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{chemical.name}</span>
                             <Badge variant="outline" className="text-xs">
-                              {CHEMICAL_TYPES.find(t => t.value === chemical.type)?.label}
+                              {chemical.type}
                             </Badge>
                           </div>
                           <span className="text-sm text-gray-600">

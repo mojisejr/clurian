@@ -5,13 +5,25 @@ import { prisma } from '@/lib/prisma'
 import { headers } from 'next/headers'
 import { auth } from '@/lib/auth'
 
+// Define all valid chemical types (both old and new for backward compatibility)
+const ChemicalTypeSchema = z.enum([
+  // New standard abbreviations (20 types)
+  'WP', 'WDG', 'GR', 'DF', 'FDF',
+  'EC', 'SC', 'SL', 'EW', 'ME',
+  'CS', 'WG', 'FS', 'SE',
+  'FERT', 'ORG', 'LIQ_FERT',
+  'SURF', 'STICK', 'SPREAD',
+  // Old types for backward compatibility
+  'chelator', 'suspended', 'liquid', 'fertilizer', 'adjuvant', 'oil_concentrate', 'oil'
+]);
+
 const CreateMixingFormulaSchema = z.object({
   orchardId: z.string().uuid(),
   name: z.string().min(1, 'ชื่อสูตรต้องไม่ว่างเปล่า'),
   description: z.string().optional(),
   components: z.array(z.object({
     name: z.string(),
-    type: z.enum(['chelator', 'suspended', 'liquid', 'fertilizer', 'adjuvant', 'oil_concentrate', 'oil']),
+    type: ChemicalTypeSchema,
     quantity: z.number().positive(),
     unit: z.string(),
     formulaType: z.string().optional(),
@@ -181,4 +193,17 @@ export async function deleteMixingFormula(formulaId: string) {
     console.error('Error deleting mixing formula:', error)
     return { success: false, error: 'ไม่สามารถลบสูตรได้ กรุณาลองใหม่' }
   }
+}
+
+/**
+ * Validate if a chemical type is valid
+ */
+export async function validateChemicalType(type: unknown) {
+  const result = ChemicalTypeSchema.safeParse(type);
+
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+
+  return { success: false, error: 'Invalid chemical type' };
 }
