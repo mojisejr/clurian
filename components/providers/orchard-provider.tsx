@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
-import type { Orchard, Tree, Log } from "@/lib/types";
+import type { Orchard, Tree, Log, PaginationMetadata } from "@/lib/types";
 import {
     useOrchards,
     useOrchardData
@@ -27,6 +27,13 @@ interface OrchardContextType {
   addLog: (log: Log) => Promise<void>;
   updateLogs: (logs: Log[]) => Promise<void>;
 
+  // Pagination state
+  currentPage: number;
+  totalPages: number;
+  totalTrees: number;
+  pagination: PaginationMetadata | undefined;
+  setCurrentPage: (page: number) => void;
+
   // Computed values for activity counts
   batchActivityCount: number;
   scheduledActivityCount: number;
@@ -40,12 +47,16 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
   // React Query hooks
   const { data: orchards = [], isLoading: isLoadingOrchards, error: orchardsError } = useOrchards();
   const [currentOrchardId, setCurrentOrchardId] = useState<string>("");
-  const { data: orchardData, isLoading: isLoadingOrchardData, error: orchardDataError } = useOrchardData(currentOrchardId);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const { data: orchardData, isLoading: isLoadingOrchardData, error: orchardDataError } = useOrchardData(currentOrchardId, currentPage, 100);
   const mutations = useOrchardMutations();
 
-  // Extract trees and logs from orchardData
+  // Extract trees, logs, and pagination from orchardData
   const trees = orchardData?.trees || [];
   const logs = orchardData?.logs || [];
+  const pagination = orchardData?.pagination;
+  const totalPages = pagination?.totalPages || 0;
+  const totalTrees = pagination?.total || 0;
 
   // Find current orchard
   const currentOrchard = orchards.find((o) => o.id === currentOrchardId);
@@ -71,6 +82,13 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
     log.orchardId === currentOrchardId &&
     log.status === 'COMPLETED'
   ).length;
+
+  // Reset pagination when changing orchards
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [currentOrchardId, currentPage]);
 
   // Initialize with first orchard using a ref and setTimeout to avoid cascade
   const hasInitialized = useRef(false);
@@ -147,6 +165,11 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
         logs,
         addLog: handleAddLog,
         updateLogs: handleUpdateLogs,
+        currentPage,
+        totalPages,
+        totalTrees,
+        pagination,
+        setCurrentPage,
         batchActivityCount,
         scheduledActivityCount,
         inProgressLogsCount,

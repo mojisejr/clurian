@@ -7,7 +7,7 @@ import {
   getOrchardTreesServer,
   getOrchardActivityLogsServer,
   getDashboardDataServer
-} from '@/app/actions/orchard';
+} from '@/app/actions/orchards';
 
 // Query keys for consistent cache management
 export const queryKeys = {
@@ -31,10 +31,14 @@ export function useOrchards() {
   });
 }
 
-export function useOrchardData(orchardId: string) {
+export function useOrchardData(
+  orchardId: string,
+  page: number = 1,
+  limit: number = 100
+) {
   return useQuery({
-    queryKey: queryKeys.orchardData(orchardId),
-    queryFn: () => getOrchardData(orchardId),
+    queryKey: [...queryKeys.orchardData(orchardId), page, limit],
+    queryFn: () => getOrchardData(orchardId, page, limit),
     enabled: !!orchardId, // Only fetch if orchardId is provided
     staleTime: 2 * 60 * 1000, // 2 minutes - trees and logs can change
     gcTime: 5 * 60 * 1000, // 5 minutes cache time

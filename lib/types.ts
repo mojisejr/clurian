@@ -83,6 +83,16 @@ export interface PaginationInfo {
   itemsPerPage: number;
 }
 
+// Pagination metadata from server
+export interface PaginationMetadata {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
 // Dashboard stats
 export interface DashboardStats {
   totalTrees: number;

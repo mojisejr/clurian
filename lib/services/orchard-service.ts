@@ -38,10 +38,16 @@ export async function createOrchard(userId: string, name: string): Promise<Orcha
   }
 }
 
-export async function getOrchardData(orchardId: string) {
+export async function getOrchardData(
+    orchardId: string,
+    page: number = 1,
+    limit: number = 100
+) {
   try {
+      const skip = (page - 1) * limit;
+
       // Use parallel queries instead of sequential
-      const [trees, logs] = await Promise.all([
+      const [trees, totalTrees, logs] = await Promise.all([
           prisma.tree.findMany({
               where: { orchardId },
               select: {
@@ -61,7 +67,11 @@ export async function getOrchardData(orchardId: string) {
                   { status: 'asc' }, // Show sick trees first
                   { createdAt: 'desc' }
               ],
-              take: 100 // Limit to prevent memory issues
+              skip,
+              take: limit // Use dynamic limit instead of hardcoded 100
+          }),
+          prisma.tree.count({
+              where: { orchardId }
           }),
           prisma.activityLog.findMany({
               where: { orchardId },
@@ -84,13 +94,34 @@ export async function getOrchardData(orchardId: string) {
           })
       ]);
 
+      const totalPages = Math.ceil(totalTrees / limit);
+
       return {
           trees: trees.map(mapPrismaTreeToDomain) as Tree[],
-          logs: logs.map(mapPrismaLogToDomain) as Log[]
+          logs: logs.map(mapPrismaLogToDomain) as Log[],
+          pagination: {
+              page,
+              limit,
+              total: totalTrees,
+              totalPages,
+              hasNext: page < totalPages,
+              hasPrev: page > 1
+          }
       };
   } catch (error) {
       handleServiceError(error, 'getOrchardData');
-      return { trees: [], logs: [] };
+      return {
+          trees: [],
+          logs: [],
+          pagination: {
+              page,
+              limit,
+              total: 0,
+              totalPages: 0,
+              hasNext: false,
+              hasPrev: false
+          }
+      };
   }
 }
 

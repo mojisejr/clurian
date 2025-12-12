@@ -19,9 +19,13 @@ export async function createOrchard(name: string) {
   return result;
 }
 
-export async function getOrchardData(orchardId: string) {
+export async function getOrchardData(
+  orchardId: string,
+  page: number = 1,
+  limit: number = 100
+) {
   await requireAuth(); // Ensure user is authenticated
-  return orchardService.getOrchardData(orchardId);
+  return orchardService.getOrchardData(orchardId, page, limit);
 }
 
 export async function getOrchardTreesServer(

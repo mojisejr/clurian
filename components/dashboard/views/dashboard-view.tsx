@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { ITEMS_PER_PAGE, ZONE_FILTER_ALL } from "@/lib/constants";
+import { ZONE_FILTER_ALL } from "@/lib/constants";
 import { useOrchard } from "@/components/providers/orchard-provider";
 import { TreeCard } from "@/components/tree-card";
 import { TreeCardSkeleton } from "@/components/ui/tree-card-skeleton";
@@ -21,49 +21,48 @@ interface DashboardViewProps {
 }
 
 export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isAddingNewTree = false }: DashboardViewProps) {
-  const { trees, currentOrchardId, currentOrchard } = useOrchard();
-  
+  const {
+    trees,
+    totalTrees,
+    currentPage,
+    totalPages,
+    pagination,
+    setCurrentPage,
+    currentOrchardId,
+    currentOrchard
+  } = useOrchard();
+
   const [filterZone, setFilterZone] = useState(ZONE_FILTER_ALL);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
   const [logoBase64, setLogoBase64] = useState<string>('');
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
 
   const orchardZones = currentOrchard?.zones || [];
+  const itemsPerPage = pagination?.limit || 100;
 
+  // For now, search/filter works on current page data
+  // In Phase 2, we'll move this to server-side
   const processedTrees = useMemo(() => {
-    let result = trees.filter(t => t.orchardId === currentOrchardId && t.status !== 'archived');
-    
+    let result = trees.filter(t => t.status !== 'archived');
+
     if (filterZone !== ZONE_FILTER_ALL) {
       result = result.filter(t => t.zone === filterZone);
     }
-    
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(t => 
-        t.code.toLowerCase().includes(query) || 
+      result = result.filter(t =>
+        t.code.toLowerCase().includes(query) ||
         t.variety.includes(query)
       );
     }
-    
-    result.sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true, sensitivity: 'base' }));
-    
+
     return result;
-  }, [trees, currentOrchardId, filterZone, searchQuery]);
+  }, [trees, filterZone, searchQuery]);
 
-  const paginatedTrees = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    return {
-      data: processedTrees.slice(start, end),
-      totalPages: Math.ceil(processedTrees.length / ITEMS_PER_PAGE),
-      totalItems: processedTrees.length
-    };
-  }, [processedTrees, currentPage]);
-
-  const currentOrchardTrees = trees.filter(t => t.orchardId === currentOrchardId);
-  const sickTreesCount = currentOrchardTrees.filter(t => t.status === 'sick').length;
-  const activeTreesCount = currentOrchardTrees.filter(t => t.status !== 'archived').length;
+  // Use totalTrees from server pagination instead
+  const sickTreesCount = trees.filter(t => t.status === 'sick').length;
+  const activeTreesCount = totalTrees;
 
   // --- Load Logo (Once) ---
   useEffect(() => {
@@ -125,22 +124,22 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
           />
           
           {/* Export PDF Button */}
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="text-xs text-muted-foreground"
             onClick={() => setIsPDFModalOpen(true)}
-            disabled={processedTrees.length === 0}
+            disabled={totalTrees === 0}
           >
-            <Printer size={14} className="mr-1" /> 
-            พิมพ์ QR ({processedTrees.length})
+            <Printer size={14} className="mr-1" />
+            พิมพ์ QR ({totalTrees})
           </Button>
         </div>
       </Card>
 
       {/* Tree List */}
       <div className="space-y-2">
-        {paginatedTrees.data.length === 0 && !isAddingNewTree ? (
+        {processedTrees.length === 0 && !isAddingNewTree ? (
             <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-xl">
                 <Sprout className="mx-auto mb-2 opacity-50" size={48} />
                 <p>ไม่พบข้อมูลต้นไม้</p>
@@ -157,7 +156,7 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
               )}
 
               {/* Render actual trees */}
-              {paginatedTrees.data.map(tree => (
+              {processedTrees.map(tree => (
                   <div key={tree.id} onClick={() => onIdentifyTree(tree.id)}>
                       <TreeCard
                           tree={tree}
@@ -167,7 +166,7 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
               ))}
 
               {/* Show empty state if no trees but loading */}
-              {paginatedTrees.data.length === 0 && isAddingNewTree && (
+              {processedTrees.length === 0 && isAddingNewTree && (
                 <div className="text-center py-4 text-muted-foreground text-sm">
                   กำลังเพิ่มต้นไม้ใหม่...
                 </div>
@@ -177,13 +176,13 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
       </div>
 
       {/* Pagination */}
-      {paginatedTrees.totalPages > 1 && (
-          <Pagination 
+      {totalPages > 1 && (
+          <Pagination
             currentPage={currentPage}
-            totalPages={paginatedTrees.totalPages}
+            totalPages={totalPages}
             onPageChange={setCurrentPage}
-            totalItems={paginatedTrees.totalItems}
-            itemsPerPage={ITEMS_PER_PAGE}
+            totalItems={totalTrees}
+            itemsPerPage={itemsPerPage}
           />
       )}
       
@@ -195,7 +194,9 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
       <PDFGeneratorModal
         isOpen={isPDFModalOpen}
         onClose={() => setIsPDFModalOpen(false)}
-        trees={processedTrees}
+        // For PDF export, we'll need all trees, not just current page
+        // This is a limitation for now - in Phase 2 we'll implement proper export
+        trees={trees}
         orchardName={currentOrchard?.name || ''}
         logoBase64={logoBase64}
       />
