@@ -8,7 +8,7 @@ import { ArrowLeft, Calculator, History, Plus } from 'lucide-react';
 import { useOrchard } from '@/components/providers/orchard-provider';
 import { MixingCalculator } from '@/components/mixing/MixingCalculator';
 import { MixingHistory } from '@/components/mixing/MixingHistory';
-import { MixingOrderDisplay } from '@/components/mixing/MixingOrderDisplay';
+import { MixingOrderDisplay, type MixingOrderDisplayResult } from '@/components/mixing/MixingOrderDisplay';
 import { createMixingFormula } from '@/app/actions/mixing-formulas';
 import { calculateMixingOrder } from '@/lib/mixing-calculator';
 import type { MixingFormula } from '@prisma/client';
@@ -32,7 +32,7 @@ export default function MixingPage() {
   const { currentOrchardId, currentOrchard } = useOrchard();
   const [view, setView] = useState<MixingView>('calculator');
   const [selectedFormula, setSelectedFormula] = useState<FormulaWithComponents | null>(null);
-  const [calculationResult, setCalculationResult] = useState<any>(null);
+  const [calculationResult, setCalculationResult] = useState<MixingOrderDisplayResult | null>(null);
   const [chemicals, setChemicals] = useState<ChemicalInput[]>([]);
 
   const handleBackToDashboard = () => {
@@ -116,49 +116,51 @@ export default function MixingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 pb-24 md:pb-8 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50 p-3 pb-24 md:p-4 md:pb-8 w-full lg:max-w-6xl lg:mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" onClick={handleBackToDashboard}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 md:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Button variant="ghost" onClick={handleBackToDashboard} size="sm">
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">ผสมสารเคมี</h1>
-            <p className="text-gray-600">{currentOrchard.name}</p>
+          <div className="text-center sm:text-left">
+            <h1 className="text-xl md:text-2xl font-bold">ผสมสารเคมี</h1>
+            <p className="text-sm md:text-base text-gray-600">{currentOrchard.name}</p>
           </div>
         </div>
       </div>
 
       {/* View Tabs */}
-      <div className="mb-6">
-        <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+      <div className="mb-4 md:mb-6">
+        <div className="flex flex-col sm:flex-row gap-1 p-1 bg-gray-100 rounded-lg">
           <button
             onClick={() => setView('calculator')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md transition-colors ${
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2 rounded-md transition-colors text-xs sm:text-sm ${
               view === 'calculator'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            <Calculator className="w-4 h-4" />
-            คำนวณสูตร
+            <Calculator className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">คำนวณสูตร</span>
+            <span className="sm:hidden">คำนวณ</span>
           </button>
           <button
             onClick={() => setView('history')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md transition-colors ${
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2 rounded-md transition-colors text-xs sm:text-sm ${
               view === 'history'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            <History className="w-4 h-4" />
-            ประวัติสูตร
+            <History className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">ประวัติสูตร</span>
+            <span className="sm:hidden">ประวัติ</span>
           </button>
           {view === 'result' && (
             <button
               onClick={() => setView('result')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md transition-colors bg-white text-gray-900 shadow-sm`}
+              className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2 rounded-md transition-colors bg-white text-gray-900 shadow-sm text-xs sm:text-sm`}
             >
               ผลลัพธ์
             </button>

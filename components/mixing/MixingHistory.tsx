@@ -150,14 +150,14 @@ export function MixingHistory({ orchardId, onSelectFormula, onShowCalculator }: 
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div>
-          <h2 className="text-2xl font-bold">ประวัติสูตรผสมสารเคมี</h2>
-          <p className="text-gray-600">จัดการและเลือกใช้สูตรผสมที่บันทึกไว้</p>
+          <h2 className="text-xl md:text-2xl font-bold">ประวัติสูตรผสมสารเคมี</h2>
+          <p className="text-sm md:text-base text-gray-600">จัดการและเลือกใช้สูตรผสมที่บันทึกไว้</p>
         </div>
-        <Button onClick={onShowCalculator}>
+        <Button onClick={onShowCalculator} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           สร้างสูตรใหม่
         </Button>
@@ -165,25 +165,27 @@ export function MixingHistory({ orchardId, onSelectFormula, onShowCalculator }: 
 
       {/* Filters */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">ค้นหาและกรอง</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Filter className="w-4 h-4" />
+            ค้นหาและกรอง
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="ค้นหาชื่อสูตรหรือรายละเอียด..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+        <CardContent className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="ค้นหาชื่อสูตรหรือรายละเอียด..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select value={filterType} onValueChange={(value: typeof filterType) => setFilterType(value)}>
               <SelectTrigger>
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue />
+                <SelectValue placeholder="กรองตาม..." />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">ทุกสูตร</SelectItem>
@@ -194,7 +196,7 @@ export function MixingHistory({ orchardId, onSelectFormula, onShowCalculator }: 
 
             <Select value={sortBy} onValueChange={(value: typeof sortBy) => setSortBy(value)}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="เรียงตาม..." />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="createdAt">วันที่สร้าง</SelectItem>
@@ -237,31 +239,31 @@ export function MixingHistory({ orchardId, onSelectFormula, onShowCalculator }: 
         <div className="grid gap-4">
           {filteredAndSortedFormulas.map((formula) => (
             <Card key={formula.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{formula.name}</CardTitle>
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base md:text-lg truncate">{formula.name}</CardTitle>
                     {formula.description && (
-                      <CardDescription className="mt-1">{formula.description}</CardDescription>
+                      <CardDescription className="mt-1 text-xs md:text-sm line-clamp-2">{formula.description}</CardDescription>
                     )}
                   </div>
-                  <div className="flex gap-2 ml-4">
+                  <div className="flex gap-1 ml-2 flex-shrink-0">
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleUseFormula(formula)}
-                      className="whitespace-nowrap"
+                      className="whitespace-nowrap px-2 sm:px-3 h-8"
                     >
-                      <Eye className="w-4 h-4 mr-1" />
-                      ใช้สูตรนี้
+                      <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline ml-1">ใช้</span>
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleDeleteFormula(formula.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 px-2 sm:px-3 h-8"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
                   </div>
                 </div>
@@ -269,18 +271,18 @@ export function MixingHistory({ orchardId, onSelectFormula, onShowCalculator }: 
               <CardContent>
                 <div className="space-y-3">
                   {/* Formula Stats */}
-                  <div className="flex gap-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <span className="font-medium">สารเคมี:</span>
-                      <span>{getTotalChemicals(formula.components)} ชนิด</span>
+                  <div className="grid grid-cols-3 gap-2 text-xs md:text-sm text-gray-600">
+                    <div className="flex flex-col items-center text-center">
+                      <span className="font-medium">สารเคมี</span>
+                      <span>{getTotalChemicals(formula.components)}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <span className="font-medium">ใช้แล้ว:</span>
-                      <span>{formula.usedCount} ครั้ง</span>
+                    <div className="flex flex-col items-center text-center">
+                      <span className="font-medium">ใช้แล้ว</span>
+                      <span>{formula.usedCount}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      <span>{formatDate(formula.createdAt)}</span>
+                    <div className="flex flex-col items-center text-center">
+                      <Clock className="w-3 h-3 mb-1" />
+                      <span className="text-xs">{formatDate(formula.createdAt).split(' ')[0]}</span>
                     </div>
                   </div>
 

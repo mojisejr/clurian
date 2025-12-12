@@ -111,54 +111,54 @@ export function MixingOrderDisplay({
       {/* Header */}
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-2xl flex items-center gap-2">
-                <Beaker className="w-6 h-6" />
-                {formulaName}
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-lg md:text-2xl flex items-center gap-2">
+                <Beaker className="w-5 h-5 md:w-6 md:h-6" />
+                <span className="truncate">{formulaName}</span>
               </CardTitle>
               {formulaDescription && (
-                <CardDescription className="mt-2">{formulaDescription}</CardDescription>
+                <CardDescription className="mt-1 text-sm md:text-base line-clamp-2">{formulaDescription}</CardDescription>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-1 sm:gap-2">
               {onSave && (
-                <Button variant="outline" onClick={onSave}>
-                  บันทึกสูตร
+                <Button variant="outline" size="sm" onClick={onSave} className="text-xs sm:text-sm">
+                  บันทึก
                 </Button>
               )}
               {onShare && (
-                <Button variant="outline" onClick={onShare}>
-                  <Share className="w-4 h-4 mr-2" />
-                  แชร์
+                <Button variant="outline" size="sm" onClick={onShare} className="text-xs sm:text-sm">
+                  <Share className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  <span className="hidden sm:inline">แชร์</span>
                 </Button>
               )}
               {onPrint && (
-                <Button variant="outline" onClick={onPrint}>
-                  <Download className="w-4 h-4 mr-2" />
-                  ดาวน์โหลด PDF
+                <Button variant="outline" size="sm" onClick={onPrint} className="text-xs sm:text-sm">
+                  <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  <span className="hidden sm:inline">PDF</span>
                 </Button>
               )}
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <span className="text-gray-600">วันที่สร้าง:</span>
-              <div className="font-medium">{formatDate()}</div>
+          <div className="grid grid-cols-2 gap-3 text-xs md:text-sm md:grid-cols-4 md:gap-4">
+            <div className="text-center">
+              <span className="text-gray-600 block">วันที่สร้าง</span>
+              <div className="font-medium">{formatDate().split(' ')[0]}</div>
             </div>
-            <div>
-              <span className="text-gray-600">จำนวนสารเคมี:</span>
-              <div className="font-medium">{chemicals.length} ชนิด</div>
+            <div className="text-center">
+              <span className="text-gray-600 block">สารเคมี</span>
+              <div className="font-medium">{chemicals.length}</div>
             </div>
-            <div>
-              <span className="text-gray-600">ปริมาณรวม:</span>
-              <div className="font-medium">{getTotalQuantity()} หน่วย</div>
+            <div className="text-center">
+              <span className="text-gray-600 block">ปริมาณรวม</span>
+              <div className="font-medium">{getTotalQuantity()}</div>
             </div>
-            <div>
-              <span className="text-gray-600">ขั้นตอนทั้งหมด:</span>
-              <div className="font-medium">{result.totalSteps} ขั้นตอน</div>
+            <div className="text-center">
+              <span className="text-gray-600 block">ขั้นตอน</span>
+              <div className="font-medium">{result.totalSteps}</div>
             </div>
           </div>
 
@@ -199,35 +199,38 @@ export function MixingOrderDisplay({
       )}
 
       {/* Mixing Steps */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-semibold">ขั้นตอนการผสม</h3>
+      <div className="space-y-3 md:space-y-4">
+        <h3 className="text-lg md:text-xl font-semibold">ขั้นตอนการผสม</h3>
 
         {result.steps.map((step, index) => (
           <div key={index} className="relative">
             {/* Step Connector */}
             {index < result.steps.length - 1 && (
-              <div className="absolute left-6 top-16 w-0.5 h-16 bg-gray-300"></div>
+              <div className="absolute left-4 sm:left-6 top-12 sm:top-16 w-0.5 h-12 sm:h-16 bg-gray-300"></div>
             )}
 
             <Card className={`${getStepColor(step.step)} border-2`}>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full ${getStepColor(step.step)}`}>
-                    {getStepIcon(step.step)}
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className={`p-1.5 sm:p-2 rounded-full ${getStepColor(step.step)}`}>
+                    {React.cloneElement(getStepIcon(step.step), {
+                      className: "w-3 h-3 sm:w-5 sm:h-5"
+                    })}
                   </div>
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">
-                      ขั้นที่ {step.step}: {step.description}
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-sm md:text-base md:text-lg">
+                      <span className="hidden sm:inline">ขั้นที่ {step.step}: </span>
+                      {step.description}
                     </CardTitle>
                     {step.timing && (
-                      <CardDescription className="flex items-center gap-1 mt-1">
+                      <CardDescription className="flex items-center gap-1 mt-1 text-xs md:text-sm">
                         <Clock className="w-3 h-3" />
                         {step.timing}
                       </CardDescription>
                     )}
                   </div>
-                  <div className="bg-white bg-opacity-50 px-3 py-1 rounded-full">
-                    <span className="text-sm font-medium">{step.chemicals.length} ชนิด</span>
+                  <div className="bg-white bg-opacity-50 px-2 py-1 rounded-full flex-shrink-0">
+                    <span className="text-xs font-medium">{step.chemicals.length}</span>
                   </div>
                 </div>
               </CardHeader>

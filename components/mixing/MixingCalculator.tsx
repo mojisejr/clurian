@@ -137,93 +137,108 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
         </CardHeader>
         <CardContent className="space-y-4">
           {chemicals.map((chemical, index) => (
-            <div key={index} className="grid grid-cols-12 gap-2 items-end">
-              <div className="col-span-4">
-                <Label htmlFor={`chemical-name-${index}`}>ชื่อสารเคมี</Label>
-                <Input
-                  id={`chemical-name-${index}`}
-                  value={chemical.name}
-                  onChange={(e) => updateChemical(index, 'name', e.target.value)}
-                  placeholder="เช่น ยาคุมหญ้า"
-                />
-              </div>
-
-              <div className="col-span-3">
-                <Label htmlFor={`chemical-type-${index}`}>ประเภท</Label>
-                <Select
-                  value={chemical.type}
-                  onValueChange={(value) => updateChemical(index, 'type', value)}
-                >
-                  <SelectTrigger id={`chemical-type-${index}`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CHEMICAL_TYPES.map(type => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="col-span-2">
-                <Label htmlFor={`chemical-qty-${index}`}>ปริมาณ</Label>
-                <Input
-                  id={`chemical-qty-${index}`}
-                  type="number"
-                  step="0.01"
-                  value={chemical.quantity || ''}
-                  onChange={(e) => updateChemical(index, 'quantity', parseFloat(e.target.value) || 0)}
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="col-span-2">
-                <Label htmlFor={`chemical-unit-${index}`}>หน่วย</Label>
-                <Select
-                  value={chemical.unit}
-                  onValueChange={(value) => updateChemical(index, 'unit', value)}
-                >
-                  <SelectTrigger id={`chemical-unit-${index}`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="มล.">มล.</SelectItem>
-                    <SelectItem value="ลิตร">ลิตร</SelectItem>
-                    <SelectItem value="กรัม">กรัม</SelectItem>
-                    <SelectItem value="กก.">กก.</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="col-span-1">
+            <div key={index} className="border border-gray-200 rounded-lg p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">สารเคมี #{index + 1}</Label>
                 <Button
                   type="button"
                   variant="outline"
-                  size="icon"
+                  size="sm"
                   onClick={() => removeChemical(index)}
                   disabled={chemicals.length === 1}
+                  className="h-8 w-8 p-0"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3 h-3" />
                 </Button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="lg:col-span-2">
+                  <Label htmlFor={`chemical-name-${index}`} className="text-xs">ชื่อสารเคมี</Label>
+                  <Input
+                    id={`chemical-name-${index}`}
+                    value={chemical.name}
+                    onChange={(e) => updateChemical(index, 'name', e.target.value)}
+                    placeholder="เช่น ยาคุมหญ้า"
+                    className="text-sm"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor={`chemical-type-${index}`} className="text-xs">ประเภท</Label>
+                  <Select
+                    value={chemical.type}
+                    onValueChange={(value) => updateChemical(index, 'type', value)}
+                  >
+                    <SelectTrigger id={`chemical-type-${index}`} className="text-sm">
+                      <SelectValue placeholder="เลือก" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CHEMICAL_TYPES.map(type => (
+                        <SelectItem key={type.value} value={type.value} className="text-xs">
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor={`chemical-qty-${index}`} className="text-xs">ปริมาณ</Label>
+                  <Input
+                    id={`chemical-qty-${index}`}
+                    type="number"
+                    step="0.01"
+                    value={chemical.quantity || ''}
+                    onChange={(e) => updateChemical(index, 'quantity', parseFloat(e.target.value) || 0)}
+                    placeholder="0"
+                    className="text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="sm:col-span-1">
+                  <Label htmlFor={`chemical-unit-${index}`} className="text-xs">หน่วย</Label>
+                  <Select
+                    value={chemical.unit}
+                    onValueChange={(value) => updateChemical(index, 'unit', value)}
+                  >
+                    <SelectTrigger id={`chemical-unit-${index}`} className="text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="มล." className="text-xs">มล.</SelectItem>
+                      <SelectItem value="ลิตร" className="text-xs">ลิตร</SelectItem>
+                      <SelectItem value="กรัม" className="text-xs">กรัม</SelectItem>
+                      <SelectItem value="กก." className="text-xs">กก.</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           ))}
 
-          <div className="flex gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={addChemical}>
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={addChemical} className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
-              เพิ่มสารเคมี
+              <span className="hidden sm:inline">เพิ่มสารเคมี</span>
+              <span className="sm:hidden">เพิ่ม</span>
             </Button>
 
             <Button
               type="button"
               onClick={handleCalculate}
               disabled={isCalculating}
-              className="ml-auto"
+              className="w-full sm:w-auto sm:ml-auto"
             >
-              {isCalculating ? 'กำลังคำนวณ...' : 'คำนวณลำดับการผสม'}
+              {isCalculating ? 'กำลังคำนวณ...' : (
+                <>
+                  <Calculator className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">คำนวณลำดับการผสม</span>
+                  <span className="sm:hidden">คำนวณ</span>
+                </>
+              )}
             </Button>
           </div>
         </CardContent>
@@ -231,10 +246,13 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
 
       {/* Results Section */}
       {result && (
-        <Card>
-          <CardHeader>
-            <CardTitle>ผลลัพธ์การคำนวณลำดับการผสม</CardTitle>
-            <CardDescription>
+        <Card className="border-2 border-green-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg md:text-xl flex items-center gap-2">
+              <Calculator className="w-5 h-5 text-green-600" />
+              ผลลัพธ์การคำนวณลำดับการผสม
+            </CardTitle>
+            <CardDescription className="text-sm md:text-base">
               ลำดับการผสมที่เหมาะสมที่สุดตามหลักวิชาการ (7 ขั้นตอน)
             </CardDescription>
           </CardHeader>
