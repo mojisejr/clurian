@@ -135,10 +135,12 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
 
   // Reset pagination and filters when changing orchards
   useEffect(() => {
-    clearFilters();
-    prevFiltersRef.current = { filterZone: 'ALL', filterStatus: 'ALL', searchTerm: '' };
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCurrentPage(1);
+    // Schedule state updates for next tick to avoid cascade
+    setTimeout(() => {
+      clearFilters();
+      prevFiltersRef.current = { filterZone: 'ALL', filterStatus: 'ALL', searchTerm: '' };
+      setCurrentPage(1);
+    }, 0);
   }, [currentOrchardId, clearFilters, setCurrentPage]);
 
   // Initialize with first orchard using a ref and setTimeout to avoid cascade
