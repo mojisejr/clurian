@@ -1,13 +1,11 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider = "postgresql"
 }
-
-// --- Better Auth Models ---
 
 model User {
   id            String    @id @default(cuid())
@@ -17,26 +15,22 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-
-  sessions      Session[]
   accounts      Account[]
-  
-  // Domain relations
   orchards      Orchard[]
-  
+  sessions      Session[]
+
   @@map("users")
 }
 
 model Session {
   id        String   @id @default(cuid())
   userId    String
-  token     String   @unique
   expiresAt DateTime
   ipAddress String?
   userAgent String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+  token     String   @unique
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
@@ -51,42 +45,87 @@ model Account {
   refreshToken          String?
   accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
-  idToken               String?
   scope                 String?
   password              String?
   createdAt             DateTime  @default(now())
+  idToken               String?
   updatedAt             DateTime  @updatedAt
-  
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("accounts")
 }
 
 model Verification {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   identifier String
   value      String
   expiresAt  DateTime
   createdAt  DateTime? @default(now())
   updatedAt  DateTime? @updatedAt
-  
+
   @@map("verifications")
 }
 
-// --- Clurian Domain Models ---
-
 model Orchard {
-  id        String   @id @default(uuid())
+  id        String        @id @default(uuid())
   ownerId   String
   name      String
-  zones     Json     @default("[]") // List of zone names e.g. ["A", "B"]
-  createdAt DateTime @default(now()) @map("created_at")
-
-  owner     User     @relation(fields: [ownerId], references: [id])
-  trees     Tree[]
+  zones     Json          @default("[]")
+  createdAt DateTime      @default(now()) @map("created_at")
   logs      ActivityLog[]
+  owner     User          @relation(fields: [ownerId], references: [id])
+  trees     Tree[]
+  mixingFormulas MixingFormula[]
 
   @@map("orchards")
+}
+
+model Tree {
+  id             String        @id @default(uuid())
+  orchardId      String
+  code           String
+  zone           String
+  type           String
+  variety        String
+  plantedDate    DateTime?     @map("planted_date") @db.Date
+  status         TreeStatus
+  replacedTreeId String?       @unique
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  logs           ActivityLog[]
+  orchard        Orchard       @relation(fields: [orchardId], references: [id])
+  replacedTree   Tree?         @relation("ReplantingHistory", fields: [replacedTreeId], references: [id])
+  replacement    Tree?         @relation("ReplantingHistory")
+
+  @@unique([orchardId, code], name: "orchard_code_unique")
+  @@index([orchardId, status, zone])
+  @@index([orchardId, status])
+  @@map("trees")
+}
+
+model ActivityLog {
+  id              String        @id @default(uuid())
+  orchardId       String
+  logType         LogType       @map("log_type")
+  treeId          String?
+  targetZone      String?       @map("target_zone")
+  action          String
+  note            String?
+  performDate     DateTime      @map("perform_date") @db.Date
+  status          LogStatus     @default(COMPLETED)
+  followUpDate    DateTime?     @map("follow_up_date") @db.Date
+  mixingFormulaId String?       @map("mixing_formula_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  orchard         Orchard       @relation(fields: [orchardId], references: [id])
+  tree            Tree?         @relation(fields: [treeId], references: [id])
+  mixingFormula   MixingFormula? @relation(fields: [mixingFormulaId], references: [id])
+
+  @@index([treeId, performDate(sort: Desc)])
+  @@index([orchardId, performDate(sort: Desc)])
+  @@index([orchardId, status, followUpDate])
+  @@index([status, followUpDate])
+  @@index([mixingFormulaId])
+  @@map("activity_logs")
 }
 
 enum TreeStatus {
@@ -94,32 +133,6 @@ enum TreeStatus {
   SICK
   DEAD
   ARCHIVED
-}
-
-model Tree {
-  id            String     @id @default(uuid())
-  orchardId     String
-  code          String     // e.g. A01
-  zone          String
-  type          String     // Durian, Mangosteen
-  variety       String     // Monthong, Kanyao
-  plantedDate   DateTime?  @map("planted_date") @db.Date
-  status        TreeStatus
-  
-  replacedTreeId String?   @unique
-  replacedTree   Tree?     @relation("ReplantingHistory", fields: [replacedTreeId], references: [id])
-  replacement    Tree?     @relation("ReplantingHistory")
-
-  createdAt     DateTime   @default(now()) @map("created_at")
-  updatedAt     DateTime   @updatedAt @map("updated_at")
-
-  orchard       Orchard    @relation(fields: [orchardId], references: [id])
-  logs          ActivityLog[]
-
-  @@unique([orchardId, code], name: "orchard_code_unique") // Ensure unique code within an orchard
-  @@index([orchardId, status, zone]) // For filtering trees by orchard, status, and zone
-  @@index([orchardId, status]) // Existing index
-  @@map("trees")
 }
 
 enum LogType {
@@ -132,31 +145,19 @@ enum LogStatus {
   IN_PROGRESS
 }
 
-model ActivityLog {
-  id           String    @id @default(uuid())
-  orchardId    String
-  logType      LogType   @map("log_type")
-  
-  // For Individual Logs
-  treeId       String?
-  tree         Tree?     @relation(fields: [treeId], references: [id])
-  
-  // For Batch Logs
-  targetZone   String?   @map("target_zone")
+// --- Chemical Mixing Models ---
 
-  action       String
-  note         String?   @db.Text
-  performDate  DateTime  @map("perform_date") @db.Date
-  status       LogStatus @default(COMPLETED)
-  followUpDate DateTime? @map("follow_up_date") @db.Date
+model MixingFormula {
+  id          String         @id @default(cuid())
+  orchardId   String
+  name        String
+  description String?
+  components  Json           // [{name, type, quantity, unit, step}]
+  createdAt   DateTime       @default(now())
+  usedCount   Int            @default(0)
+  activities  ActivityLog[]
 
-  createdAt    DateTime  @default(now()) @map("created_at")
+  orchard     Orchard        @relation(fields: [orchardId], references: [id])
 
-  orchard      Orchard   @relation(fields: [orchardId], references: [id])
-
-  @@index([treeId, performDate(sort: Desc)])
-  @@index([orchardId, performDate(sort: Desc)]) // For sorting activity logs by date in dashboard
-  @@index([orchardId, status, followUpDate]) // For follow-up activities
-  @@index([status, followUpDate]) // For general follow-up queries across orchards
-  @@map("activity_logs")
+  @@map("mixing_formulas")
 }

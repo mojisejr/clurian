@@ -61,6 +61,7 @@ export interface Log {
   status: LogStatus;
   followUpDate?: string; // ISO date string
   createdAt: string; // ISO datetime string
+  mixingFormulaId?: string; // reference to mixing formula used
 }
 
 // Form data types
@@ -80,6 +81,16 @@ export interface PaginationInfo {
   totalPages: number;
   totalItems: number;
   itemsPerPage: number;
+}
+
+// Pagination metadata from server
+export interface PaginationMetadata {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
 }
 
 // Dashboard stats

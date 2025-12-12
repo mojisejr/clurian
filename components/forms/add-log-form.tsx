@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Leaf, Sprout, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,12 @@ import {
 import { cn } from "@/lib/utils";
 import { LOG_ACTIONS } from "@/lib/constants";
 
+export interface MixingFormula {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 export interface AddLogFormProps {
   isBatch: boolean;
   treeCode?: string;
@@ -30,6 +36,9 @@ export interface AddLogFormProps {
   onCancel: () => void;
   className?: string;
   isLoading?: boolean;
+  mixingFormulas?: MixingFormula[];
+  isLoadingFormulas?: boolean;
+  dataTestId?: string;
 }
 
 export interface AddLogFormData {
@@ -38,6 +47,7 @@ export interface AddLogFormData {
   date: string;
   note: string;
   followUpDate?: string;
+  mixingFormulaId?: string;
 }
 
 /**
@@ -51,15 +61,43 @@ export function AddLogForm({
   onCancel,
   className,
   isLoading = false,
+  mixingFormulas = [],
+  isLoadingFormulas = false,
+  dataTestId,
 }: AddLogFormProps) {
   const [isCustomAction, setIsCustomAction] = useState(false);
+  const [selectedAction, setSelectedAction] = useState("");
+  const [selectedFormula, setSelectedFormula] = useState("");
 
-  const title = isBatch
-    ? "บันทึกงานเหมาแปลง (Batch)"
-    : `บันทึกงานต้น ${treeCode}`;
-  const Icon = isBatch ? Sprout : Leaf;
+  const title = useMemo(() =>
+    isBatch
+      ? "บันทึกงานเหมาแปลง (Batch)"
+      : `บันทึกงานต้น ${treeCode}`,
+    [isBatch, treeCode]
+  );
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const Icon = useMemo(() =>
+    isBatch ? Sprout : Leaf,
+    [isBatch]
+  );
+
+  // Use Set for O(1) lookup instead of O(n) array.some
+  const chemicalActionsSet = useMemo(() =>
+    new Set(['พ่นยา/ฮอร์โมน', 'ใส่ปุ๋ย']),
+    []
+  );
+
+  const requiresFormula = useMemo(() =>
+    chemicalActionsSet.has(selectedAction),
+    [chemicalActionsSet, selectedAction]
+  );
+
+  const selectedFormulaDetails = useMemo(() =>
+    mixingFormulas.find(f => f.id === selectedFormula),
+    [mixingFormulas, selectedFormula]
+  );
+
+  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (isLoading) return; // Prevent multiple submissions
@@ -76,11 +114,12 @@ export function AddLogForm({
       date: formData.get("date") as string,
       note: formData.get("note") as string,
       followUpDate: formData.get("followUpDate") as string || undefined,
+      mixingFormulaId: requiresFormula ? (formData.get("mixingFormula") as string) || undefined : undefined,
     });
-  };
+  }, [isCustomAction, isBatch, isLoading, onSubmit, requiresFormula]);
 
   return (
-    <Card className={cn("max-w-lg mx-auto mt-4", className)}>
+    <Card className={cn("max-w-lg mx-auto mt-4", className)} data-testid={dataTestId || "add-log-form"}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Icon className="h-5 w-5 text-primary" />
@@ -94,7 +133,7 @@ export function AddLogForm({
             <div className="space-y-2">
               <Label htmlFor="targetZone">โซนเป้าหมาย *</Label>
               <Select name="targetZone" required disabled={isLoading}>
-                <SelectTrigger>
+                <SelectTrigger data-testid="target-zone-select">
                   <SelectValue placeholder="เลือกโซน" />
                 </SelectTrigger>
                 <SelectContent>
@@ -129,10 +168,17 @@ export function AddLogForm({
                 placeholder="ระบุกิจกรรม"
                 required
                 disabled={isLoading}
+                onChange={(e) => setSelectedAction(e.target.value)}
               />
             ) : (
-              <Select name="action" required disabled={isLoading}>
-                <SelectTrigger>
+              <Select
+                name="action"
+                required
+                disabled={isLoading}
+                onValueChange={(value) => setSelectedAction(value)}
+                value={selectedAction}
+              >
+                <SelectTrigger data-testid="action-select">
                   <SelectValue placeholder="เลือกกิจกรรม" />
                 </SelectTrigger>
                 <SelectContent>
@@ -158,6 +204,66 @@ export function AddLogForm({
               disabled={isLoading}
             />
           </div>
+
+          {/* Mixing Formula Selection */}
+          {requiresFormula && (
+            <div className="space-y-2">
+              <Label htmlFor="mixingFormula">
+                เลือกสูตรผสม (ถ้ามี){" "}
+                <span className="text-muted-foreground text-xs">(ไม่บังคับ)</span>
+              </Label>
+              {isLoadingFormulas ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  กำลังโหลดสูตรผสม...
+                </div>
+              ) : mixingFormulas.length === 0 ? (
+                <div className="text-sm text-muted-foreground p-3 border rounded-md">
+                  ไม่มีสูตรผสมที่บันทึกไว้
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="p-0 h-auto ml-2"
+                    onClick={() => window.location.href = '/dashboard/mixing'}
+                  >
+                    สร้างสูตรใหม่
+                  </Button>
+                </div>
+              ) : (
+                <Select
+                  name="mixingFormula"
+                  disabled={isLoading}
+                  onValueChange={(value) => setSelectedFormula(value)}
+                  value={selectedFormula}
+                >
+                  <SelectTrigger data-testid="formula-select">
+                    <SelectValue placeholder="เลือกสูตรผสม" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">ไม่เลือกสูตร</SelectItem>
+                    {mixingFormulas.map((formula) => (
+                      <SelectItem key={formula.id} value={formula.id}>
+                        {formula.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {/* Show selected formula details */}
+              {selectedFormulaDetails && (
+                <div className="mt-2 p-3 bg-muted rounded-md">
+                  <div className="font-medium text-sm">{selectedFormulaDetails.name}</div>
+                  {selectedFormulaDetails.description && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {selectedFormulaDetails.description}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Note */}
           <div className="space-y-2">
@@ -196,7 +302,7 @@ export function AddLogForm({
             >
               ยกเลิก
             </Button>
-            <Button type="submit" className="flex-1" disabled={isLoading}>
+            <Button type="submit" className="flex-1" disabled={isLoading} data-testid="submit-btn">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

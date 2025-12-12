@@ -18,9 +18,10 @@ import { DashboardSkeleton } from '@/components/dashboard/skeleton-loader';
 import { AddTreeForm } from "@/components/forms/add-tree-form";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 // Types
-type ViewState = 'dashboard' | 'add_tree' | 'add_batch_log' | 'tree_detail' | 'batch_activities' | 'scheduled_activities';
+type ViewState = 'dashboard' | 'add_tree' | 'add_batch_log' | 'tree_detail' | 'batch_activities' | 'scheduled_activities' | 'mixing';
 
 function DashboardContent() {
   const {
@@ -44,7 +45,7 @@ function DashboardContent() {
   const [loadingTreeId, setLoadingTreeId] = useState<string | null>(null);
   const [isAddingTree, setIsAddingTree] = useState(false);
   const [isAddingBatchLog, setIsAddingBatchLog] = useState(false);
-  const [activeTab, setActiveTab] = useState<'trees' | 'batch_activities' | 'scheduled_activities'>('trees');
+  const [activeTab, setActiveTab] = useState<'trees' | 'batch_activities' | 'scheduled_activities' | 'mixing'>('trees');
 
   const selectedTree = trees.find(t => t.id === selectedTreeId);
 
@@ -142,12 +143,14 @@ function DashboardContent() {
      }
   };
 
-  const handleTabChange = (tab: 'trees' | 'batch_activities' | 'scheduled_activities') => {
+  const handleTabChange = (tab: 'trees' | 'batch_activities' | 'scheduled_activities' | 'mixing') => {
     setActiveTab(tab);
     if (tab === 'batch_activities') {
       setView('batch_activities');
     } else if (tab === 'scheduled_activities') {
       setView('scheduled_activities');
+    } else if (tab === 'mixing') {
+      setView('mixing');
     } else {
       setView('dashboard');
     }
@@ -198,6 +201,19 @@ function DashboardContent() {
           />
         </div>
       );
+  } else if (view === 'mixing') {
+      // Redirect to mixing page or render mixing component inline
+      if (typeof window !== 'undefined') {
+        window.location.href = '/dashboard/mixing';
+      }
+      viewContent = (
+        <div className="min-h-screen bg-gray-50 p-4 pb-24 md:pb-8 max-w-md mx-auto">
+          <div className="text-center py-12">
+            <h3 className="text-lg font-medium mb-2">กำลังไปที่หน้าผสมสารเคมี...</h3>
+            <p className="text-gray-600">กรุณารอสักครู่</p>
+          </div>
+        </div>
+      );
   } else {
      // Default Dashboard View with Tabs
      viewContent = (
@@ -231,6 +247,12 @@ function DashboardContent() {
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger
+              isActive={activeTab === 'mixing'}
+              onClick={() => handleTabChange('mixing')}
+            >
+              ผสมสารเคมี
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent>
@@ -248,6 +270,20 @@ function DashboardContent() {
               />
             )}
             {activeTab === 'scheduled_activities' && <ScheduledActivitiesView />}
+            {activeTab === 'mixing' && (
+              <div className="space-y-4">
+                <div className="text-center py-12">
+                  <h3 className="text-lg font-medium mb-2">กำลังโหลดหน้าผสมสารเคมี...</h3>
+                  <p className="text-gray-600">หากคุณรอนานกว่านี้ กรุณา</p>
+                  <Button
+                    className="mt-4"
+                    onClick={() => window.location.href = '/dashboard/mixing'}
+                  >
+                    ไปที่หน้าผสมสารเคมี
+                  </Button>
+                </div>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
      );
