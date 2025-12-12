@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import MixingCalculator from '@/components/chemical-mixing/MixingCalculator'
-import MixingOrderDisplay from '@/components/chemical-mixing/MixingOrderDisplay'
-import MixingHistory from '@/components/chemical-mixing/MixingHistory'
+import { MixingCalculator } from '@/components/mixing/MixingCalculator'
+import { MixingOrderDisplay } from '@/components/mixing/MixingOrderDisplay'
+import { MixingHistory } from '@/components/mixing/MixingHistory'
 
 // Mock dependencies
 vi.mock('@/lib/mixing-calculator', () => ({

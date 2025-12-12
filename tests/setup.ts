@@ -85,7 +85,7 @@ afterAll(() => {
   mockFetch: (response: Record<string, unknown>, options: { status?: number; delay?: number } = {}) => {
     const { status = 200, delay = 0 } = options
 
-    ;(globalThis as { fetch: typeof fetch }).fetch = vi.fn(() =>
+    ;(globalThis as { fetch: typeof fetch }).fetch = vi.fn((): Promise<Response> =>
       new Promise(resolve =>
         setTimeout(() => {
           resolve({
