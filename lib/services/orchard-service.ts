@@ -76,7 +76,8 @@ export async function getOrchardData(orchardId: string) {
                   performDate: true,
                   status: true,
                   followUpDate: true,
-                  createdAt: true
+                  createdAt: true,
+                  mixingFormulaId: true
               },
               orderBy: { performDate: 'desc' },
               take: 50 // Limit recent logs

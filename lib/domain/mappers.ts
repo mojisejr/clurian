@@ -61,5 +61,6 @@ export const mapPrismaLogToDomain = (l: PrismaLog): Log => ({
   performDate: l.performDate.toISOString().split('T')[0],
   status: mapLogStatus(l.status),
   followUpDate: l.followUpDate ? l.followUpDate.toISOString().split('T')[0] : undefined,
-  createdAt: l.createdAt.toISOString()
+  createdAt: l.createdAt.toISOString(),
+  mixingFormulaId: l.mixingFormulaId || undefined
 });

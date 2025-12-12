@@ -61,6 +61,7 @@ export interface Log {
   status: LogStatus;
   followUpDate?: string; // ISO date string
   createdAt: string; // ISO datetime string
+  mixingFormulaId?: string; // reference to mixing formula used
 }
 
 // Form data types

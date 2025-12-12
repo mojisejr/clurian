@@ -19,6 +19,7 @@ export default defineConfig({
       '.git',
       '.cache'
     ],
+    pool: 'threads',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

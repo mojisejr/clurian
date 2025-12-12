@@ -104,24 +104,27 @@ model Tree {
 }
 
 model ActivityLog {
-  id           String    @id @default(uuid())
-  orchardId    String
-  logType      LogType   @map("log_type")
-  treeId       String?
-  targetZone   String?   @map("target_zone")
-  action       String
-  note         String?
-  performDate  DateTime  @map("perform_date") @db.Date
-  status       LogStatus @default(COMPLETED)
-  followUpDate DateTime? @map("follow_up_date") @db.Date
-  createdAt    DateTime  @default(now()) @map("created_at")
-  orchard      Orchard   @relation(fields: [orchardId], references: [id])
-  tree         Tree?     @relation(fields: [treeId], references: [id])
+  id              String        @id @default(uuid())
+  orchardId       String
+  logType         LogType       @map("log_type")
+  treeId          String?
+  targetZone      String?       @map("target_zone")
+  action          String
+  note            String?
+  performDate     DateTime      @map("perform_date") @db.Date
+  status          LogStatus     @default(COMPLETED)
+  followUpDate    DateTime?     @map("follow_up_date") @db.Date
+  mixingFormulaId String?       @map("mixing_formula_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  orchard         Orchard       @relation(fields: [orchardId], references: [id])
+  tree            Tree?         @relation(fields: [treeId], references: [id])
+  mixingFormula   MixingFormula? @relation(fields: [mixingFormulaId], references: [id])
 
   @@index([treeId, performDate(sort: Desc)])
   @@index([orchardId, performDate(sort: Desc)])
   @@index([orchardId, status, followUpDate])
   @@index([status, followUpDate])
+  @@index([mixingFormulaId])
   @@map("activity_logs")
 }
 
@@ -145,15 +148,16 @@ enum LogStatus {
 // --- Chemical Mixing Models ---
 
 model MixingFormula {
-  id          String   @id @default(cuid())
+  id          String         @id @default(cuid())
   orchardId   String
   name        String
   description String?
-  components  Json     // [{name, type, quantity, unit, step}]
-  createdAt   DateTime @default(now())
-  usedCount   Int      @default(0)
+  components  Json           // [{name, type, quantity, unit, step}]
+  createdAt   DateTime       @default(now())
+  usedCount   Int            @default(0)
+  activities  ActivityLog[]
 
-  orchard     Orchard  @relation(fields: [orchardId], references: [id])
+  orchard     Orchard        @relation(fields: [orchardId], references: [id])
 
   @@map("mixing_formulas")
 }

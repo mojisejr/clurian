@@ -139,18 +139,37 @@ export async function deleteMixingFormula(formulaId: string) {
       return { success: false, error: 'ไม่ได้รับอนุญาตให้เข้าใช้งาน' }
     }
 
-    // Verify formula ownership
+    // Verify formula ownership and check dependencies
     const formula = await prisma.mixingFormula.findFirst({
       where: {
         id: formulaId,
         orchard: {
           ownerId: session.user.id
         }
+      },
+      include: {
+        _count: {
+          select: {
+            activities: true
+          }
+        }
       }
     })
 
     if (!formula) {
       return { success: false, error: 'ไม่พบสูตรที่ระบุ' }
+    }
+
+    // Check if formula has dependencies
+    const activityCount = await prisma.activityLog.count({
+      where: { mixingFormulaId: formula.id }
+    })
+
+    if (activityCount > 0) {
+      return {
+        success: false,
+        error: `มีกิจกรรมที่ใช้สูตรนี้แล้ว ${activityCount} รายการ ไม่สามารถลบได้`
+      }
     }
 
     await prisma.mixingFormula.delete({

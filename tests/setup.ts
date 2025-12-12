@@ -45,6 +45,16 @@ beforeAll(() => {
     disconnect: vi.fn(),
   }))
 
+  // Mock Element.prototype.hasPointerCapture for Radix UI
+  Object.defineProperty(Element.prototype, 'hasPointerCapture', {
+    value: vi.fn().mockReturnValue(false),
+    writable: true,
+  })
+  Object.defineProperty(Element.prototype, 'setPointerCapture', {
+    value: vi.fn(),
+    writable: true,
+  })
+
   // Mock canvas
   HTMLCanvasElement.prototype.getContext = vi.fn()
 })
