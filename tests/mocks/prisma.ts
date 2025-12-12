@@ -1,4 +1,5 @@
 import { vi } from 'vitest'
+import { mockChemicals, mockFormulas } from '../helpers/chemical-mixing'
 
 // Mock Prisma Client
 export const mockPrismaClient = {
@@ -74,7 +75,6 @@ export const resetPrismaMocks = () => {
 
 // Helper to setup common mock return values
 export const setupMockMixingFormula = () => {
-  const { mockChemicals, mockFormulas } = require('./chemical-mixing')
 
   mockPrismaClient.mixingFormula.create.mockImplementation(async ({ data }) => ({
     id: `formula-${Date.now()}`,

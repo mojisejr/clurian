@@ -1,27 +1,61 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createMixingFormula, getMixingFormulasByOrchard, updateMixingFormulaUsage, deleteMixingFormula } from '@/app/actions/mixing-formulas'
 
-// Mock Prisma client
+// Mock dependencies
+vi.mock('@/lib/auth', () => ({
+  auth: {
+    api: {
+      getSession: vi.fn()
+    }
+  }
+}))
+
+// Mock headers function
+vi.mock('next/headers', () => ({
+  headers: vi.fn()
+}))
+
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     mixingFormula: {
       create: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
-      delete: vi.fn()
+      delete: vi.fn(),
+      findFirst: vi.fn()
+    },
+    orchard: {
+      findFirst: vi.fn()
     }
   }
 }))
 
 describe('Mixing Formula Actions', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
+
+    // Mock headers
+    const { headers } = await import('next/headers')
+    vi.mocked(headers).mockResolvedValue(new Map())
+
+    // Mock auth session
+    const mockAuth = vi.mocked(await import('@/lib/auth'))
+    mockAuth.auth.api.getSession.mockResolvedValue({
+      user: { id: 'user-1' }
+    })
+
+    // Mock orchard lookup
+    const { prisma } = await import('@/lib/prisma')
+    vi.mocked(prisma.orchard.findFirst).mockResolvedValue({
+      id: 'orchard-123',
+      ownerId: 'user-1'
+    } as { id: string; ownerId: string })
   })
 
   describe('createMixingFormula', () => {
     it('should create a new mixing formula successfully', async () => {
       const formulaData = {
-        orchardId: 'orchard-123',
+        orchardId: '550e8400-e29b-41d4-a716-446655440000', // Valid UUID
         name: 'สูตรพื้นฐาน',
         description: 'สูตรสำหรับการป้องกันโรคพืชฐาน',
         components: [
@@ -63,10 +97,10 @@ describe('Mixing Formula Actions', () => {
 
     it('should handle validation errors', async () => {
       const invalidFormulaData = {
-        orchardId: '',
-        name: '',
+        orchardId: '550e8400-e29b-41d4-a716-446655440000', // Valid UUID
+        name: '', // Empty name should fail validation
         description: '',
-        components: []
+        components: [] // Empty components should fail validation
       }
 
       const result = await createMixingFormula(invalidFormulaData)
@@ -77,10 +111,18 @@ describe('Mixing Formula Actions', () => {
 
     it('should handle database errors', async () => {
       const formulaData = {
-        orchardId: 'orchard-123',
+        orchardId: '550e8400-e29b-41d4-a716-446655440000',
         name: 'สูตรทดสอบ',
         description: 'สูตรสำหรับทดสอบ database error',
-        components: []
+        components: [
+          {
+            name: 'ยาทดสอบ',
+            type: 'liquid',
+            quantity: 100,
+            unit: 'ml',
+            step: 1
+          }
+        ]
       }
 
       const { prisma } = await import('@/lib/prisma')
@@ -89,21 +131,25 @@ describe('Mixing Formula Actions', () => {
       const result = await createMixingFormula(formulaData)
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain('Database connection failed')
+      expect(result.error).toContain('ไม่สามารถสร้างสูตรได้ กรุณาลองใหม่')
     })
 
     it('should handle missing orchardId', async () => {
       const formulaData = {
-        orchardId: '',
+        orchardId: '550e8400-e29b-41d4-a716-446655440000',
         name: 'สูตรทดสอบ',
         description: 'สูตรที่ไม่มี orchardId',
         components: []
       }
 
+      // Mock orchard findFirst to return null (orchard not found)
+      const { prisma } = await import('@/lib/prisma')
+      vi.mocked(prisma.orchard.findFirst).mockResolvedValue(null)
+
       const result = await createMixingFormula(formulaData)
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain('orchardId is required')
+      expect(result.error).toContain('ไม่พบสวนที่ระบุ')
     })
   })
 
@@ -166,6 +212,11 @@ describe('Mixing Formula Actions', () => {
 
       const { prisma } = await import('@/lib/prisma')
       vi.mocked(prisma.mixingFormula.update).mockResolvedValue(mockUpdatedFormula)
+      // Mock findFirst for ownership check
+      vi.mocked(prisma.mixingFormula.findFirst).mockResolvedValue({
+        id: formulaId,
+        orchard: { ownerId: 'user-1' }
+      })
 
       const result = await updateMixingFormulaUsage(formulaId)
 
@@ -180,25 +231,26 @@ describe('Mixing Formula Actions', () => {
       const formulaId = 'non-existent-formula'
 
       const { prisma } = await import('@/lib/prisma')
-      vi.mocked(prisma.mixingFormula.update).mockRejectedValue(new Error('Formula not found'))
+      // Mock orchard findFirst to return null (formula not found)
+      vi.mocked(prisma.mixingFormula.findFirst).mockResolvedValue(null)
 
       const result = await updateMixingFormulaUsage(formulaId)
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain('Formula not found')
+      expect(result.error).toContain('ไม่พบสูตรที่ระบุ')
     })
   })
 
   describe('deleteMixingFormula', () => {
     it('should delete formula successfully', async () => {
       const formulaId = 'formula-123'
-      const mockDeletedFormula = {
-        id: formulaId,
-        name: 'สูตรที่จะถูกลบ'
-      }
 
+      // Mock findFirst for ownership check
       const { prisma } = await import('@/lib/prisma')
-      vi.mocked(prisma.mixingFormula.delete).mockResolvedValue(mockDeletedFormula)
+      vi.mocked(prisma.mixingFormula.findFirst).mockResolvedValue({
+        id: formulaId,
+        orchard: { ownerId: 'user-1' }
+      } as { id: string; orchard: { ownerId: string } })
 
       const result = await deleteMixingFormula(formulaId)
 
@@ -211,7 +263,14 @@ describe('Mixing Formula Actions', () => {
     it('should handle deletion of formula with dependencies', async () => {
       const formulaId = 'formula-with-dependencies'
 
+      // Mock findFirst for ownership check
       const { prisma } = await import('@/lib/prisma')
+      vi.mocked(prisma.mixingFormula.findFirst).mockResolvedValue({
+        id: formulaId,
+        orchard: { ownerId: 'user-1' }
+      } as { id: string; orchard: { ownerId: string } })
+
+      // Mock delete to reject
       vi.mocked(prisma.mixingFormula.delete).mockRejectedValue(
         new Error('Cannot delete formula: has dependencies')
       )
@@ -219,7 +278,7 @@ describe('Mixing Formula Actions', () => {
       const result = await deleteMixingFormula(formulaId)
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain('Cannot delete formula: has dependencies')
+      expect(result.error).toContain('ไม่สามารถลบสูตรได้')
     })
   })
 })

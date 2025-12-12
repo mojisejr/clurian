@@ -82,9 +82,10 @@ model Orchard {
   zones     Json     @default("[]") // List of zone names e.g. ["A", "B"]
   createdAt DateTime @default(now()) @map("created_at")
 
-  owner     User     @relation(fields: [ownerId], references: [id])
-  trees     Tree[]
-  logs      ActivityLog[]
+  owner          User           @relation(fields: [ownerId], references: [id])
+  trees          Tree[]
+  logs           ActivityLog[]
+  mixingFormulas MixingFormula[]
 
   @@map("orchards")
 }
@@ -159,4 +160,20 @@ model ActivityLog {
   @@index([orchardId, status, followUpDate]) // For follow-up activities
   @@index([status, followUpDate]) // For general follow-up queries across orchards
   @@map("activity_logs")
+}
+
+// --- Chemical Mixing Models ---
+
+model MixingFormula {
+  id          String   @id @default(cuid())
+  orchardId   String
+  name        String
+  description String?
+  components  Json     // [{name, type, quantity, unit, step}]
+  createdAt   DateTime @default(now())
+  usedCount   Int      @default(0)
+
+  orchard     Orchard  @relation(fields: [orchardId], references: [id])
+
+  @@map("mixing_formulas")
 }
