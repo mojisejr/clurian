@@ -238,7 +238,7 @@ export function MixingHistory({ orchardId, onSelectFormula, onShowCalculator }: 
       ) : (
         <div className="grid gap-4">
           {filteredAndSortedFormulas.map((formula) => (
-            <Card key={formula.id} className="hover:shadow-md transition-shadow">
+            <Card key={formula.id} className="hover:shadow-md transition-shadow" data-testid="formula-item">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start gap-2">
                   <div className="flex-1 min-w-0">
@@ -253,6 +253,7 @@ export function MixingHistory({ orchardId, onSelectFormula, onShowCalculator }: 
                       variant="outline"
                       onClick={() => handleUseFormula(formula)}
                       className="whitespace-nowrap px-2 sm:px-3 h-8"
+                      data-testid="use-formula-btn"
                     >
                       <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span className="hidden sm:inline ml-1">ใช้</span>
@@ -262,6 +263,7 @@ export function MixingHistory({ orchardId, onSelectFormula, onShowCalculator }: 
                       variant="outline"
                       onClick={() => handleDeleteFormula(formula.id)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50 px-2 sm:px-3 h-8"
+                      data-testid="delete-formula-btn"
                     >
                       <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>

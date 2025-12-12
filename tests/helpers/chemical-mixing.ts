@@ -10,7 +10,7 @@ export interface ChemicalInput {
 }
 
 export interface MixingOrderStep {
-  step: string
+  step: number
   description: string
   chemicals: ChemicalInput[]
 }
@@ -18,6 +18,9 @@ export interface MixingOrderStep {
 export interface MixingOrderResult {
   steps: MixingOrderStep[]
   warnings: string[]
+  totalSteps: number
+  estimatedTime?: string
+  waterAmount?: number
 }
 
 // Use these types in tests
@@ -114,52 +117,61 @@ export const mockFormulas = [
 export const expectedMixingOrder: Record<string, MixingOrderResult> = {
   empty: {
     steps: [
-      { step: 'P-0', description: 'เตรียมน้ำ', chemicals: [] },
-      { step: '1', description: 'สารคีเลต/สารอินทรีย์', chemicals: [] },
-      { step: '2', description: 'สารแขวนลอย', chemicals: [] },
-      { step: '3', description: 'สารละลายน้ำใส', chemicals: [] },
-      { step: '4', description: 'ปุ๋ยมีประจุ', chemicals: [] },
-      { step: '5', description: 'สารจับใบ', chemicals: [] },
-      { step: '6', description: 'สารละลายน้ำมัน', chemicals: [] },
-      { step: '7', description: 'ออยล์', chemicals: [] }
+      { step: 0, description: 'เตรียมน้ำ', chemicals: [] },
+      { step: 1, description: 'สารคีเลต/สารอินทรีย์', chemicals: [] },
+      { step: 2, description: 'สารแขวนลอย', chemicals: [] },
+      { step: 3, description: 'สารละลายน้ำใส', chemicals: [] },
+      { step: 4, description: 'ปุ๋ยมีประจุ', chemicals: [] },
+      { step: 5, description: 'สารจับใบ', chemicals: [] },
+      { step: 6, description: 'สารละลายน้ำมัน', chemicals: [] },
+      { step: 7, description: 'ออยล์', chemicals: [] }
     ],
-    warnings: []
+    warnings: [],
+    totalSteps: 8,
+    estimatedTime: '5 นาที',
+    waterAmount: 1000
   },
   basic: {
     steps: [
-      { step: 'P-0', description: 'เตรียมน้ำ', chemicals: [] },
-      { step: '1', description: 'สารคีเลต/สารอินทรีย์', chemicals: [mockChemicals.basic[0]] },
-      { step: '2', description: 'สารแขวนลอย', chemicals: [mockChemicals.basic[1]] },
-      { step: '3', description: 'สารละลายน้ำใส', chemicals: [] },
-      { step: '4', description: 'ปุ๋ยมีประจุ', chemicals: [mockChemicals.basic[2]] },
-      { step: '5', description: 'สารจับใบ', chemicals: [] },
-      { step: '6', description: 'สารละลายน้ำมัน', chemicals: [] },
-      { step: '7', description: 'ออยล์', chemicals: [] }
+      { step: 0, description: 'เตรียมน้ำ', chemicals: [] },
+      { step: 1, description: 'สารคีเลต/สารอินทรีย์', chemicals: [mockChemicals.basic[0]] },
+      { step: 2, description: 'สารแขวนลอย', chemicals: [mockChemicals.basic[1]] },
+      { step: 3, description: 'สารละลายน้ำใส', chemicals: [] },
+      { step: 4, description: 'ปุ๋ยมีประจุ', chemicals: [mockChemicals.basic[2]] },
+      { step: 5, description: 'สารจับใบ', chemicals: [] },
+      { step: 6, description: 'สารละลายน้ำมัน', chemicals: [] },
+      { step: 7, description: 'ออยล์', chemicals: [] }
     ],
     warnings: [
       'ละลายยาที่เป็นผงในน้ำเล็กน้อยก่อนนำไปผสม',
       'ละลายปุ๋ยให้หมดก่อนนำไปผสมกับสารอื่น'
-    ]
+    ],
+    totalSteps: 8,
+    estimatedTime: '5 นาที',
+    waterAmount: 8000
   },
   allSuspended: {
     steps: [
-      { step: 'P-0', description: 'เตรียมน้ำ', chemicals: [] },
-      { step: '1', description: 'สารคีเลต/สารอินทรีย์', chemicals: [] },
-      { step: '2', description: 'สารแขวนลอย', chemicals: [
+      { step: 0, description: 'เตรียมน้ำ', chemicals: [] },
+      { step: 1, description: 'สารคีเลต/สารอินทรีย์', chemicals: [] },
+      { step: 2, description: 'สารแขวนลอย', chemicals: [
         mockChemicals.allSuspended[0], // 50g
         mockChemicals.allSuspended[2], // 300g
         mockChemicals.allSuspended[3], // 200g
         mockChemicals.allSuspended[1]  // 150g
       ]},
-      { step: '3', description: 'สารละลายน้ำใส', chemicals: [] },
-      { step: '4', description: 'ปุ๋ยมีประจุ', chemicals: [] },
-      { step: '5', description: 'สารจับใบ', chemicals: [] },
-      { step: '6', description: 'สารละลายน้ำมัน', chemicals: [] },
-      { step: '7', description: 'ออยล์', chemicals: [] }
+      { step: 3, description: 'สารละลายน้ำใส', chemicals: [] },
+      { step: 4, description: 'ปุ๋ยมีประจุ', chemicals: [] },
+      { step: 5, description: 'สารจับใบ', chemicals: [] },
+      { step: 6, description: 'สารละลายน้ำมัน', chemicals: [] },
+      { step: 7, description: 'ออยล์', chemicals: [] }
     ],
     warnings: [
       'ละลายยาที่เป็นผงในน้ำเล็กน้อยก่อนนำไปผสม'
-    ]
+    ],
+    totalSteps: 8,
+    estimatedTime: '5 นาที',
+    waterAmount: 14000
   }
 }
 

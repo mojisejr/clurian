@@ -116,11 +116,11 @@ export default function MixingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 pb-24 md:p-4 md:pb-8 w-full lg:max-w-6xl lg:mx-auto">
+    <div className="min-h-screen bg-gray-50 p-3 pb-24 md:p-4 md:pb-8 w-full lg:max-w-6xl lg:mx-auto" data-testid="mixing-page">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 md:mb-6">
         <div className="flex items-center gap-2 sm:gap-3">
-          <Button variant="ghost" onClick={handleBackToDashboard} size="sm">
+          <Button variant="ghost" onClick={handleBackToDashboard} size="sm" data-testid="back-to-dashboard-btn">
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="text-center sm:text-left">
@@ -132,9 +132,10 @@ export default function MixingPage() {
 
       {/* View Tabs */}
       <div className="mb-4 md:mb-6">
-        <div className="flex flex-col sm:flex-row gap-1 p-1 bg-gray-100 rounded-lg">
+        <div className="flex flex-col sm:flex-row gap-1 p-1 bg-gray-100 rounded-lg" data-testid="dashboard-tabs">
           <button
             onClick={() => setView('calculator')}
+            data-testid="tab-calculator"
             className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2 rounded-md transition-colors text-xs sm:text-sm ${
               view === 'calculator'
                 ? 'bg-white text-gray-900 shadow-sm'
@@ -147,6 +148,7 @@ export default function MixingPage() {
           </button>
           <button
             onClick={() => setView('history')}
+            data-testid="tab-mixing"
             className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2 rounded-md transition-colors text-xs sm:text-sm ${
               view === 'history'
                 ? 'bg-white text-gray-900 shadow-sm'
@@ -171,18 +173,22 @@ export default function MixingPage() {
       {/* Content */}
       <div>
         {view === 'calculator' && (
-          <MixingCalculator
-            orchardId={currentOrchardId}
-            onSaveFormula={handleSaveFormula}
-          />
+          <div data-testid="mixing-calculator">
+            <MixingCalculator
+              orchardId={currentOrchardId}
+              onSaveFormula={handleSaveFormula}
+            />
+          </div>
         )}
 
         {view === 'history' && (
-          <MixingHistory
-            orchardId={currentOrchardId}
-            onSelectFormula={handleSelectFormula}
-            onShowCalculator={() => setView('calculator')}
-          />
+          <div data-testid="mixing-history">
+            <MixingHistory
+              orchardId={currentOrchardId}
+              onSelectFormula={handleSelectFormula}
+              onShowCalculator={() => setView('calculator')}
+            />
+          </div>
         )}
 
         {view === 'result' && calculationResult && (

@@ -30,17 +30,25 @@ export const calculateMixingOrder = (chemicals: ChemicalInput[]): MixingOrderRes
     warnings.push('ละลายปุ๋ยให้หมดก่อนนำไปผสมกับสารอื่น')
   }
 
+  const steps = [
+    { step: 0, description: 'เตรียมน้ำ', chemicals: [] },
+    { step: 1, description: 'สารคีเลต/สารอินทรีย์', chemicals: grouped.chelator || [] },
+    { step: 2, description: 'สารแขวนลอย', chemicals: grouped.suspended || [] },
+    { step: 3, description: 'สารละลายน้ำใส', chemicals: grouped.liquid || [] },
+    { step: 4, description: 'ปุ๋ยมีประจุ', chemicals: grouped.fertilizer || [] },
+    { step: 5, description: 'สารจับใบ', chemicals: grouped.adjuvant || [] },
+    { step: 6, description: 'สารละลายน้ำมัน', chemicals: grouped.oil_concentrate || [] },
+    { step: 7, description: 'ออยล์', chemicals: grouped.oil || [] },
+  ];
+
+  const totalSteps = steps.length;
+  const waterAmount = chemicals.reduce((total, chem) => total + chem.quantity, 0) * 20; // Estimate water
+
   return {
-    steps: [
-      { step: 'P-0', description: 'เตรียมน้ำ', chemicals: [] },
-      { step: '1', description: 'สารคีเลต/สารอินทรีย์', chemicals: grouped.chelator || [] },
-      { step: '2', description: 'สารแขวนลอย', chemicals: grouped.suspended || [] },
-      { step: '3', description: 'สารละลายน้ำใส', chemicals: grouped.liquid || [] },
-      { step: '4', description: 'ปุ๋ยมีประจุ', chemicals: grouped.fertilizer || [] },
-      { step: '5', description: 'สารจับใบ', chemicals: grouped.adjuvant || [] },
-      { step: '6', description: 'สารละลายน้ำมัน', chemicals: grouped.oil_concentrate || [] },
-      { step: '7', description: 'ออยล์', chemicals: grouped.oil || [] },
-    ],
-    warnings
+    steps,
+    warnings,
+    totalSteps,
+    estimatedTime: `${Math.max(5, totalSteps * 2)} นาที`,
+    waterAmount
   }
 }

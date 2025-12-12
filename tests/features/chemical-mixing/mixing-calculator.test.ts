@@ -17,7 +17,7 @@ describe('Mixing Calculator', () => {
 
       const result = calculateMixingOrder(chemicals)
 
-      expect(result.steps[1].step).toBe('1')
+      expect(result.steps[1].step).toBe(1)
       expect(result.steps[1].description).toBe('สารคีเลต/สารอินทรีย์')
       expect(result.steps[1].chemicals).toHaveLength(1)
       expect(result.steps[1].chemicals[0].name).toBe('EDTA')
@@ -36,7 +36,7 @@ describe('Mixing Calculator', () => {
 
       const result = calculateMixingOrder(chemicals)
 
-      expect(result.steps[2].step).toBe('2')
+      expect(result.steps[2].step).toBe(2)
       expect(result.steps[2].description).toBe('สารแขวนลอย')
       expect(result.steps[2].chemicals).toHaveLength(1)
       expect(result.steps[2].chemicals[0].name).toBe('ยากำจัดแมลง WP')

@@ -123,7 +123,7 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="mixing-calculator-form">
       {/* Input Section */}
       <Card>
         <CardHeader>
@@ -161,6 +161,7 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
                     onChange={(e) => updateChemical(index, 'name', e.target.value)}
                     placeholder="เช่น ยาคุมหญ้า"
                     className="text-sm"
+                    data-testid={`chemical-name-input-${index}`}
                   />
                 </div>
 
@@ -170,7 +171,7 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
                     value={chemical.type}
                     onValueChange={(value) => updateChemical(index, 'type', value)}
                   >
-                    <SelectTrigger id={`chemical-type-${index}`} className="text-sm">
+                    <SelectTrigger id={`chemical-type-${index}`} className="text-sm" data-testid={`chemical-type-select-${index}`}>
                       <SelectValue placeholder="เลือก" />
                     </SelectTrigger>
                     <SelectContent>
@@ -193,6 +194,7 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
                     onChange={(e) => updateChemical(index, 'quantity', parseFloat(e.target.value) || 0)}
                     placeholder="0"
                     className="text-sm"
+                    data-testid={`chemical-quantity-input-${index}`}
                   />
                 </div>
               </div>
@@ -220,7 +222,7 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
           ))}
 
           <div className="flex flex-col sm:flex-row gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={addChemical} className="w-full sm:w-auto">
+            <Button type="button" variant="outline" onClick={addChemical} className="w-full sm:w-auto" data-testid="add-chemical-btn">
               <Plus className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">เพิ่มสารเคมี</span>
               <span className="sm:hidden">เพิ่ม</span>
@@ -231,6 +233,7 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
               onClick={handleCalculate}
               disabled={isCalculating}
               className="w-full sm:w-auto sm:ml-auto"
+              data-testid="calculate-mixing-order-btn"
             >
               {isCalculating ? 'กำลังคำนวณ...' : (
                 <>
@@ -275,7 +278,7 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
                 {result.steps.map((step, index) => (
                   <div key={index} className="border-l-4 border-green-500 pl-4 py-2">
                     <div className="font-medium text-green-800 mb-1">
-                      {getStepLabel(parseInt(step.step))}
+                      {getStepLabel(step.step)}
                     </div>
                     <div className="space-y-1">
                       {step.chemicals.map((chemical, chemIndex) => (
@@ -303,6 +306,7 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
                   variant="outline"
                   onClick={() => setShowSaveForm(!showSaveForm)}
                   className="w-full"
+                  data-testid="save-as-formula-btn"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   บันทึกเป็นสูตร
@@ -319,6 +323,7 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
                       value={formulaName}
                       onChange={(e) => setFormulaName(e.target.value)}
                       placeholder="เช่น สูตรคุมหญ้าโตเต็มวัย"
+                      data-testid="formula-name-input"
                     />
                   </div>
 
@@ -331,6 +336,7 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
                       value={formulaDescription}
                       onChange={(e) => setFormulaDescription(e.target.value)}
                       placeholder="รายละเอียดเพิ่มเติมเกี่ยวกับสูตรนี้..."
+                      data-testid="formula-description-input"
                     />
                   </div>
 
@@ -340,6 +346,7 @@ export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: Mixin
                       onClick={handleSaveFormula}
                       disabled={isSaving}
                       className="flex-1"
+                      data-testid="confirm-save-formula-btn"
                     >
                       {isSaving ? 'กำลังบันทึก...' : 'บันทึกสูตร'}
                     </Button>
