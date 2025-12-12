@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   getOrchards,
   getOrchardData,
+  getOrchardDataLegacy,
   getOrchardTreesServer,
   getOrchardActivityLogsServer,
   getDashboardDataServer
@@ -13,7 +14,8 @@ import {
 export const queryKeys = {
   orchards: ['orchards'] as const,
   orchard: (orchardId: string) => ['orchard', orchardId] as const,
-  orchardData: (orchardId: string) => ['orchardData', orchardId] as const,
+  orchardData: (orchardId: string, options?: Record<string, unknown>) =>
+    options ? ['orchardData', orchardId, options] as const : ['orchardData', orchardId] as const,
   orchardTrees: (orchardId: string, filters?: Record<string, unknown>) =>
     filters ? ['orchardTrees', orchardId, filters] as const : ['orchardTrees', orchardId] as const,
   orchardActivityLogs: (orchardId: string, filters?: Record<string, unknown>) =>
@@ -33,15 +35,42 @@ export function useOrchards() {
 
 export function useOrchardData(
   orchardId: string,
+  options?: {
+    page?: number;
+    limit?: number;
+    filters?: {
+      zone?: string;
+      status?: string;
+      searchTerm?: string;
+    };
+  }
+) {
+  return useQuery({
+    queryKey: queryKeys.orchardData(orchardId, options),
+    queryFn: () => getOrchardData(orchardId, options),
+    enabled: !!orchardId, // Only fetch if orchardId is provided
+    staleTime: 2 * 60 * 1000, // 2 minutes - trees and logs can change
+    gcTime: 5 * 60 * 1000, // 5 minutes cache time
+    // Keep previous data while fetching new data for better UX
+    placeholderData: (previousData) => previousData,
+  });
+}
+
+/**
+ * Legacy compatibility hook for backward compatibility
+ * @deprecated Use useOrchardData with options object instead
+ */
+export function useOrchardDataLegacy(
+  orchardId: string,
   page: number = 1,
   limit: number = 100
 ) {
   return useQuery({
-    queryKey: [...queryKeys.orchardData(orchardId), page, limit],
-    queryFn: () => getOrchardData(orchardId, page, limit),
-    enabled: !!orchardId, // Only fetch if orchardId is provided
-    staleTime: 2 * 60 * 1000, // 2 minutes - trees and logs can change
-    gcTime: 5 * 60 * 1000, // 5 minutes cache time
+    queryKey: [...queryKeys.orchardData(orchardId), { page, limit }],
+    queryFn: () => getOrchardDataLegacy(orchardId, page, limit),
+    enabled: !!orchardId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 }
 

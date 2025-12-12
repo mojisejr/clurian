@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { ZONE_FILTER_ALL } from "@/lib/constants";
+import React, { useState, useEffect } from 'react';
 import { useOrchard } from "@/components/providers/orchard-provider";
 import { TreeCard } from "@/components/tree-card";
 import { TreeCardSkeleton } from "@/components/ui/tree-card-skeleton";
 import { Pagination } from "@/components/pagination";
-import { ZoneFilter } from "@/components/zone-filter";
 import { PDFGeneratorModal } from "@/components/modals/pdf-generator-modal";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,39 +26,23 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
     totalPages,
     pagination,
     setCurrentPage,
-    currentOrchardId,
-    currentOrchard
+    currentOrchard,
+    filterZone,
+    filterStatus,
+    searchTerm,
+    setFilterZone,
+    setFilterStatus,
+    setSearchTerm,
+    clearFilters
   } = useOrchard();
 
-  const [filterZone, setFilterZone] = useState(ZONE_FILTER_ALL);
-  const [searchQuery, setSearchQuery] = useState('');
   const [logoBase64, setLogoBase64] = useState<string>('');
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
 
-  const orchardZones = currentOrchard?.zones || [];
+  const orchardZones = ['ALL', ...(currentOrchard?.zones || [])];
   const itemsPerPage = pagination?.limit || 100;
 
-  // For now, search/filter works on current page data
-  // In Phase 2, we'll move this to server-side
-  const processedTrees = useMemo(() => {
-    let result = trees.filter(t => t.status !== 'archived');
-
-    if (filterZone !== ZONE_FILTER_ALL) {
-      result = result.filter(t => t.zone === filterZone);
-    }
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(t =>
-        t.code.toLowerCase().includes(query) ||
-        t.variety.includes(query)
-      );
-    }
-
-    return result;
-  }, [trees, filterZone, searchQuery]);
-
-  // Use totalTrees from server pagination instead
+  // Trees are already filtered on the server side
   const sickTreesCount = trees.filter(t => t.status === 'sick').length;
   const activeTreesCount = totalTrees;
 
@@ -108,26 +90,60 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
       <Card className="p-3 space-y-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          <Input 
-            className="pl-10" 
-            placeholder="ค้นหาเลขต้น..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+          <Input
+            className="pl-10"
+            placeholder="ค้นหาเลขต้นหรือพันธุ์..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
-        <div className="flex justify-between items-center">
-          <ZoneFilter 
-            zones={orchardZones} 
-            activeZone={filterZone} 
-            onZoneChange={setFilterZone} 
-          />
-          
+
+        <div className="flex justify-between items-center gap-2">
+          <div className="flex gap-2 flex-1">
+            {/* Zone Filter */}
+            <select
+              value={filterZone}
+              onChange={(e) => setFilterZone(e.target.value)}
+              className="text-xs px-2 py-1 border rounded"
+            >
+              {orchardZones.map(zone => (
+                <option key={zone} value={zone}>
+                  {zone === 'ALL' ? 'ทุกโซน' : `โซน ${zone}`}
+                </option>
+              ))}
+            </select>
+
+            {/* Status Filter */}
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="text-xs px-2 py-1 border rounded"
+            >
+              <option value="ALL">ทุกสถานะ</option>
+              <option value="healthy">สมบูรณ์</option>
+              <option value="sick">ป่วย</option>
+              <option value="dead">ตาย</option>
+              <option value="archived">เก็บรวบ</option>
+            </select>
+          </div>
+
+          {/* Clear Filters Button */}
+          {(filterZone !== 'ALL' || filterStatus !== 'ALL' || searchTerm) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearFilters}
+              className="text-xs"
+            >
+              ล้างตัวกรอง
+            </Button>
+          )}
+
           {/* Export PDF Button */}
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs text-muted-foreground"
+            className="text-xs text-muted-foreground whitespace-nowrap"
             onClick={() => setIsPDFModalOpen(true)}
             disabled={totalTrees === 0}
           >
@@ -139,7 +155,7 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
 
       {/* Tree List */}
       <div className="space-y-2">
-        {processedTrees.length === 0 && !isAddingNewTree ? (
+        {trees.length === 0 && !isAddingNewTree ? (
             <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-xl">
                 <Sprout className="mx-auto mb-2 opacity-50" size={48} />
                 <p>ไม่พบข้อมูลต้นไม้</p>
@@ -156,7 +172,7 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
               )}
 
               {/* Render actual trees */}
-              {processedTrees.map(tree => (
+              {trees.map(tree => (
                   <div key={tree.id} onClick={() => onIdentifyTree(tree.id)}>
                       <TreeCard
                           tree={tree}
@@ -166,7 +182,7 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
               ))}
 
               {/* Show empty state if no trees but loading */}
-              {processedTrees.length === 0 && isAddingNewTree && (
+              {trees.length === 0 && isAddingNewTree && (
                 <div className="text-center py-4 text-muted-foreground text-sm">
                   กำลังเพิ่มต้นไม้ใหม่...
                 </div>

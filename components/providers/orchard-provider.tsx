@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo, useCallback } from "react";
 import type { Orchard, Tree, Log, PaginationMetadata } from "@/lib/types";
 import {
     useOrchards,
@@ -34,6 +34,15 @@ interface OrchardContextType {
   pagination: PaginationMetadata | undefined;
   setCurrentPage: (page: number) => void;
 
+  // Filter state
+  filterZone: string;
+  filterStatus: string;
+  searchTerm: string;
+  setFilterZone: (zone: string) => void;
+  setFilterStatus: (status: string) => void;
+  setSearchTerm: (term: string) => void;
+  clearFilters: () => void;
+
   // Computed values for activity counts
   batchActivityCount: number;
   scheduledActivityCount: number;
@@ -48,7 +57,23 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
   const { data: orchards = [], isLoading: isLoadingOrchards, error: orchardsError } = useOrchards();
   const [currentOrchardId, setCurrentOrchardId] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const { data: orchardData, isLoading: isLoadingOrchardData, error: orchardDataError } = useOrchardData(currentOrchardId, currentPage, 100);
+
+  // Filter state
+  const [filterZone, setFilterZone] = useState<string>("ALL");
+  const [filterStatus, setFilterStatus] = useState<string>("ALL");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
+  // Build query options
+  const queryOptions = useMemo(() => ({
+    page: currentPage,
+    filters: {
+      zone: filterZone !== "ALL" ? filterZone : undefined,
+      status: filterStatus !== "ALL" ? filterStatus : undefined,
+      searchTerm: searchTerm || undefined,
+    }
+  }), [currentPage, filterZone, filterStatus, searchTerm]);
+
+  const { data: orchardData, isLoading: isLoadingOrchardData, error: orchardDataError } = useOrchardData(currentOrchardId, queryOptions);
   const mutations = useOrchardMutations();
 
   // Extract trees, logs, and pagination from orchardData
@@ -57,6 +82,14 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
   const pagination = orchardData?.pagination;
   const totalPages = pagination?.totalPages || 0;
   const totalTrees = pagination?.total || 0;
+
+  // Clear filters helper
+  const clearFilters = useCallback(() => {
+    setFilterZone("ALL");
+    setFilterStatus("ALL");
+    setSearchTerm("");
+    setCurrentPage(1);
+  }, []);
 
   // Find current orchard
   const currentOrchard = orchards.find((o) => o.id === currentOrchardId);
@@ -83,12 +116,30 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
     log.status === 'COMPLETED'
   ).length;
 
-  // Reset pagination when changing orchards
+  // Reset to page 1 when filters change (use ref to avoid stale closure)
+  const prevFiltersRef = useRef({ filterZone, filterStatus, searchTerm });
+
   useEffect(() => {
-    if (currentPage !== 1) {
+    const hasFilterChanged =
+      prevFiltersRef.current.filterZone !== filterZone ||
+      prevFiltersRef.current.filterStatus !== filterStatus ||
+      prevFiltersRef.current.searchTerm !== searchTerm;
+
+    if (hasFilterChanged) {
+      // Update ref after check
+      prevFiltersRef.current = { filterZone, filterStatus, searchTerm };
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentPage(1);
     }
-  }, [currentOrchardId, currentPage]);
+  }, [filterZone, filterStatus, searchTerm, setCurrentPage]);
+
+  // Reset pagination and filters when changing orchards
+  useEffect(() => {
+    clearFilters();
+    prevFiltersRef.current = { filterZone: 'ALL', filterStatus: 'ALL', searchTerm: '' };
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentPage(1);
+  }, [currentOrchardId, clearFilters, setCurrentPage]);
 
   // Initialize with first orchard using a ref and setTimeout to avoid cascade
   const hasInitialized = useRef(false);
@@ -170,6 +221,13 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
         totalTrees,
         pagination,
         setCurrentPage,
+        filterZone,
+        filterStatus,
+        searchTerm,
+        setFilterZone,
+        setFilterStatus,
+        setSearchTerm,
+        clearFilters,
         batchActivityCount,
         scheduledActivityCount,
         inProgressLogsCount,

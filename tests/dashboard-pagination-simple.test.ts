@@ -10,10 +10,10 @@ const createMockTree = (id: string, code: string, zone: string, status: Tree['st
   zone,
   type: 'ทุเรียน',
   variety: 'หมอนทอง',
-  plantedDate: new Date('2024-01-01'),
+  plantedDate: '2024-01-01',
   status,
-  createdAt: new Date('2024-01-01'),
-  updatedAt: new Date('2024-01-01')
+  createdAt: '2024-01-01',
+  updatedAt: '2024-01-01'
 })
 
 // Create mock trees for testing
@@ -66,8 +66,8 @@ describe('Dashboard Pagination Bug Tests', () => {
       // Import after mocking
       const orchardServiceModule = await import('@/lib/services/orchard-service')
 
-      // Act
-      const result = await orchardServiceModule.getOrchardData('orchard-1', 1, 100)
+      // Act - Call with default options
+      const result = await orchardServiceModule.getOrchardData('orchard-1')
 
       // Assert - With our implementation, should handle pagination properly
       // But the mock simulates a hard limit of 100, showing the OLD behavior
@@ -152,7 +152,7 @@ describe('Dashboard Pagination Bug Tests', () => {
       const orchardServiceModule = await import('@/lib/services/orchard-service')
 
       // Act
-      const result = await orchardServiceModule.getOrchardData('orchard-1', 1, 150)
+      const result = await orchardServiceModule.getOrchardData('orchard-1', { limit: 150 })
 
       // Assert - The fix should work with our mock, but vi.doMock has limitations
       // For now, let's verify pagination metadata is correct

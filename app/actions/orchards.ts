@@ -21,11 +21,31 @@ export async function createOrchard(name: string) {
 
 export async function getOrchardData(
   orchardId: string,
+  options?: {
+    page?: number;
+    limit?: number;
+    filters?: {
+      zone?: string;
+      status?: string;
+      searchTerm?: string;
+    };
+  }
+) {
+  await requireAuth(); // Ensure user is authenticated
+  return orchardService.getOrchardData(orchardId, options);
+}
+
+/**
+ * Legacy compatibility function for backward compatibility
+ * @deprecated Use getOrchardData with options object instead
+ */
+export async function getOrchardDataLegacy(
+  orchardId: string,
   page: number = 1,
   limit: number = 100
 ) {
-  await requireAuth(); // Ensure user is authenticated
-  return orchardService.getOrchardData(orchardId, page, limit);
+  await requireAuth();
+  return orchardService.getOrchardDataLegacy(orchardId, page, limit);
 }
 
 export async function getOrchardTreesServer(
