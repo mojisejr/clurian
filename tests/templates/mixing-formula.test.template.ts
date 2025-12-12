@@ -103,8 +103,8 @@ describe('Action Name', () => {
   describe('Success Cases', () => {
     it('should return success with valid data', async () => {
       // Arrange
-      const data = { /* valid input */ }
-      const expected = { /* expected output */ }
+      const data = {} as any // valid input
+      const expected = {} as any // expected output
       mockPrismaClient.model.create.mockResolvedValue(expected)
 
       // Act
@@ -122,7 +122,7 @@ describe('Action Name', () => {
   describe('Error Cases', () => {
     it('should handle validation errors', async () => {
       // Arrange
-      const invalidData = { /* invalid input */ }
+      const invalidData = {} as any // invalid input
 
       // Act
       const result = await action(invalidData)
@@ -134,7 +134,7 @@ describe('Action Name', () => {
 
     it('should handle database errors', async () => {
       // Arrange
-      const data = { /* valid input */ }
+      const data = {} as any // valid input
       mockPrismaClient.model.create.mockRejectedValue(new Error('DB Error'))
 
       // Act
