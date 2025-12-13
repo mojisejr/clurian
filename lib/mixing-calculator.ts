@@ -40,15 +40,30 @@ const CHEMICAL_STEP_MAP: Readonly<Record<string, number>> = {
   'DF': 2,     // Dustable Formulation
   'FDF': 2,    // Flowable Dust-Free Powder
   'WG': 2,     // Water Granule
+  'SP': 2,     // Soluble Powder
+  'SG': 2,     // Soluble Granule
+  'MG': 2,     // Micro Granule
+  'MT': 2,     // Micro Tablet
+  'WS': 2,     // Water Soluble
+  'ZC': 2,     // Zinc/Copper
+  'RB': 2,     // Ready Bait
+  'T': 2,      // Tablet
+  'GB': 2,     // Granular Bait
 
   // Step 3: Water-soluble liquids
   'SL': 3,         // Soluble Liquid
   'LIQ_FERT': 3,   // Liquid Fertilizer
+  'UL': 3,         // Drone Formulation (water-based)
 
-  // Step 4: Fertilizers (solid and organic)
+  // Step 4: Fertilizers (solid and organic) and special formulations
   'FERT': 4,   // Chemical Fertilizer
   'ORG': 4,    // Organic Fertilizer
   'GR': 4,     // Granule (placed at step 4 for better dissolution)
+  'PA': 4,     // Tree Paste
+  'GE': 4,     // Gas Generator (special case)
+  'BR': 4,     // Bait Ready
+  'FU': 4,     // Fumigant
+  'TO': 4,     // Topical
 
   // Step 5: Adjuvants and surface-active agents
   'SURF': 5,   // Surfactant
@@ -64,6 +79,17 @@ const CHEMICAL_STEP_MAP: Readonly<Record<string, number>> = {
   'EW': 7,     // Emulsion in Water
   'FS': 7,     // Flowable Concentrate
   'CS': 7,     // Capsule Suspension
+  'OD': 7,     // Oil Dispersion
+  'AC': 7,     // Aqueous Capsule (oil-based)
+  'AF': 7,     // Aqueous Flowable (oil-based)
+  'WP-SC': 7,  // Combined formulation (oil-based)
+  'EC-ME': 7,  // Combined formulation (oil-based)
+  'SC-EC': 7,  // Combined formulation (oil-based)
+  'MC': 7,     // Micro Capsule
+  'SG-S': 7,   // Seed Granule (oil-treated)
+  'EW-O': 7,   // Oil-based Emulsion
+  'XL': 7,     // Extended Release
+  'WP-E': 7,   // Wettable Powder Extra
 } as const;
 
 /**
@@ -87,6 +113,15 @@ const POWDER_TYPES = new Set<string>([
   'DF',     // Dustable Formulation
   'FDF',    // Flowable Dust-Free Powder
   'WG',     // Water Granule
+  'SP',     // Soluble Powder
+  'SG',     // Soluble Granule
+  'MG',     // Micro Granule
+  'MT',     // Micro Tablet
+  'WS',     // Water Soluble
+  'ZC',     // Zinc/Copper
+  'RB',     // Ready Bait
+  'T',      // Tablet
+  'GB',     // Granular Bait
   'suspended' // Legacy type
 ]);
 
@@ -95,6 +130,8 @@ const FERTILIZER_TYPES = new Set<string>([
   'FERT',       // Chemical Fertilizer
   'ORG',        // Organic Fertilizer
   'GR',         // Granule
+  'LIQ_FERT',   // Liquid Fertilizer
+  'PA',         // Tree Paste
   'fertilizer'  // Legacy type
 ]);
 

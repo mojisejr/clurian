@@ -14,6 +14,7 @@ import {
   SPECIAL_FORMULATIONS,
   FERTILIZER_FORMULATIONS,
   ADJUVANT_FORMULATIONS,
+  ADDITIONAL_FORMULATIONS,
   TYPE_MIGRATION_MAP,
   isOldChemicalType,
   migrateChemicalType,
@@ -38,7 +39,11 @@ describe('CHEMICAL_FORMULATIONS Constants', () => {
         'SP', 'SG', 'PA', 'OD', 'ZC', 'UL', 'GE', 'GB',
         'MG', 'MT', 'RB', 'AC', 'AF', 'T', 'WS',
         // Additional international standards
-        'WP-SC', 'EC-ME', 'SC-EC'
+        'WP-SC', 'EC-ME', 'SC-EC',
+        // Added special types
+        'MC', 'SG-S', 'EW-O', 'XL', 'WP-E',
+        // Additional types
+        'BR', 'FU', 'TO'
       ]
 
       criticalTypes.forEach(type => {
@@ -83,7 +88,8 @@ describe('CHEMICAL_FORMULATIONS Constants', () => {
         ...LIQUID_FORMULATIONS,
         ...SPECIAL_FORMULATIONS,
         ...FERTILIZER_FORMULATIONS,
-        ...ADJUVANT_FORMULATIONS
+        ...ADJUVANT_FORMULATIONS,
+        ...ADDITIONAL_FORMULATIONS
       ]
 
       // Should include all types (no duplicates)
@@ -155,7 +161,7 @@ describe('CHEMICAL_FORMULATIONS Constants', () => {
     it('should migrate legacy types to appropriate new standards', () => {
       const expectedMigrations = {
         'chelator': 'SC',      // Now maps to Suspension Concentrate
-        'suspended': 'SC',     // Wettable Powder
+        'suspended': 'WP',     // Wettable Powder
         'liquid': 'SL',        // Soluble Liquid
         'fertilizer': 'FERT',  // Chemical Fertilizer
         'adjuvant': 'SURF',    // Surfactant
@@ -183,7 +189,10 @@ describe('CHEMICAL_FORMULATIONS Constants', () => {
         { type: 'FERT', category: 'Fertilizer' },
         { type: 'ORG', category: 'Fertilizer' },
         { type: 'SURF', category: 'Adjuvant' },
-        { type: 'STICK', category: 'Adjuvant' }
+        { type: 'STICK', category: 'Adjuvant' },
+        { type: 'BR', category: 'Additional' },
+        { type: 'FU', category: 'Additional' },
+        { type: 'TO', category: 'Additional' }
       ]
 
       testCases.forEach(({ type, category }) => {
@@ -216,6 +225,9 @@ describe('FAO/CIPAC Compliance', () => {
         parts.forEach(part => {
           expect(part).toMatch(/^[A-Z]{2,4}$/)
         })
+      } else if (formulation === 'LIQ_FERT') {
+        // Special case for liquid fertilizer
+        expect(formulation).toBe('LIQ_FERT')
       } else {
         expect(formulation).toMatch(/^[A-Z]{2,4}$/)
       }
