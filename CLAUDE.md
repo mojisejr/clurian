@@ -320,18 +320,44 @@ npm test -- --coverage
 
 ---
 
-## 📋 Available Commands
+## 🚨 CODING POLICY: /impl COMMAND ONLY
 
-### Implementation Commands
+### ABSOLUTELY NO CODING EXCEPT WITH /impl
+
+**I WILL NEVER write, create, or modify ANY code in regular conversation.**
+
+- ❌ **NO CODE** in normal discussion
+- ❌ **NO FILE EDITS** without `/impl` command
+- ❌ **NO IMPLEMENTATION** without explicit `/impl` trigger
+- ❌ **NO BUILD/TEST/LINT** outside of `/impl` workflow
+- ✅ **Discussion/Analysis**: Read, analyze, discuss, plan
+- ✅ **Implementation**: ONLY when `/impl [task]` is used
+
+### Natural Conversation Flow
+1. **Discuss**: Talk about features, approaches, issues
+2. **Analyze**: Review code, explore options
+3. **Plan**: Decide what needs to be done
+4. **Ready?**: User types `/impl [task]`
+5. **Implement**: Full TDD workflow begins
+
+### Commands
 
 ```bash
-/impl [task description]        # Implementation workflow with testing
-/run-test [type]               # Run specific test types
+/impl [task description]        # ONLY trigger for coding/implementation
+/discuss [topic]               # Analysis and discussion (no coding)
+/analyze [topic]               # Deep dive analysis (no coding)
+/run-test [type]               # Run tests (safe, no code changes)
 ```
 
-### Command Execution Flow
+### Workflow
 
-**When using /impl:**
+**Regular Mode (Default)**:
+- Pure discussion and analysis
+- No code changes whatsoever
+- Can read files, search, explore
+- Wait for `/impl` command
+
+**When `/impl` is used**:
 1. Check current branch (must be staging)
 2. Create feature branch
 3. Phase 0: Analysis & Planning
@@ -340,11 +366,6 @@ npm test -- --coverage
 6. Phase 3: Refactor & optimize
 7. Phase 4: QA (build, lint, test, types)
 8. Commit with conventional format
-
-**When using /run-test:**
-1. Check testing framework status
-2. Execute appropriate test command
-3. Report results and coverage
 
 ---
 

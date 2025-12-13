@@ -56,7 +56,25 @@ All operations MUST:
 
 ## 🎯 Agent-Specific Guidelines
 
-### For Code Generation Agents
+### 🚨 CRITICAL: NO CODING POLICY (EXCEPT /impl COMMAND)
+
+**ABSOLUTELY NO CODE IMPLEMENTATION UNLESS EXPLICITLY TRIGGERED BY `/impl` COMMAND**
+
+- ❌ **NEVER write code** in regular conversation
+- ❌ **NEVER create or modify files** without `/impl` command
+- ❌ **NEVER implement features** in discussion mode
+- ❌ **NEVER edit existing code** unless `/impl` is used
+- ❌ **NEVER run build/test/lint** unless part of `/impl` workflow
+- ✅ **ALLOWED**: Read, analyze, discuss, plan, explore
+- ✅ **ALLOWED**: Use `/impl` command for implementation
+- ✅ **ALLOWED**: Ask questions and provide guidance
+
+**Workflow**:
+1. Discuss and analyze in normal mode (NO CODING)
+2. Wait for user to type `/impl [task]`
+3. Only then begin implementation with TDD workflow
+
+### For Code Generation Agents (ONLY during /impl)
 
 1. **Next.js App Router Patterns**:
    - Use `app/` directory structure
