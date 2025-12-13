@@ -34,14 +34,14 @@ describe('CHEMICAL_FORMULATIONS Constants', () => {
         'EC', 'SC', 'SL', 'EW', 'ME',
         'CS', 'WG', 'FS', 'SE',
         'FERT', 'ORG', 'LIQ_FERT',
-        'SURF', 'STICK', 'SPREAD',
+        'SURF', 'STIK', 'SPRD',
         // New critical types for Thai agriculture
         'SP', 'SG', 'PA', 'OD', 'ZC', 'UL', 'GE', 'GB',
-        'MG', 'MT', 'RB', 'AC', 'AF', 'T', 'WS',
+        'MG', 'MT', 'RB', 'AC', 'AF', 'TAB', 'WS',
         // Additional international standards
         'WP-SC', 'EC-ME', 'SC-EC',
         // Added special types
-        'MC', 'SG-S', 'EW-O', 'XL', 'WP-E',
+        'MC', 'SGST', 'EWOM', 'XL', 'WPEX',
         // Additional types
         'BR', 'FU', 'TO'
       ]
@@ -67,7 +67,7 @@ describe('CHEMICAL_FORMULATIONS Constants', () => {
         'RB': 'Ready Bait',
         'AC': 'Aqueous Capsule',
         'AF': 'Aqueous Flowable',
-        'T': 'Tablet',
+        'TAB': 'Tablet',
         'WS': 'Water Soluble',
         'WP-SC': 'Wettable Powder-Suspension Concentrate',
         'EC-ME': 'Emulsifiable Concentrate-Micro Emulsion',
@@ -103,7 +103,7 @@ describe('CHEMICAL_FORMULATIONS Constants', () => {
 
       const expectedPowderTypes = [
         'WP', 'WDG', 'GR', 'DF', 'FDF', 'SP', 'SG', 'MG', 'MT',
-        'WS', 'T', 'ZC', 'RB', 'GB'
+        'WS', 'TAB', 'ZC', 'RB', 'GB'
       ]
 
       expectedPowderTypes.forEach(type => {
@@ -128,8 +128,8 @@ describe('CHEMICAL_FORMULATIONS Constants', () => {
       expect(SPECIAL_FORMULATIONS).toHaveLength(10)
 
       const expectedSpecialTypes = [
-        'CS', 'WG', 'FS', 'SE', 'PA', 'MC', 'SG-S', 'EW-O',
-        'XL', 'WP-E'
+        'CS', 'WG', 'FS', 'SE', 'PA', 'MC', 'SGST', 'EWOM',
+        'XL', 'WPEX'
       ]
 
       expectedSpecialTypes.forEach(type => {
@@ -143,8 +143,8 @@ describe('CHEMICAL_FORMULATIONS Constants', () => {
       expect(FERTILIZER_FORMULATIONS).toContain('LIQ_FERT')
 
       expect(ADJUVANT_FORMULATIONS).toContain('SURF')
-      expect(ADJUVANT_FORMULATIONS).toContain('STICK')
-      expect(ADJUVANT_FORMULATIONS).toContain('SPREAD')
+      expect(ADJUVANT_FORMULATIONS).toContain('STIK')
+      expect(ADJUVANT_FORMULATIONS).toContain('SPRD')
     })
   })
 
@@ -189,7 +189,7 @@ describe('CHEMICAL_FORMULATIONS Constants', () => {
         { type: 'FERT', category: 'Fertilizer' },
         { type: 'ORG', category: 'Fertilizer' },
         { type: 'SURF', category: 'Adjuvant' },
-        { type: 'STICK', category: 'Adjuvant' },
+        { type: 'STIK', category: 'Adjuvant' },
         { type: 'BR', category: 'Additional' },
         { type: 'FU', category: 'Additional' },
         { type: 'TO', category: 'Additional' }

@@ -37,8 +37,8 @@ const THAI_DESCRIPTIONS: Readonly<Record<ChemicalFormulation, string>> = {
 
   // Adjuvants
   SURF: 'สารลดแรงตึงผิว',
-  STICK: 'สารยึดเกาะ',
-  SPREAD: 'สารขยายพื้นที่'
+  STIK: 'สารยึดเกาะ',
+  SPRD: 'สารขยายพื้นที่'
 } as const;
 
 /**
@@ -172,7 +172,7 @@ function getFormulationCategory(type: ChemicalFormulation): string {
   const liquidTypes: ChemicalFormulation[] = ['EC', 'SC', 'SL', 'EW', 'ME'];
   const specialTypes: ChemicalFormulation[] = ['CS', 'WG', 'FS', 'SE'];
   const fertilizerTypes: ChemicalFormulation[] = ['FERT', 'ORG', 'LIQ_FERT'];
-  const adjuvantTypes: ChemicalFormulation[] = ['SURF', 'STICK', 'SPREAD'];
+  const adjuvantTypes: ChemicalFormulation[] = ['SURF', 'STIK', 'SPRD'];
 
   if (powderTypes.includes(type)) return 'Powder';
   if (liquidTypes.includes(type)) return 'Liquid';

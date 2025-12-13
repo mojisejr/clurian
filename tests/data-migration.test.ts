@@ -145,11 +145,16 @@ describe('Chemical Formulation Data Migration', () => {
 
       // Mock mixing calculator to verify order preserved
       const calculateMixingOrder = (chemicals: any[]) => {
-        // Simplified step mapping matching actual implementation
+        // Step mapping matching actual implementation
         const stepMap: Record<string, number> = {
-          'WP': 2,  // suspended -> WP
-          'SL': 3,  // liquid -> SL
-          'FERT': 4 // fertilizer -> FERT
+          // Legacy types
+          'suspended': 2,  // Should map to WP step
+          'liquid': 3,     // Should map to SL step
+          'fertilizer': 4, // Should map to FERT step
+          // New types
+          'WP': 2,
+          'SL': 3,
+          'FERT': 4
         }
 
         return chemicals
@@ -157,13 +162,13 @@ describe('Chemical Formulation Data Migration', () => {
           .sort((a, b) => a.step - b.step)
       }
 
-      // Before migration
+      // Before migration - using legacy types
       const orderBefore = calculateMixingOrder(beforeMigration)
       expect(orderBefore[0].type).toBe('suspended')
       expect(orderBefore[1].type).toBe('liquid')
       expect(orderBefore[2].type).toBe('fertilizer')
 
-      // After migration
+      // After migration - using new types
       const afterMigration = beforeMigration.map(c => ({
         ...c,
         type: c.type === 'suspended' ? 'WP' :
@@ -176,8 +181,9 @@ describe('Chemical Formulation Data Migration', () => {
       expect(orderAfter[1].type).toBe('SL')
       expect(orderAfter[2].type).toBe('FERT')
 
-      // Order should be preserved
-      expect(orderAfter.map(c => c.step)).toEqual(orderBefore.map(c => c.step))
+      // Order should be preserved - steps should be the same
+      expect(orderAfter.map(c => c.step)).toEqual([2, 3, 4])
+      expect(orderBefore.map(c => c.step)).toEqual([2, 3, 4])
     })
   })
 
@@ -188,7 +194,7 @@ describe('Chemical Formulation Data Migration', () => {
           const validTypes = [
             // New standard types
             'WP', 'WDG', 'GR', 'DF', 'FDF', 'EC', 'SC', 'SL', 'EW', 'ME',
-            'CS', 'WG', 'FS', 'SE', 'FERT', 'ORG', 'LIQ_FERT', 'SURF', 'STICK', 'SPREAD',
+            'CS', 'WG', 'FS', 'SE', 'FERT', 'ORG', 'LIQ_FERT', 'SURF', 'STIK', 'SPRD',
             // Legacy types for backward compatibility
             'chelator', 'suspended', 'liquid', 'fertilizer', 'adjuvant', 'oil_concentrate', 'oil'
           ]
@@ -251,7 +257,7 @@ describe('Chemical Formulation Data Migration', () => {
         canMigrate: (oldType: string, newType: string) => {
           // Safety check: ensure new type exists in standards
           const validNewTypes = ['WP', 'WDG', 'GR', 'DF', 'FDF', 'EC', 'SC', 'SL', 'EW', 'ME',
-                                'CS', 'WG', 'FS', 'SE', 'FERT', 'ORG', 'LIQ_FERT', 'SURF', 'STICK', 'SPREAD']
+                                'CS', 'WG', 'FS', 'SE', 'FERT', 'ORG', 'LIQ_FERT', 'SURF', 'STIK', 'SPRD']
 
           // Safety check: ensure old type is legacy
           const validLegacyTypes = ['chelator', 'suspended', 'liquid', 'fertilizer', 'adjuvant', 'oil_concentrate', 'oil']

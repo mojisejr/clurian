@@ -9,15 +9,15 @@ import { auth } from '@/lib/auth'
 const ChemicalTypeSchema = z.enum([
   // New standard abbreviations (46 types)
   // Powder formulations (14)
-  'WP', 'WDG', 'GR', 'DF', 'FDF', 'SP', 'SG', 'MG', 'MT', 'WS', 'ZC', 'RB', 'T', 'GB',
+  'WP', 'WDG', 'GR', 'DF', 'FDF', 'SP', 'SG', 'MG', 'MT', 'WS', 'ZC', 'RB', 'TAB', 'GB',
   // Liquid formulations (13)
   'EC', 'SC', 'SL', 'EW', 'ME', 'OD', 'AC', 'AF', 'WP-SC', 'EC-ME', 'SC-EC', 'UL', 'GE',
   // Special formulations (10)
-  'CS', 'WG', 'FS', 'SE', 'PA', 'MC', 'SG-S', 'EW-O', 'XL', 'WP-E',
+  'CS', 'WG', 'FS', 'SE', 'PA', 'MC', 'SGST', 'EWOM', 'XL', 'WPEX',
   // Fertilizers (3)
   'FERT', 'ORG', 'LIQ_FERT',
   // Adjuvants (3)
-  'SURF', 'STICK', 'SPREAD',
+  'SURF', 'STIK', 'SPRD',
   // Additional (3)
   'BR', 'FU', 'TO',
   // Old types for backward compatibility (7)

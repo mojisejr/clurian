@@ -35,7 +35,7 @@ export const CHEMICAL_FORMULATIONS = {
   WS: 'Water Soluble',               // ละลายน้ำได้ - General water-soluble formulation
   ZC: 'Zinc/Copper',                 // สังกะสี/ทองแดง - Micronutrient formulation
   RB: 'Ready Bait',                  // เหยื่อสำเร็จ - Pre-formulated bait for pest control
-  T: 'Tablet',                       // แท็บเล็ต - Compressed solid formulation
+  TAB: 'Tablet',                     // แท็บเล็ต - Compressed solid formulation
   GB: 'Granular Bait',               // เหยื่อเม็ด - Granular bait formulation
 
   // === Liquid Formulations (13 types) ===
@@ -63,10 +63,10 @@ export const CHEMICAL_FORMULATIONS = {
   PA: 'Tree Paste',                  // สารทาท่อ - Paste formulation for trunk application
   // 5 more special types needed to reach 46 total
   MC: 'Micro Capsule',               // ไมโครแคปซูล - Advanced micro-encapsulation
-  'SG-S': 'Seed Granule',              // เม็ดพันธุ์ - Granular formulation for seed treatment
-  'EW-O': 'Oil-based Emulsion in Water', // อิมัลชันน้ำมันในน้ำ - Oil-phase emulsion
+  'SGST': 'Seed Granule',             // เม็ดพันธุ์ - Granular formulation for seed treatment
+  'EWOM': 'Oil-based Emulsion in Water', // อิมัลชันน้ำมันในน้ำ - Oil-phase emulsion
   XL: 'Extended Release',            // ปล่อยช้า - Controlled release formulation
-  'WP-E': 'Wettable Powder Extra',     // ผงชุ่มน้ำพิเศษ - Enhanced wettable powder
+  'WPEX': 'Wettable Powder Extra',     // ผงชุ่มน้ำพิเศษ - Enhanced wettable powder
 
   // === Fertilizers (3 types) ===
   // Nutrient formulations for plant nutrition
@@ -83,8 +83,8 @@ export const CHEMICAL_FORMULATIONS = {
   // === Adjuvants (3 types) ===
   // Additives that enhance pesticide performance
   SURF: 'Surfactant',                // สารลดแรงตึงผิว - Reduces surface tension
-  STICK: 'Sticker',                  // สารยึดเกาะ - Improves adhesion to surfaces
-  SPREAD: 'Spreader'                 // สารขยายพื้นที่ - Increases spray coverage
+  STIK: 'Sticker',                   // สารยึดเกาะ - Improves adhesion to surfaces
+  SPRD: 'Spreader'                   // สารขยายพื้นที่ - Increases spray coverage
 } as const;
 
 // Type for chemical formulation abbreviations
@@ -95,7 +95,7 @@ export type ChemicalFormulation = keyof typeof CHEMICAL_FORMULATIONS;
 
 /** Powder formulations that require water mixing */
 export const POWDER_FORMULATIONS = [
-  'WP', 'WDG', 'GR', 'DF', 'FDF', 'SP', 'SG', 'MG', 'MT', 'WS', 'ZC', 'RB', 'T', 'GB'
+  'WP', 'WDG', 'GR', 'DF', 'FDF', 'SP', 'SG', 'MG', 'MT', 'WS', 'ZC', 'RB', 'TAB', 'GB'
 ] as const;
 
 /** Liquid formulations with varying properties */
@@ -105,14 +105,14 @@ export const LIQUID_FORMULATIONS = [
 
 /** Special advanced delivery systems */
 export const SPECIAL_FORMULATIONS = [
-  'CS', 'WG', 'FS', 'SE', 'PA', 'MC', 'SG-S', 'EW-O', 'XL', 'WP-E'
+  'CS', 'WG', 'FS', 'SE', 'PA', 'MC', 'SGST', 'EWOM', 'XL', 'WPEX'
 ] as const;
 
 /** Nutrient formulations */
 export const FERTILIZER_FORMULATIONS = ['FERT', 'ORG', 'LIQ_FERT'] as const;
 
 /** Performance-enhancing additives */
-export const ADJUVANT_FORMULATIONS = ['SURF', 'STICK', 'SPREAD'] as const;
+export const ADJUVANT_FORMULATIONS = ['SURF', 'STIK', 'SPRD'] as const;
 
 /** Additional formulations for completeness */
 export const ADDITIONAL_FORMULATIONS = ['BR', 'FU', 'TO'] as const;

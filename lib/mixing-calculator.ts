@@ -47,7 +47,7 @@ const CHEMICAL_STEP_MAP: Readonly<Record<string, number>> = {
   'WS': 2,     // Water Soluble
   'ZC': 2,     // Zinc/Copper
   'RB': 2,     // Ready Bait
-  'T': 2,      // Tablet
+  'TAB': 2,    // Tablet
   'GB': 4,     // Granular Bait
 
   // Step 3: Water-soluble liquids
@@ -67,8 +67,8 @@ const CHEMICAL_STEP_MAP: Readonly<Record<string, number>> = {
 
   // Step 5: Adjuvants and surface-active agents
   'SURF': 5,   // Surfactant
-  'STICK': 5,  // Sticker
-  'SPREAD': 5, // Spreader
+  'STIK': 5,  // Sticker
+  'SPRD': 5, // Spreader
   'SE': 5,     // Suspo Emulsion (contains adjuvants)
 
   // Step 6: Oil-based concentrates
@@ -86,10 +86,10 @@ const CHEMICAL_STEP_MAP: Readonly<Record<string, number>> = {
   'EC-ME': 7,  // Combined formulation (oil-based)
   'SC-EC': 7,  // Combined formulation (oil-based)
   'MC': 7,     // Micro Capsule
-  'SG-S': 7,   // Seed Granule (oil-treated)
-  'EW-O': 7,   // Oil-based Emulsion
+  'SGST': 7,   // Seed Granule (oil-treated)
+  'EWOM': 7,   // Oil-based Emulsion
   'XL': 7,     // Extended Release
-  'WP-E': 7,   // Wettable Powder Extra
+  'WPEX': 7,   // Wettable Powder Extra
 } as const;
 
 /**

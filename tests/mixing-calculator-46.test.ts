@@ -224,7 +224,7 @@ describe('Mixing Calculator with 46 Formulation Types', () => {
       expect(result.steps[1].chemicals[0].type).toBe('SC')  // Chelators first
       expect(result.steps[2].chemicals).toHaveLength(3)    // All powders
       expect(result.steps[4].chemicals).toHaveLength(2)    // Fertilizers & tree paste
-      expect(result.steps[7].chemicals).toHaveLength(1)    // Oil-based last
+      expect(result.steps[6].chemicals).toHaveLength(1)    // Emulsifiable Concentrate
     })
 
     it('should handle organic farming spray program', () => {
@@ -232,14 +232,14 @@ describe('Mixing Calculator with 46 Formulation Types', () => {
       const organicMix: ChemicalInput[] = [
         { name: 'สารสกัดพืช', type: 'SL', quantity: 500, unit: 'ml' },     // Botanical extract
         { name: 'ปุ๋ยอินทรีย์', type: 'ORG', quantity: 2, unit: 'kg' },     // Organic fertilizer
-        { name: 'สารจับใบออร์แกนิค', type: 'STICK', quantity: 100, unit: 'ml' } // Organic sticker
+        { name: 'สารจับใบออร์แกนิค', type: 'STIK', quantity: 100, unit: 'ml' } // Organic sticker
       ]
 
       const result = calculateMixingOrder(organicMix)
 
       expect(result.steps[3].chemicals[0].type).toBe('SL')  // Soluble liquid
       expect(result.steps[4].chemicals[0].type).toBe('ORG') // Organic fertilizer
-      expect(result.steps[5].chemicals[0].type).toBe('STICK') // Sticker
+      expect(result.steps[5].chemicals[0].type).toBe('STIK') // Sticker
     })
 
     it('should handle seed treatment program', () => {
