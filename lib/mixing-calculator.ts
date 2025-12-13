@@ -1,3 +1,11 @@
+/**
+ * Agricultural Chemical Mixing Order Calculator
+ *
+ * Implements the academic 7-step mixing process for agricultural chemicals
+ * following Thai agricultural extension guidelines. The order of mixing
+ * is critical to prevent chemical reactions and ensure effectiveness.
+ */
+
 // Re-export types from helpers
 export type {
   ChemicalType,
@@ -7,150 +15,184 @@ export type {
 } from '@/tests/helpers/chemical-mixing'
 
 import type { ChemicalInput, MixingOrderResult } from '@/tests/helpers/chemical-mixing'
-import { isOldChemicalType, migrateChemicalType } from '@/constants/chemical-formulations'
+
+// === Chemical Step Mapping ===
+// Maps chemical formulations to their mixing steps based on solubility
+// and compatibility with other chemicals
+
+/** Mapping of chemical types to mixing steps for optimal compatibility */
+const CHEMICAL_STEP_MAP: Readonly<Record<string, number>> = {
+  // Legacy types (for backward compatibility)
+  'chelator': 1,
+  'suspended': 2,
+  'liquid': 3,
+  'fertilizer': 4,
+  'adjuvant': 5,
+  'oil_concentrate': 6,
+  'oil': 7,
+
+  // Step 1: Chelators and organic amendments
+  'SC': 1,
+
+  // Step 2: Powders and dry formulations (need pre-wetting)
+  'WP': 2,     // Wettable Powder
+  'WDG': 2,    // Water Dispersible Granule
+  'DF': 2,     // Dustable Formulation
+  'FDF': 2,    // Flowable Dust-Free Powder
+  'WG': 2,     // Water Granule
+
+  // Step 3: Water-soluble liquids
+  'SL': 3,         // Soluble Liquid
+  'LIQ_FERT': 3,   // Liquid Fertilizer
+
+  // Step 4: Fertilizers (solid and organic)
+  'FERT': 4,   // Chemical Fertilizer
+  'ORG': 4,    // Organic Fertilizer
+  'GR': 4,     // Granule (placed at step 4 for better dissolution)
+
+  // Step 5: Adjuvants and surface-active agents
+  'SURF': 5,   // Surfactant
+  'STICK': 5,  // Sticker
+  'SPREAD': 5, // Spreader
+  'SE': 5,     // Suspo Emulsion (contains adjuvants)
+
+  // Step 6: Oil-based concentrates
+  'EC': 6,     // Emulsifiable Concentrate
+
+  // Step 7: Final oils and oil-based formulations
+  'ME': 7,     // Micro Emulsion
+  'EW': 7,     // Emulsion in Water
+  'FS': 7,     // Flowable Concentrate
+  'CS': 7,     // Capsule Suspension
+} as const;
 
 /**
- * Map chemical type to mixing step based on 7-step academic process
+ * Determine the mixing step for a chemical based on its formulation type
+ *
+ * @param type - The chemical formulation type (legacy or standard)
+ * @returns The mixing step number (1-7)
  */
 function mapChemicalTypeToStep(type: string): number {
-  // Handle old types directly without migration for backward compatibility
-  switch (type) {
-    // Old types - map to their original steps
-    case 'chelator':
-      return 1
-    case 'suspended':
-      return 2
-    case 'liquid':
-      return 3
-    case 'fertilizer':
-      return 4
-    case 'adjuvant':
-      return 5
-    case 'oil_concentrate':
-      return 6
-    case 'oil':
-      return 7
-  }
-
-  // Handle new types
-  switch (type) {
-    // Step 1: Chelators (SC - Suspension Concentrate for chelated micronutrients)
-    case 'SC':
-      return 1
-
-    // Step 2: Suspended/Wettable powders (sorted by quantity)
-    case 'WP':   // Wettable Powder
-    case 'WDG':  // Water Dispersible Granule
-    case 'DF':   // Dustable Formulation
-    case 'FDF':  // Flowable Dust-Free Powder
-    case 'WG':   // Water Granule
-      return 2
-
-    // Step 3: Soluble liquids
-    case 'SL':   // Soluble Liquid
-    case 'LIQ_FERT': // Liquid Fertilizer
-      return 3
-
-    // Step 4: Fertilizers
-    case 'FERT': // Fertilizer
-    case 'ORG':  // Organic Fertilizer
-      return 4
-
-    // Step 5: Adjuvants (Surfactants, Stickers, Spreaders)
-    case 'SURF':  // Surfactant
-    case 'STICK': // Sticker
-    case 'SPREAD': // Spreader
-    case 'SE':    // Suspo Emulsion (often contains adjuvants)
-      return 5
-
-    // Step 6: Oil concentrates
-    case 'EC': // Emulsifiable Concentrate
-      return 6
-
-    // Step 7: Oils
-    case 'ME':  // Micro Emulsion
-    case 'EW':  // Emulsion in Water
-    case 'FS':  // Flowable Concentrate (often oil-based)
-    case 'CS':  // Capsule Suspension (oil-based)
-      return 7
-
-    // Granules - can be added at step 2 or 4
-    case 'GR':  // Granule
-      return 4
-
-    // Unknown - default to step 7 (last)
-    default:
-      return 7
-  }
+  // Use the mapping table for consistent and maintainable step assignment
+  return CHEMICAL_STEP_MAP[type] ?? 7; // Default to step 7 for unknown types
 }
 
-export const calculateMixingOrder = (chemicals: ChemicalInput[]): MixingOrderResult => {
-  // Group by mixing step
-  const grouped = chemicals.reduce((acc, chemical) => {
-    const step = mapChemicalTypeToStep(chemical.type)
-    if (!acc[step]) acc[step] = []
-    acc[step].push(chemical)
-    return acc
-  }, {} as Record<number, ChemicalInput[]>)
+// === Warning Generation ===
+// Chemical types that require special handling warnings
 
-  // Sort chemicals within step 2 (powders) by quantity (น้อย -> มาก)
-  if (grouped[2]) {
-    grouped[2].sort((a, b) => a.quantity - b.quantity)
-  }
+/** Chemical types that need pre-wetting to prevent clumping */
+const POWDER_TYPES = new Set<string>([
+  'WP',     // Wettable Powder
+  'WDG',    // Water Dispersible Granule
+  'DF',     // Dustable Formulation
+  'FDF',    // Flowable Dust-Free Powder
+  'WG',     // Water Granule
+  'suspended' // Legacy type
+]);
 
-  // Generate warnings based on chemical types
-  const warnings = []
+/** Chemical types that are fertilizers requiring complete dissolution */
+const FERTILIZER_TYPES = new Set<string>([
+  'FERT',       // Chemical Fertilizer
+  'ORG',        // Organic Fertilizer
+  'GR',         // Granule
+  'fertilizer'  // Legacy type
+]);
+
+/** Step descriptions in Thai for user interface */
+const STEP_DESCRIPTIONS = [
+  { step: 0, description: 'เตรียมน้ำ', chemicals: [] },
+  { step: 1, description: 'สารคีเลต/สารอินทรีย์', chemicals: [] },
+  { step: 2, description: 'สารแขวนลอย', chemicals: [] },
+  { step: 3, description: 'สารละลายน้ำใส', chemicals: [] },
+  { step: 4, description: 'ปุ๋ยมีประจุ', chemicals: [] },
+  { step: 5, description: 'สารจับใบ', chemicals: [] },
+  { step: 6, description: 'สารละลายน้ำมัน', chemicals: [] },
+  { step: 7, description: 'ออยล์', chemicals: [] },
+] as const;
+
+/**
+ * Generate appropriate warnings based on the chemical types present
+ *
+ * @param chemicals - Array of chemical inputs
+ * @returns Array of warning messages in Thai
+ */
+function generateWarnings(chemicals: ReadonlyArray<ChemicalInput>): string[] {
+  const warnings: string[] = [];
 
   // Check for powders that need pre-wetting
-  const powderTypes = ['WP', 'WDG', 'DF', 'FDF', 'WG', 'suspended']
-  if (chemicals.some(c => powderTypes.includes(c.type))) {
-    warnings.push('ละลายยาที่เป็นผงในน้ำเล็กน้อยก่อนนำไปผสม')
+  const hasPowders = chemicals.some(c => POWDER_TYPES.has(c.type));
+  if (hasPowders) {
+    warnings.push('ละลายยาที่เป็นผงในน้ำเล็กน้อยก่อนนำไปผสม');
   }
 
   // Check for fertilizers
-  const fertilizerTypes = ['FERT', 'ORG', 'GR', 'fertilizer']
-  if (chemicals.some(c => fertilizerTypes.includes(c.type))) {
-    warnings.push('ละลายปุ๋ยให้หมดก่อนนำไปผสมกับสารอื่น')
+  const hasFertilizers = chemicals.some(c => FERTILIZER_TYPES.has(c.type));
+  if (hasFertilizers) {
+    warnings.push('ละลายปุ๋ยให้หมดก่อนนำไปผสมกับสารอื่น');
   }
 
-  // Build 8-step mixing order (including step 0 for เตรียมน้ำ)
-  // Use array indices starting from 0 for backward compatibility with tests
-  const steps = [
-    { step: 0, description: 'เตรียมน้ำ', chemicals: [] },
-    { step: 1, description: 'สารคีเลต/สารอินทรีย์', chemicals: grouped[1] || [] },
-    { step: 2, description: 'สารแขวนลอย', chemicals: grouped[2] || [] },
-    { step: 3, description: 'สารละลายน้ำใส', chemicals: grouped[3] || [] },
-    { step: 4, description: 'ปุ๋ยมีประจุ', chemicals: grouped[4] || [] },
-    { step: 5, description: 'สารจับใบ', chemicals: grouped[5] || [] },
-    { step: 6, description: 'สารละลายน้ำมัน', chemicals: grouped[6] || [] },
-    { step: 7, description: 'ออยล์', chemicals: grouped[7] || [] },
-  ];
+  return warnings;
+}
 
-  const totalSteps = steps.length
-  const waterAmount = chemicals.reduce((total, chem) => total + chem.quantity, 0) * 20 // Estimate water
+/**
+ * Calculate the optimal mixing order for agricultural chemicals
+ *
+ * This function implements the academic 7-step mixing process following
+ * Thai agricultural extension guidelines. The order ensures chemical
+ * compatibility and prevents adverse reactions.
+ *
+ * @param chemicals - Array of chemicals to mix with their properties
+ * @returns Complete mixing plan with steps, warnings, and timing estimates
+ *
+ * @example
+ * ```typescript
+ * const chemicals = [
+ *   { name: 'ยาคุมหญ้า', type: 'WP', quantity: 50, unit: 'กรัม' },
+ *   { name: 'ปุ๋ยเคมี', type: 'FERT', quantity: 20, unit: 'กก.' }
+ * ];
+ * const plan = calculateMixingOrder(chemicals);
+ * ```
+ */
+export const calculateMixingOrder = (chemicals: ReadonlyArray<ChemicalInput>): MixingOrderResult => {
+  // Group chemicals by their mixing steps
+  const groupedByStep = chemicals.reduce<Record<number, ChemicalInput[]>>((acc, chemical) => {
+    const step = mapChemicalTypeToStep(chemical.type);
+
+    // Initialize step array if needed
+    if (!acc[step]) {
+      acc[step] = [];
+    }
+
+    acc[step].push(chemical);
+    return acc;
+  }, {});
+
+  // Sort powders (step 2) by quantity - smallest first for better dissolution
+  if (groupedByStep[2]) {
+    groupedByStep[2].sort((a, b) => a.quantity - b.quantity);
+  }
+
+  // Generate appropriate warnings
+  const warnings = generateWarnings(chemicals);
+
+  // Build the complete mixing steps with assigned chemicals
+  const steps = STEP_DESCRIPTIONS.map(step => ({
+    ...step,
+    chemicals: groupedByStep[step.step] || []
+  }));
+
+  // Calculate additional metrics
+  const totalSteps = steps.length;
+  const totalQuantity = chemicals.reduce((sum, chem) => sum + chem.quantity, 0);
+  const waterAmount = totalQuantity * 20; // Estimate: 1L water per 50g chemical
+  const estimatedMinutes = Math.max(5, totalSteps * 2); // Minimum 5 minutes
 
   return {
     steps,
     warnings,
     totalSteps,
-    estimatedTime: `${Math.max(5, totalSteps * 2)} นาที`,
+    estimatedTime: `${estimatedMinutes} นาที`,
     waterAmount
-  }
-}
+  };
+};
 
-/**
- * Get Thai description for each mixing step
- */
-function getStepDescription(step: number): string {
-  const descriptions = [
-    '',
-    '1. ใส่สารคีเลต/สารอินทรีย์',
-    '2. ใส่สารแขวนตะกอน (เรียงจากน้อยไปมาก)',
-    '3. ใส่สารละลายน้ำ',
-    '4. ใส่ปุ๋ย',
-    '5. ใส่สารควบคุม',
-    '6. ใส่น้ำมันเข้มข้น',
-    '7. ใส่น้ำมัน'
-  ]
-  return descriptions[step - 1] || `ขั้นที่ ${step}`
-}
