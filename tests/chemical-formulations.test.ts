@@ -128,8 +128,8 @@ describe('CHEMICAL_FORMULATIONS Constants', () => {
       expect(SPECIAL_FORMULATIONS).toHaveLength(10)
 
       const expectedSpecialTypes = [
-        'CS', 'WG', 'FS', 'SE', 'PA', 'MG', 'MT', 'RB',
-        'AC', 'AF'
+        'CS', 'WG', 'FS', 'SE', 'PA', 'MC', 'SG-S', 'EW-O',
+        'XL', 'WP-E'
       ]
 
       expectedSpecialTypes.forEach(type => {
@@ -272,7 +272,7 @@ describe('Quality Assurance', () => {
     // Categories should be sorted by importance/usage frequency
     const checkOrder = (category: readonly string[]) => {
       const firstType = category[0]
-      expect(['WP', 'EC', 'SC', 'FERT', 'SURF']).toContain(firstType)
+      expect(['WP', 'EC', 'SC', 'CS', 'FERT', 'SURF']).toContain(firstType)
     }
 
     checkOrder(POWDER_FORMULATIONS)

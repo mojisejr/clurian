@@ -145,9 +145,9 @@ describe('Chemical Formulation Data Migration', () => {
 
       // Mock mixing calculator to verify order preserved
       const calculateMixingOrder = (chemicals: any[]) => {
-        // Simplified step mapping
+        // Simplified step mapping matching actual implementation
         const stepMap: Record<string, number> = {
-          'SC': 2,  // suspended -> SC
+          'WP': 2,  // suspended -> WP
           'SL': 3,  // liquid -> SL
           'FERT': 4 // fertilizer -> FERT
         }
@@ -166,13 +166,13 @@ describe('Chemical Formulation Data Migration', () => {
       // After migration
       const afterMigration = beforeMigration.map(c => ({
         ...c,
-        type: c.type === 'suspended' ? 'SC' :
+        type: c.type === 'suspended' ? 'WP' :
               c.type === 'liquid' ? 'SL' :
               c.type === 'fertilizer' ? 'FERT' : c.type
       }))
 
       const orderAfter = calculateMixingOrder(afterMigration)
-      expect(orderAfter[0].type).toBe('SC')
+      expect(orderAfter[0].type).toBe('WP')
       expect(orderAfter[1].type).toBe('SL')
       expect(orderAfter[2].type).toBe('FERT')
 

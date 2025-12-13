@@ -48,7 +48,7 @@ const CHEMICAL_STEP_MAP: Readonly<Record<string, number>> = {
   'ZC': 2,     // Zinc/Copper
   'RB': 2,     // Ready Bait
   'T': 2,      // Tablet
-  'GB': 2,     // Granular Bait
+  'GB': 4,     // Granular Bait
 
   // Step 3: Water-soluble liquids
   'SL': 3,         // Soluble Liquid
@@ -82,7 +82,7 @@ const CHEMICAL_STEP_MAP: Readonly<Record<string, number>> = {
   'OD': 7,     // Oil Dispersion
   'AC': 7,     // Aqueous Capsule (oil-based)
   'AF': 7,     // Aqueous Flowable (oil-based)
-  'WP-SC': 7,  // Combined formulation (oil-based)
+  'WP-SC': 2,  // Combined formulation (powder-based)
   'EC-ME': 7,  // Combined formulation (oil-based)
   'SC-EC': 7,  // Combined formulation (oil-based)
   'MC': 7,     // Micro Capsule
