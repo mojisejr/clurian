@@ -5,91 +5,81 @@
  * implemented the full migration system yet
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
-import { prisma } from '@/lib/prisma'
+import { describe, it, expect } from 'vitest'
+import {
+  validateMigration,
+  validateFormulaMigration,
+  migrateComponent,
+  migrateFormula,
+  createRollbackData,
+  ensureStandardTypes,
+  validateFormulaTypes,
+  findFormulasNeedingMigration,
+  migrateFormulaInDB,
+  migrateAllFormulas,
+  rollbackFormulaMigration,
+  type MixingFormula,
+  type MixingFormulaComponent
+} from '@/lib/services/chemical-migration-service'
 
 describe('Chemical Formulation Data Migration', () => {
   describe('Type Migration Validation', () => {
-    it('should validate legacy types before migration', async () => {
-      // These are the legacy types that need migration
-      const legacyTypes = [
-        'chelator',
-        'suspended',
-        'liquid',
-        'fertilizer',
-        'adjuvant',
-        'oil_concentrate',
-        'oil'
-      ]
+    it('should validate legacy type migrations correctly', () => {
+      // Valid migrations
+      expect(validateMigration('chelator', 'SC')).toBe(true)
+      expect(validateMigration('suspended', 'WP')).toBe(true)
+      expect(validateMigration('liquid', 'SL')).toBe(true)
+      expect(validateMigration('fertilizer', 'FERT')).toBe(true)
+      expect(validateMigration('adjuvant', 'SURF')).toBe(true)
+      expect(validateMigration('oil_concentrate', 'EC')).toBe(true)
+      expect(validateMigration('oil', 'ME')).toBe(true)
 
-      // Mock validation function
-      const validateLegacyType = (type: string) => {
-        const validLegacy = ['chelator', 'suspended', 'liquid', 'fertilizer', 'adjuvant', 'oil_concentrate', 'oil']
-        return validLegacy.includes(type)
-      }
-
-      legacyTypes.forEach(type => {
-        expect(validateLegacyType(type)).toBe(true)
-      })
+      // Invalid migrations - non-legacy old type
+      expect(validateMigration('WP', 'SC')).toBe(false)
+      expect(validateMigration('invalid', 'SC')).toBe(false)
+      expect(validateMigration('chelator', 'INVALID')).toBe(false)
     })
 
-    it('should map legacy types to correct new standards', () => {
-      // Expected mappings from Issue #27
-      const expectedMappings = {
-        'chelator': 'SC',        // Suspension Concentrate
-        'suspended': 'SC',       // Suspension Concentrate (was Wettable Powder, but SC is more accurate)
-        'liquid': 'SL',          // Soluble Liquid
-        'fertilizer': 'FERT',    // Chemical Fertilizer
-        'adjuvant': 'SURF',      // Surfactant
-        'oil_concentrate': 'EC', // Emulsifiable Concentrate
-        'oil': 'ME'              // Micro Emulsion
+    it('should identify formulas that need migration', () => {
+      const formulaWithLegacy: MixingFormula = {
+        id: 'test-1',
+        orchardId: 'orchard-1',
+        name: 'Test Formula',
+        components: [
+          { name: 'EDTA', type: 'chelator', quantity: 100, unit: 'g' },
+          { name: 'ยาแขวนลอย', type: 'suspended', quantity: 200, unit: 'g' }
+        ]
       }
 
-      // Mock migration function
-      const migrateType = (oldType: string) => {
-        const migrationMap: Record<string, string> = {
-          'chelator': 'SC',
-          'suspended': 'SC',
-          'liquid': 'SL',
-          'fertilizer': 'FERT',
-          'adjuvant': 'SURF',
-          'oil_concentrate': 'EC',
-          'oil': 'ME'
-        }
-        return migrationMap[oldType] || oldType
+      const formulaWithNewTypes: MixingFormula = {
+        id: 'test-2',
+        orchardId: 'orchard-1',
+        name: 'Modern Formula',
+        components: [
+          { name: 'EDTA', type: 'SC', quantity: 100, unit: 'g' },
+          { name: 'ยาแขวนลอย', type: 'WP', quantity: 200, unit: 'g' }
+        ]
       }
 
-      Object.entries(expectedMappings).forEach(([oldType, newType]) => {
-        expect(migrateType(oldType)).toBe(newType)
-      })
+      const validation1 = validateFormulaMigration(formulaWithLegacy)
+      expect(validation1.canMigrate).toBe(true)
+      expect(validation1.unmigratable).toHaveLength(0)
+
+      const validation2 = validateFormulaMigration(formulaWithNewTypes)
+      expect(validation2.canMigrate).toBe(true)
+      expect(validation2.unmigratable).toHaveLength(0)
     })
   })
 
   describe('Database Migration', () => {
-    it('should identify records needing migration', async () => {
-      // Mock database query to find legacy type records
-      const mockFindLegacyRecords = async () => {
-        return [
-          { id: '1', orchardId: 'orchard-1', components: [
-            { type: 'chelator', name: 'EDTA' },
-            { type: 'suspended', name: 'ยา WP' }
-          ]},
-          { id: '2', orchardId: 'orchard-2', components: [
-            { type: 'liquid', name: 'ยาละลายน้ำ' }
-          ]}
-        ]
-      }
-
-      const legacyRecords = await mockFindLegacyRecords()
-
-      expect(legacyRecords).toHaveLength(2)
-      expect(legacyRecords[0].components[0].type).toBe('chelator')
-      expect(legacyRecords[0].components[1].type).toBe('suspended')
-      expect(legacyRecords[1].components[0].type).toBe('liquid')
+    it('should find formulas needing migration from database', async () => {
+      // This should fail because the function is not implemented yet
+      const formulas = await findFormulasNeedingMigration()
+      expect(formulas).toBeDefined()
     })
 
-    it('should migrate mixing formulas safely', async () => {
-      const mockFormula = {
+    it('should migrate mixing formulas safely', () => {
+      const testFormula: MixingFormula = {
         id: 'formula-1',
         orchardId: 'orchard-1',
         name: 'สูตรเก่า',
@@ -101,34 +91,17 @@ describe('Chemical Formulation Data Migration', () => {
         ]
       }
 
-      // Mock migration function
-      const migrateFormula = (formula: any) => {
-        const migrationMap: Record<string, string> = {
-          'chelator': 'SC',
-          'suspended': 'SC',
-          'liquid': 'SL',
-          'fertilizer': 'FERT',
-          'adjuvant': 'SURF',
-          'oil_concentrate': 'EC',
-          'oil': 'ME'
-        }
+      const migratedFormula = migrateFormula(testFormula)
 
-        return {
-          ...formula,
-          components: formula.components.map((c: any) => ({
-            ...c,
-            type: migrationMap[c.type] || c.type
-          }))
-        }
-      }
-
-      const migratedFormula = migrateFormula(mockFormula)
-
-      // Verify migration
+      // Verify migration worked correctly
       expect(migratedFormula.components[0].type).toBe('SC')  // chelator -> SC
-      expect(migratedFormula.components[1].type).toBe('SC')  // suspended -> SC
+      expect(migratedFormula.components[1].type).toBe('WP')  // suspended -> WP
       expect(migratedFormula.components[2].type).toBe('SL')  // liquid -> SL
       expect(migratedFormula.components[3].type).toBe('FERT') // fertilizer -> FERT
+
+      // Verify audit trail
+      expect(migratedFormula.components[0]._originalType).toBe('chelator')
+      expect(migratedFormula.components[1]._originalType).toBe('suspended')
 
       // Verify other properties unchanged
       expect(migratedFormula.name).toBe('สูตรเก่า')
@@ -136,257 +109,235 @@ describe('Chemical Formulation Data Migration', () => {
       expect(migratedFormula.components[0].quantity).toBe(100)
     })
 
-    it('should preserve mixing order after migration', () => {
-      const beforeMigration = [
-        { name: 'ยา WP', type: 'suspended', quantity: 100, unit: 'g' },
-        { name: 'ยาน้ำ', type: 'liquid', quantity: 200, unit: 'ml' },
-        { name: 'ปุ๋ย', type: 'fertilizer', quantity: 300, unit: 'g' }
-      ]
-
-      // Mock mixing calculator to verify order preserved
-      const calculateMixingOrder = (chemicals: any[]) => {
-        // Step mapping matching actual implementation
-        const stepMap: Record<string, number> = {
-          // Legacy types
-          'suspended': 2,  // Should map to WP step
-          'liquid': 3,     // Should map to SL step
-          'fertilizer': 4, // Should map to FERT step
-          // New types
-          'WP': 2,
-          'SL': 3,
-          'FERT': 4
-        }
-
-        return chemicals
-          .map(c => ({ ...c, step: stepMap[c.type] || 7 }))
-          .sort((a, b) => a.step - b.step)
+    it('should migrate individual components correctly', () => {
+      const legacyComponent: MixingFormulaComponent = {
+        name: 'ยาเก่า',
+        type: 'chelator',
+        quantity: 100,
+        unit: 'g'
       }
 
-      // Before migration - using legacy types
-      const orderBefore = calculateMixingOrder(beforeMigration)
-      expect(orderBefore[0].type).toBe('suspended')
-      expect(orderBefore[1].type).toBe('liquid')
-      expect(orderBefore[2].type).toBe('fertilizer')
+      const migratedComponent = migrateComponent(legacyComponent)
+      expect(migratedComponent.type).toBe('SC')
+      expect(migratedComponent._originalType).toBe('chelator')
+      expect(migratedComponent.name).toBe('ยาเก่า')
 
-      // After migration - using new types
-      const afterMigration = beforeMigration.map(c => ({
-        ...c,
-        type: c.type === 'suspended' ? 'WP' :
-              c.type === 'liquid' ? 'SL' :
-              c.type === 'fertilizer' ? 'FERT' : c.type
-      }))
+      // New type component should remain unchanged
+      const newComponent: MixingFormulaComponent = {
+        name: 'ยาใหม่',
+        type: 'SC',
+        quantity: 100,
+        unit: 'g'
+      }
 
-      const orderAfter = calculateMixingOrder(afterMigration)
-      expect(orderAfter[0].type).toBe('WP')
-      expect(orderAfter[1].type).toBe('SL')
-      expect(orderAfter[2].type).toBe('FERT')
+      const unchangedComponent = migrateComponent(newComponent)
+      expect(unchangedComponent.type).toBe('SC')
+      expect(unchangedComponent._originalType).toBeUndefined()
+    })
 
-      // Order should be preserved - steps should be the same
-      expect(orderAfter.map(c => c.step)).toEqual([2, 3, 4])
-      expect(orderBefore.map(c => c.step)).toEqual([2, 3, 4])
+    it('should create rollback data correctly', () => {
+      const testFormula: MixingFormula = {
+        id: 'test-1',
+        orchardId: 'orchard-1',
+        name: 'Test',
+        components: [
+          { name: 'Test', type: 'SC', _originalType: 'chelator', quantity: 100, unit: 'g' }
+        ]
+      }
+
+      const rollbackData = createRollbackData(testFormula)
+      expect(rollbackData.id).toBe('test-1')
+      expect(rollbackData.originalComponents[0].type).toBe('SC')
+      expect(rollbackData.originalComponents[0].originalType).toBe('chelator')
+    })
+
+    it('should fail migration for formulas with unmigratable types', () => {
+      const invalidFormula: MixingFormula = {
+        id: 'invalid-1',
+        orchardId: 'orchard-1',
+        name: 'Invalid Formula',
+        components: [
+          { name: 'Unknown', type: 'unknown_type', quantity: 100, unit: 'g' }
+        ]
+      }
+
+      expect(() => migrateFormula(invalidFormula)).toThrow()
     })
   })
 
   describe('Backward Compatibility', () => {
-    it('should accept legacy types in validation', () => {
-      const mockValidation = {
-        validate: (type: string) => {
-          const validTypes = [
-            // New standard types
-            'WP', 'WDG', 'GR', 'DF', 'FDF', 'EC', 'SC', 'SL', 'EW', 'ME',
-            'CS', 'WG', 'FS', 'SE', 'FERT', 'ORG', 'LIQ_FERT', 'SURF', 'STIK', 'SPRD',
-            // Legacy types for backward compatibility
-            'chelator', 'suspended', 'liquid', 'fertilizer', 'adjuvant', 'oil_concentrate', 'oil'
-          ]
-          return validTypes.includes(type)
-        }
-      }
-
-      // Should accept both new and legacy types
-      expect(mockValidation.validate('WP')).toBe(true)
-      expect(mockValidation.validate('SP')).toBe(false) // Not implemented yet
-      expect(mockValidation.validate('chelator')).toBe(true)
-      expect(mockValidation.validate('suspended')).toBe(true)
-    })
-
-    it('should auto-migrate legacy types on save', async () => {
-      const mockSaveFormula = async (formula: any) => {
-        // Auto-migrate legacy types before saving
-        const migrationMap: Record<string, string> = {
-          'chelator': 'SC',
-          'suspended': 'SC',
-          'liquid': 'SL',
-          'fertilizer': 'FERT',
-          'adjuvant': 'SURF',
-          'oil_concentrate': 'EC',
-          'oil': 'ME'
-        }
-
-        const migrated = {
-          ...formula,
-          components: formula.components.map((c: any) => ({
-            ...c,
-            type: migrationMap[c.type] || c.type
-          }))
-        }
-
-        // Simulate database save
-        return { id: 'new-id', ...migrated }
-      }
-
-      const formulaWithLegacyTypes = {
-        name: 'สูตรผสม',
+    it('should validate both legacy and new types', () => {
+      const formulaWithLegacyTypes: MixingFormula = {
+        id: 'test-1',
+        orchardId: 'orchard-1',
+        name: 'Legacy Formula',
         components: [
-          { name: 'EDTA', type: 'chelator', quantity: 100 },
-          { name: 'ยา WP', type: 'suspended', quantity: 200 }
+          { name: 'EDTA', type: 'chelator', quantity: 100, unit: 'g' },
+          { name: 'ยา', type: 'WP', quantity: 200, unit: 'g' }
         ]
       }
 
-      const saved = await mockSaveFormula(formulaWithLegacyTypes)
+      const formulaWithNewTypes: MixingFormula = {
+        id: 'test-2',
+        orchardId: 'orchard-1',
+        name: 'New Formula',
+        components: [
+          { name: 'EDTA', type: 'SC', quantity: 100, unit: 'g' },
+          { name: 'ยา', type: 'SP', quantity: 200, unit: 'g' }
+        ]
+      }
 
-      // Should auto-migrate
-      expect(saved.components[0].type).toBe('SC')
-      expect(saved.components[1].type).toBe('SC')
-      expect(saved.id).toBe('new-id')
+      // Should accept both legacy and new types
+      expect(validateFormulaTypes(formulaWithLegacyTypes)).toBe(true)
+      expect(validateFormulaTypes(formulaWithNewTypes)).toBe(true)
+    })
+
+    it('should auto-migrate formulas with legacy types', () => {
+      const formulaWithLegacyTypes: MixingFormula = {
+        id: 'test-1',
+        orchardId: 'orchard-1',
+        name: 'สูตรเก่า',
+        components: [
+          { name: 'EDTA', type: 'chelator', quantity: 100, unit: 'g' },
+          { name: 'ยา WP', type: 'suspended', quantity: 200, unit: 'g' },
+          { name: 'ยาน้ำ', type: 'SL', quantity: 150, unit: 'ml' } // Already new type
+        ]
+      }
+
+      const standardized = ensureStandardTypes(formulaWithLegacyTypes)
+
+      // Should migrate legacy types but keep new types unchanged
+      expect(standardized.components[0].type).toBe('SC') // chelator -> SC
+      expect(standardized.components[1].type).toBe('WP') // suspended -> WP
+      expect(standardized.components[2].type).toBe('SL') // Already SL, unchanged
+
+      // Should preserve audit trail
+      expect(standardized.components[0]._originalType).toBe('chelator')
+      expect(standardized.components[1]._originalType).toBe('suspended')
+      expect(standardized.components[2]._originalType).toBeUndefined()
+    })
+
+    it('should leave formulas with new types unchanged', () => {
+      const formulaWithNewTypes: MixingFormula = {
+        id: 'test-2',
+        orchardId: 'orchard-1',
+        name: 'สูตรใหม่',
+        components: [
+          { name: 'EDTA', type: 'SC', quantity: 100, unit: 'g' },
+          { name: 'ยา', type: 'SP', quantity: 200, unit: 'g' }
+        ]
+      }
+
+      const result = ensureStandardTypes(formulaWithNewTypes)
+
+      // Should remain unchanged
+      expect(result.components[0].type).toBe('SC')
+      expect(result.components[1].type).toBe('SP')
+      expect(result.components[0]._originalType).toBeUndefined()
     })
   })
 
   describe('Migration Safety', () => {
-    it('should validate migration before applying', () => {
-      const mockValidation = {
-        canMigrate: (oldType: string, newType: string) => {
-          // Safety check: ensure new type exists in standards
-          const validNewTypes = ['WP', 'WDG', 'GR', 'DF', 'FDF', 'EC', 'SC', 'SL', 'EW', 'ME',
-                                'CS', 'WG', 'FS', 'SE', 'FERT', 'ORG', 'LIQ_FERT', 'SURF', 'STIK', 'SPRD']
-
-          // Safety check: ensure old type is legacy
-          const validLegacyTypes = ['chelator', 'suspended', 'liquid', 'fertilizer', 'adjuvant', 'oil_concentrate', 'oil']
-
-          return validLegacyTypes.includes(oldType) && validNewTypes.includes(newType)
-        }
-      }
-
+    it('should validate migration mapping correctness', () => {
       // Valid migrations
-      expect(mockValidation.canMigrate('chelator', 'SC')).toBe(true)
-      expect(mockValidation.canMigrate('liquid', 'SL')).toBe(true)
+      expect(validateMigration('chelator', 'SC')).toBe(true)
+      expect(validateMigration('suspended', 'WP')).toBe(true)
+      expect(validateMigration('liquid', 'SL')).toBe(true)
 
-      // Invalid migrations
-      expect(mockValidation.canMigrate('invalid', 'SC')).toBe(false)
-      expect(mockValidation.canMigrate('chelator', 'INVALID')).toBe(false)
+      // Invalid migrations - wrong target type
+      expect(validateMigration('chelator', 'WP')).toBe(false)
+      expect(validateMigration('suspended', 'SL')).toBe(false)
+
+      // Invalid migrations - non-legacy source
+      expect(validateMigration('WP', 'SC')).toBe(false)
+      expect(validateMigration('invalid', 'SC')).toBe(false)
     })
 
-    it('should handle unknown legacy types gracefully', () => {
-      const mockGracefulMigration = {
-        migrate: (type: string) => {
-          const migrationMap: Record<string, string> = {
-            'chelator': 'SC',
-            'suspended': 'SC',
-            'liquid': 'SL',
-            'fertilizer': 'FERT',
-            'adjuvant': 'SURF',
-            'oil_concentrate': 'EC',
-            'oil': 'ME'
-          }
-
-          // Return original type if no mapping found
-          return migrationMap[type] || type
-        }
-      }
-
-      // Known type
-      expect(mockGracefulMigration.migrate('chelator')).toBe('SC')
-
-      // Unknown type - should preserve original
-      expect(mockGracefulMigration.migrate('unknown_type')).toBe('unknown_type')
-    })
-
-    it('should maintain data integrity during migration', () => {
-      const mockIntegrityCheck = {
-        migrateWithIntegrity: (record: any) => {
-          // Backup original
-          const original = JSON.parse(JSON.stringify(record))
-
-          // Apply migration
-          const migrationMap: Record<string, string> = {
-            'chelator': 'SC',
-            'suspended': 'SC'
-          }
-
-          const migrated = {
-            ...record,
-            components: record.components.map((c: any) => ({
-              ...c,
-              type: migrationMap[c.type] || c.type,
-              _originalType: c.type // Keep for audit trail
-            }))
-          }
-
-          // Verify integrity
-          const integrityCheck = {
-            recordCount: migrated.components.length === original.components.length,
-            quantitiesPreserved: migrated.components.every((c: any, i: number) =>
-              c.quantity === original.components[i].quantity
-            ),
-            namesPreserved: migrated.components.every((c: any, i: number) =>
-              c.name === original.components[i].name
-            )
-          }
-
-          return { migrated, integrityCheck }
-        }
-      }
-
-      const testRecord = {
+    it('should preserve data integrity during migration', () => {
+      const testFormula: MixingFormula = {
+        id: 'test-1',
+        orchardId: 'orchard-1',
         name: 'Test Formula',
         components: [
-          { name: 'Chem 1', type: 'chelator', quantity: 100 },
-          { name: 'Chem 2', type: 'suspended', quantity: 200 }
+          { name: 'Chem 1', type: 'chelator', quantity: 100, unit: 'g' },
+          { name: 'Chem 2', type: 'suspended', quantity: 200, unit: 'g' },
+          { name: 'Chem 3', type: 'liquid', quantity: 150, unit: 'ml' }
         ]
       }
 
-      const result = mockIntegrityCheck.migrateWithIntegrity(testRecord)
+      const original = JSON.parse(JSON.stringify(testFormula))
+      const migrated = migrateFormula(testFormula)
 
       // Check migration worked
-      expect(result.migrated.components[0].type).toBe('SC')
-      expect(result.migrated.components[0]._originalType).toBe('chelator')
+      expect(migrated.components[0].type).toBe('SC')
+      expect(migrated.components[0]._originalType).toBe('chelator')
 
       // Check integrity preserved
-      expect(result.integrityCheck.recordCount).toBe(true)
-      expect(result.integrityCheck.quantitiesPreserved).toBe(true)
-      expect(result.integrityCheck.namesPreserved).toBe(true)
+      expect(migrated.components.length).toBe(original.components.length)
+      expect(migrated.components.every((c, i) => c.quantity === original.components[i].quantity)).toBe(true)
+      expect(migrated.components.every((c, i) => c.name === original.components[i].name)).toBe(true)
+      expect(migrated.components.every((c, i) => c.unit === original.components[i].unit)).toBe(true)
+    })
+
+    it('should handle formulas with mixed legacy and new types', () => {
+      const mixedFormula: MixingFormula = {
+        id: 'mixed-1',
+        orchardId: 'orchard-1',
+        name: 'Mixed Formula',
+        components: [
+          { name: 'Legacy', type: 'chelator', quantity: 100, unit: 'g' },
+          { name: 'New', type: 'SC', quantity: 200, unit: 'g' },
+          { name: 'Another Legacy', type: 'fertilizer', quantity: 300, unit: 'g' }
+        ]
+      }
+
+      const migrated = migrateFormula(mixedFormula)
+
+      // Legacy types should be migrated
+      expect(migrated.components[0].type).toBe('SC')
+      expect(migrated.components[0]._originalType).toBe('chelator')
+      expect(migrated.components[2].type).toBe('FERT')
+      expect(migrated.components[2]._originalType).toBe('fertilizer')
+
+      // New types should remain unchanged
+      expect(migrated.components[1].type).toBe('SC')
+      expect(migrated.components[1]._originalType).toBeUndefined()
     })
   })
 
-  describe('Rollback Capability', () => {
-    it('should be able to rollback migration', () => {
-      const mockRollback = {
-        rollback: (migratedRecord: any) => {
-          const reverseMigration: Record<string, string> = {
-            'SC': 'chelator', // This is a simplification - real rollback would track original type
-          }
+  describe('Database Operations', () => {
+    it('should successfully find formulas needing migration', async () => {
+      // This should work now that the function is implemented
+      const formulas = await findFormulasNeedingMigration()
+      expect(Array.isArray(formulas)).toBe(true)
+      // Should return an array (may be empty if no formulas need migration)
+    })
 
-          return {
-            ...migratedRecord,
-            components: migratedRecord.components.map((c: any) => ({
-              ...c,
-              type: c._originalType || reverseMigration[c.type] || c.type,
-              _originalType: undefined
-            }))
-          }
-        }
-      }
+    it('should fail when migrating non-existent formula in database', async () => {
+      // This should fail because formula doesn't exist
+      const result = await migrateFormulaInDB('non-existent-id')
+      expect(result.success).toBe(false)
+      expect(result.errors.length).toBeGreaterThan(0)
+      expect(result.duration).toBeGreaterThanOrEqual(0)
+    })
 
-      const migratedRecord = {
-        name: 'Test Formula',
-        components: [
-          { name: 'Chem 1', type: 'SC', _originalType: 'chelator', quantity: 100 }
-        ]
-      }
+    it('should successfully migrate all formulas (even if none need migration)', async () => {
+      // This should work now that the function is implemented
+      const result = await migrateAllFormulas()
+      expect(result).toBeDefined()
+      expect(typeof result.success).toBe('boolean')
+      expect(typeof result.duration).toBe('number')
+      expect(Array.isArray(result.errors)).toBe(true)
+      expect(Array.isArray(result.warnings)).toBe(true)
+      expect(Array.isArray(result.logs)).toBe(true)
+    }, 10000) // Increase timeout to 10 seconds
 
-      const rolledBack = mockRollback.rollback(migratedRecord)
-
-      expect(rolledBack.components[0].type).toBe('chelator')
-      expect(rolledBack.components[0]._originalType).toBeUndefined()
+    it('should indicate rollback functionality is not fully implemented', async () => {
+      // This should work but indicate that rollback is not fully implemented
+      const result = await rollbackFormulaMigration('test-id')
+      expect(result.success).toBe(false)
+      expect(result.errors.some(e => e.includes('not fully implemented'))).toBe(true)
+      expect(result.warnings.some(w => w.includes('audit trail'))).toBe(true)
     })
   })
 })

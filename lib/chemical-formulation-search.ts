@@ -168,10 +168,10 @@ function getFormulationCategory(type: ChemicalFormulation): string {
 /**
  * Debounce function to limit API calls during search
  */
-export function debounce(func: (...args: any[]) => void, delay: number): (...args: any[]) => void {
+export function debounce<T extends unknown[]>(func: (...args: T) => void, delay: number): (...args: T) => void {
   let timeoutId: NodeJS.Timeout;
 
-  return (...args: any[]) => {
+  return (...args: T) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => func(...args), delay);
   };
