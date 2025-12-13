@@ -16,9 +16,9 @@ import { BatchActivitiesView } from '@/components/dashboard/views/batch-activiti
 import { ScheduledActivitiesView } from '@/components/dashboard/views/scheduled-activities-view';
 import { DashboardSkeleton } from '@/components/dashboard/skeleton-loader';
 import { AddTreeForm } from "@/components/forms/add-tree-form";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { SlidableTabs } from "@/components/ui/slidable-tabs";
 
 // Types
 type ViewState = 'dashboard' | 'add_tree' | 'add_batch_log' | 'tree_detail' | 'batch_activities' | 'scheduled_activities' | 'mixing';
@@ -143,16 +143,18 @@ function DashboardContent() {
      }
   };
 
-  const handleTabChange = (tab: 'trees' | 'batch_activities' | 'scheduled_activities' | 'mixing') => {
-    setActiveTab(tab);
-    if (tab === 'batch_activities') {
-      setView('batch_activities');
-    } else if (tab === 'scheduled_activities') {
-      setView('scheduled_activities');
-    } else if (tab === 'mixing') {
-      setView('mixing');
-    } else {
-      setView('dashboard');
+  const handleTabChange = (tab: string) => {
+    if (tab === 'trees' || tab === 'batch_activities' || tab === 'scheduled_activities' || tab === 'mixing') {
+      setActiveTab(tab as 'trees' | 'batch_activities' | 'scheduled_activities' | 'mixing');
+      if (tab === 'batch_activities') {
+        setView('batch_activities');
+      } else if (tab === 'scheduled_activities') {
+        setView('scheduled_activities');
+      } else if (tab === 'mixing') {
+        setView('mixing');
+      } else {
+        setView('dashboard');
+      }
     }
   };
 
@@ -215,45 +217,35 @@ function DashboardContent() {
         </div>
       );
   } else {
-     // Default Dashboard View with Tabs
+     // Default Dashboard View with Slidable Tabs
      viewContent = (
         <Tabs>
-          <TabsList>
-            <TabsTrigger
-              isActive={activeTab === 'trees'}
-              onClick={() => handleTabChange('trees')}
-            >
-              ต้นไม้
-            </TabsTrigger>
-            <TabsTrigger
-              isActive={activeTab === 'batch_activities'}
-              onClick={() => handleTabChange('batch_activities')}
-            >
-              งานทั้งแปลง
-              {batchActivityCount > 0 && (
-                <Badge variant="secondary" className="ml-2 text-xs px-1.5 py-0">
-                  {batchActivityCount}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger
-              isActive={activeTab === 'scheduled_activities'}
-              onClick={() => handleTabChange('scheduled_activities')}
-            >
-              งานที่ต้องทำ
-              {scheduledActivityCount > 0 && (
-                <Badge variant="secondary" className="ml-2 text-xs px-1.5 py-0">
-                  {scheduledActivityCount}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger
-              isActive={activeTab === 'mixing'}
-              onClick={() => handleTabChange('mixing')}
-            >
-              ผสมสารเคมี
-            </TabsTrigger>
-          </TabsList>
+          <SlidableTabs
+            tabs={[
+              {
+                id: 'trees',
+                label: 'ต้นไม้',
+                badge: undefined
+              },
+              {
+                id: 'batch_activities',
+                label: 'งานทั้งแปลง',
+                badge: batchActivityCount > 0 ? batchActivityCount : undefined
+              },
+              {
+                id: 'scheduled_activities',
+                label: 'งานที่ต้องทำ',
+                badge: scheduledActivityCount > 0 ? scheduledActivityCount : undefined
+              },
+              {
+                id: 'mixing',
+                label: 'ผสมสารเคมี',
+                badge: undefined
+              }
+            ]}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
 
           <TabsContent>
             {activeTab === 'trees' && (
