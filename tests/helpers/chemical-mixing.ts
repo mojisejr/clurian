@@ -1,5 +1,14 @@
 // Types for chemical mixing - will be implemented in lib/mixing-calculator.ts
-export type ChemicalType = 'chelator' | 'suspended' | 'liquid' | 'fertilizer' | 'adjuvant' | 'oil_concentrate' | 'oil'
+// Updated to support new standard agricultural chemical formulations
+export type ChemicalType =
+  // New standard abbreviations (20 types)
+  | 'WP' | 'WDG' | 'GR' | 'DF' | 'FDF'
+  | 'EC' | 'SC' | 'SL' | 'EW' | 'ME'
+  | 'CS' | 'WG' | 'FS' | 'SE'
+  | 'FERT' | 'ORG' | 'LIQ_FERT'
+  | 'SURF' | 'STICK' | 'SPREAD'
+  // Old types for backward compatibility
+  | 'chelator' | 'suspended' | 'liquid' | 'fertilizer' | 'adjuvant' | 'oil_concentrate' | 'oil'
 
 export interface ChemicalInput {
   name: string
