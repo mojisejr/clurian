@@ -43,6 +43,22 @@ export function Pagination({
   showItemCount = true,
   ariaLabel = "การนำทางหน้า",
 }: PaginationProps) {
+  // Announce page changes to screen readers
+  React.useEffect(() => {
+    const announcement = document.createElement('div');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.setAttribute('aria-atomic', 'true');
+    announcement.className = 'sr-only';
+    announcement.textContent = `อยู่ที่หน้า ${currentPage} จาก ${totalPages} หน้า`;
+
+    document.body.appendChild(announcement);
+    setTimeout(() => {
+      if (document.body.contains(announcement)) {
+        document.body.removeChild(announcement);
+      }
+    }, 1000);
+  }, [currentPage, totalPages]);
+
   if (totalPages <= 1) return null;
 
   const startItem = (currentPage - 1) * itemsPerPage + 1;
@@ -96,20 +112,6 @@ export function Pagination({
         break;
     }
   };
-
-  // Announce page changes to screen readers
-  React.useEffect(() => {
-    const announcement = document.createElement('div');
-    announcement.setAttribute('aria-live', 'polite');
-    announcement.setAttribute('aria-atomic', 'true');
-    announcement.className = 'sr-only';
-    announcement.textContent = `อยู่ที่หน้า ${currentPage} จาก ${totalPages} หน้า`;
-
-    document.body.appendChild(announcement);
-    setTimeout(() => {
-      document.body.removeChild(announcement);
-    }, 1000);
-  }, [currentPage, totalPages]);
 
   return (
     <nav

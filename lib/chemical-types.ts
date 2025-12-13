@@ -2,7 +2,8 @@ import {
   CHEMICAL_FORMULATIONS,
   ChemicalFormulation,
   isOldChemicalType,
-  migrateChemicalType
+  migrateChemicalType,
+  getFormulationCategory as getFormulationCategoryFromConstants
 } from '@/constants/chemical-formulations';
 
 /**
@@ -10,35 +11,63 @@ import {
  * Maps standard abbreviations to their Thai names for user interface
  */
 const THAI_DESCRIPTIONS: Readonly<Record<ChemicalFormulation, string>> = {
-  // Powder formulations
+  // Powder formulations (14 types)
   WP: 'ผงชุ่มน้ำ',
   WDG: 'เม็ดกระเจิงในน้ำ',
   GR: 'เม็ด',
   DF: 'ผงโป๊ย',
   FDF: 'ผงไหลไร้ฝุ่น',
+  SP: 'ผงละลายน้ำ',
+  SG: 'เม็ดละลายน้ำ',
+  MG: 'ไมโครเกรนูล',
+  MT: 'ไมโครแท็บเล็ต',
+  WS: 'ละลายน้ำได้',
+  ZC: 'สังกะสี/ทองแดง',
+  RB: 'เหยื่อสำเร็จ',
+  TAB: 'แท็บเล็ต',
+  GB: 'เหยื่อเม็ด',
 
-  // Liquid formulations
+  // Liquid formulations (13 types)
   EC: 'เข้มข้นอิมัลชัน',
   SC: 'แขวนลอยเข้มข้น',
-  SL: 'สารละลายน้ำ',
+  SL: 'สารละลายน้ำใส',
   EW: 'อิมัลชันในน้ำ',
   ME: 'ไมโครอิมัลชัน',
+  OD: 'น้ำมันกระจาย',
+  AC: 'แคปซูลในน้ำ',
+  AF: 'น้ำของเหลวไหล',
+  'WP-SC': 'ผงชุ่มน้ำ-แขวนลอยเข้มข้น',
+  'EC-ME': 'เข้มข้นอิมัลชัน-ไมโครอิมัลชัน',
+  'SC-EC': 'แขวนลอยเข้มข้น-เข้มข้นอิมัลชัน',
+  UL: 'สำหรับโดรน',
+  GE: 'กำเนิดแก๊ส',
 
-  // Special formulations
+  // Special formulations (10 types)
   CS: 'แคปซูลแขวนลอย',
   WG: 'เม็ดในน้ำ',
   FS: 'ของเหลวไหล',
   SE: 'ซัสโปอิมัลชัน',
+  PA: 'สารทาท่อ',
+  MC: 'ไมโครแคปซูล',
+  'SGST': 'เม็ดพันธุ์',
+  'EWOM': 'อิมัลชันน้ำมันในน้ำ',
+  XL: 'ปล่อยช้า',
+  'WPEX': 'ผงชุ่มน้ำพิเศษ',
 
-  // Fertilizers
+  // Fertilizers (3 types)
   FERT: 'ปุ๋ยเคมี',
   ORG: 'ปุ๋ยอินทรีย์',
   LIQ_FERT: 'ปุ๋ยน้ำ',
 
-  // Adjuvants
+  // Adjuvants (3 types)
   SURF: 'สารลดแรงตึงผิว',
-  STICK: 'สารยึดเกาะ',
-  SPREAD: 'สารขยายพื้นที่'
+  STIK: 'สารยึดเกาะ',
+  SPRD: 'สารขยายพื้นที่',
+
+  // Additional (3 types)
+  BR: 'เหยื่อพร้อมใช้',
+  FU: 'ก๊าซฆ่าแมลง',
+  TO: 'ทาผิว'
 } as const;
 
 /**
@@ -168,18 +197,7 @@ export function getAllChemicalTypes(): ReadonlyArray<{ value: ChemicalFormulatio
  * @returns The category name or 'Unknown' if not found
  */
 function getFormulationCategory(type: ChemicalFormulation): string {
-  const powderTypes: ChemicalFormulation[] = ['WP', 'WDG', 'GR', 'DF', 'FDF'];
-  const liquidTypes: ChemicalFormulation[] = ['EC', 'SC', 'SL', 'EW', 'ME'];
-  const specialTypes: ChemicalFormulation[] = ['CS', 'WG', 'FS', 'SE'];
-  const fertilizerTypes: ChemicalFormulation[] = ['FERT', 'ORG', 'LIQ_FERT'];
-  const adjuvantTypes: ChemicalFormulation[] = ['SURF', 'STICK', 'SPREAD'];
-
-  if (powderTypes.includes(type)) return 'Powder';
-  if (liquidTypes.includes(type)) return 'Liquid';
-  if (specialTypes.includes(type)) return 'Special';
-  if (fertilizerTypes.includes(type)) return 'Fertilizer';
-  if (adjuvantTypes.includes(type)) return 'Adjuvant';
-  return 'Unknown';
+  return getFormulationCategoryFromConstants(type);
 }
 
 /**

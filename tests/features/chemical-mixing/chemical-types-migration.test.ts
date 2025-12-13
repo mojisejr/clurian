@@ -19,7 +19,7 @@ describe('CHEMICAL_FORMULATIONS', () => {
         'EC', 'SC', 'SL', 'EW', 'ME',      // Liquid formulations
         'CS', 'WG', 'FS', 'SE',            // Special formulations
         'FERT', 'ORG', 'LIQ_FERT',         // Fertilizer types
-        'SURF', 'STICK', 'SPREAD'          // Adjuvants
+        'SURF', 'STIK', 'SPRD'          // Adjuvants
       ];
 
       requiredAbbreviations.forEach(abbr => {
@@ -55,8 +55,8 @@ describe('CHEMICAL_FORMULATIONS', () => {
         ORG: 'Organic Fertilizer',
         LIQ_FERT: 'Liquid Fertilizer',
         SURF: 'Surfactant',
-        STICK: 'Sticker',
-        SPREAD: 'Spreader'
+        STIK: 'Sticker',
+        SPRD: 'Spreader'
       };
 
       Object.entries(expectedDescriptions).forEach(([abbr, desc]) => {
@@ -152,7 +152,7 @@ describe('Chemical Type Validation', () => {
         'EC', 'SC', 'SL', 'EW', 'ME',
         'CS', 'WG', 'FS', 'SE',
         'FERT', 'ORG', 'LIQ_FERT',
-        'SURF', 'STICK', 'SPREAD'
+        'SURF', 'STIK', 'SPRD'
       ];
 
       for (const type of validTypes) {
