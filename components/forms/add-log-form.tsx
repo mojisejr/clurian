@@ -67,7 +67,7 @@ export function AddLogForm({
 }: AddLogFormProps) {
   const [isCustomAction, setIsCustomAction] = useState(false);
   const [selectedAction, setSelectedAction] = useState("");
-  const [selectedFormula, setSelectedFormula] = useState("");
+  const [selectedFormula, setSelectedFormula] = useState("none");
 
   const title = useMemo(() =>
     isBatch
@@ -93,18 +93,16 @@ export function AddLogForm({
   );
 
   const selectedFormulaDetails = useMemo(() =>
-    mixingFormulas.find(f => f.id === selectedFormula),
+    selectedFormula && selectedFormula !== "none" ? mixingFormulas.find(f => f.id === selectedFormula) : null,
     [mixingFormulas, selectedFormula]
   );
 
-  // Auto-select first formula when switching to chemical action
+  // Reset formula when action changes, but don't auto-select
   useEffect(() => {
-    if (requiresFormula && mixingFormulas.length > 0 && !selectedFormula) {
-      setSelectedFormula(mixingFormulas[0].id);
-    } else if (!requiresFormula) {
-      setSelectedFormula("");
+    if (!requiresFormula) {
+      setSelectedFormula("none");
     }
-  }, [requiresFormula, mixingFormulas, selectedFormula]);
+  }, [requiresFormula]);
 
   const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -123,7 +121,7 @@ export function AddLogForm({
       date: formData.get("date") as string,
       note: formData.get("note") as string,
       followUpDate: formData.get("followUpDate") as string || undefined,
-      mixingFormulaId: requiresFormula ? selectedFormula : undefined,
+      mixingFormulaId: requiresFormula && selectedFormula !== "none" ? selectedFormula : undefined,
     });
   }, [isCustomAction, isBatch, isLoading, onSubmit, requiresFormula, selectedFormula]);
 
@@ -250,6 +248,7 @@ export function AddLogForm({
                     <SelectValue placeholder="เลือกสูตรผสม" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none">ไม่เลือกสูตร</SelectItem>
                     {mixingFormulas.map((formula) => (
                       <SelectItem key={formula.id} value={formula.id}>
                         {formula.name}
