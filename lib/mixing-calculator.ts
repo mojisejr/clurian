@@ -16,6 +16,19 @@ export type {
 
 import type { ChemicalInput, MixingOrderResult } from '@/tests/helpers/chemical-mixing'
 
+// New interface for 200L fixed water volume
+export interface MixingOrderResultFor200L {
+  steps: Array<{
+    originalStep: number;  // Original step (1-7)
+    displayStep: number;   // Display step (1, 2, 3...)
+    chemicals: ChemicalInput[];
+    description: string;
+  }>;
+  warnings: string[];
+  totalSteps: number;
+  waterVolume: 200;  // Fixed 200L water volume
+}
+
 // === Chemical Step Mapping ===
 // Maps chemical formulations to their mixing steps based on solubility
 // and compatibility with other chemicals
@@ -230,6 +243,67 @@ export const calculateMixingOrder = (chemicals: ReadonlyArray<ChemicalInput>): M
     totalSteps,
     estimatedTime: `${estimatedMinutes} นาที`,
     waterAmount
+  };
+};
+
+/**
+ * Calculate mixing order for fixed 200L water volume
+ *
+ * This function filters out empty steps and reindexes remaining steps
+ * for cleaner display. Perfect for practical field use.
+ *
+ * @param chemicals - Array of chemicals to mix
+ * @returns Mixing plan with only non-empty steps, reindexed as 1, 2, 3...
+ */
+export const calculateMixingOrderFor200L = (
+  chemicals: ReadonlyArray<ChemicalInput>
+): MixingOrderResultFor200L => {
+  // Group chemicals by their original mixing steps
+  const groupedByStep = chemicals.reduce<Record<number, ChemicalInput[]>>((acc, chemical) => {
+    const step = mapChemicalTypeToStep(chemical.type);
+
+    if (!acc[step]) {
+      acc[step] = [];
+    }
+
+    acc[step].push(chemical);
+    return acc;
+  }, {});
+
+  // Sort powders (step 2) by quantity - smallest first for better dissolution
+  if (groupedByStep[2]) {
+    groupedByStep[2].sort((a, b) => a.quantity - b.quantity);
+  }
+
+  // Generate warnings
+  const warnings = generateWarnings(chemicals);
+
+  // Filter out empty steps and create reindexed steps
+  const nonEmptySteps = Object.entries(groupedByStep)
+    .filter(([_, chemicals]) => chemicals.length > 0)
+    .map(([stepStr, chemicalsInStep]) => {
+      const originalStep = parseInt(stepStr, 10);
+      const stepDescription = STEP_DESCRIPTIONS.find(s => s.step === originalStep);
+
+      return {
+        originalStep,
+        chemicals: chemicalsInStep,
+        description: stepDescription?.description || `ขั้นที่ ${originalStep}`
+      };
+    })
+    .sort((a, b) => a.originalStep - b.originalStep);  // Sort by original step order
+
+  // Reindex steps from 1 to N
+  const steps = nonEmptySteps.map((step, index) => ({
+    ...step,
+    displayStep: index + 1
+  }));
+
+  return {
+    steps,
+    warnings,
+    totalSteps: steps.length,
+    waterVolume: 200
   };
 };
 

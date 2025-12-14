@@ -10,48 +10,31 @@ import {
   Droplets,
   Package,
   AlertTriangle,
-  CheckCircle,
   Clock,
   Download,
   Share
 } from 'lucide-react';
-import type { ChemicalInput } from '@/lib/mixing-calculator';
+import type { ChemicalInput, MixingOrderResultFor200L } from '@/lib/mixing-calculator';
 
-interface MixingOrderDisplayProps {
-  result: MixingOrderDisplayResult;
+interface MixingOrderDisplay200LProps {
+  result: MixingOrderResultFor200L;
   chemicals: ChemicalInput[];
   formulaName?: string;
   formulaDescription?: string;
   onSave?: () => void;
   onShare?: () => void;
   onPrint?: () => void;
-  isFor200L?: boolean;  // Flag to indicate if this is 200L display
 }
 
-export interface MixingOrderDisplayResult {
-  steps: Array<{
-    step: number;
-    chemicals: ChemicalInput[];
-    description: string;
-    timing?: string;
-    notes?: string[];
-  }>;
-  warnings: string[];
-  totalSteps: number;
-  estimatedTime?: string;
-  waterAmount?: number;
-}
-
-export function MixingOrderDisplay({
+export function MixingOrderDisplay200L({
   result,
   chemicals,
   formulaName = "สูตรผสมสารเคมี",
   formulaDescription,
   onSave,
   onShare,
-  onPrint,
-  isFor200L = false
-}: MixingOrderDisplayProps) {
+  onPrint
+}: MixingOrderDisplay200LProps) {
 
   const getStepIcon = (step: number) => {
     const icons = [
@@ -63,7 +46,7 @@ export function MixingOrderDisplay({
       <Droplets key="oil_concentrate" className="w-5 h-5" />,   // Oil Concentrate
       <Droplets key="oil" className="w-5 h-5" />    // Oil
     ];
-    return icons[step - 1] || <Beaker key="default" className="w-5 h-5" />;
+    return icons[(step - 1) % 7] || <Beaker key="default" className="w-5 h-5" />;
   };
 
   const getStepColor = (step: number) => {
@@ -76,7 +59,7 @@ export function MixingOrderDisplay({
       'bg-yellow-100 border-yellow-300 text-yellow-800', // Oil Concentrate
       'bg-amber-100 border-amber-300 text-amber-800'     // Oil
     ];
-    return colors[step - 1] || 'bg-gray-100 border-gray-300 text-gray-800';
+    return colors[(step - 1) % 7] || 'bg-gray-100 border-gray-300 text-gray-800';
   };
 
   const getTypeLabel = (type: string) => {
@@ -200,7 +183,7 @@ export function MixingOrderDisplay({
         </Card>
       )}
 
-      {/* Mixing Steps */}
+      {/* Mixing Steps - Only show non-empty steps */}
       <div className="space-y-3 md:space-y-4">
         <h3 className="text-lg md:text-xl font-semibold">ขั้นตอนการผสม</h3>
 
@@ -211,25 +194,19 @@ export function MixingOrderDisplay({
               <div className="absolute left-4 sm:left-6 top-12 sm:top-16 w-0.5 h-12 sm:h-16 bg-gray-300"></div>
             )}
 
-            <Card className={`${getStepColor(step.step)} border-2`}>
+            <Card className={`${getStepColor(step.originalStep)} border-2`}>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className={`p-1.5 sm:p-2 rounded-full ${getStepColor(step.step)}`}>
-                    {React.cloneElement(getStepIcon(step.step), {
+                  <div className={`p-1.5 sm:p-2 rounded-full ${getStepColor(step.originalStep)}`}>
+                    {React.cloneElement(getStepIcon(step.originalStep), {
                       className: "w-3 h-3 sm:w-5 sm:h-5"
                     })}
                   </div>
                   <div className="flex-1 min-w-0">
                     <CardTitle className="text-sm md:text-base md:text-lg">
-                      <span className="hidden sm:inline">ขั้นที่ {step.step}: </span>
+                      <span className="hidden sm:inline">ขั้นที่ {step.displayStep}: </span>
                       {step.description}
                     </CardTitle>
-                    {step.timing && (
-                      <CardDescription className="flex items-center gap-1 mt-1 text-xs md:text-sm">
-                        <Clock className="w-3 h-3" />
-                        {step.timing}
-                      </CardDescription>
-                    )}
                   </div>
                   <div className="bg-white bg-opacity-50 px-2 py-1 rounded-full flex-shrink-0">
                     <span className="text-xs font-medium">{step.chemicals.length}</span>
@@ -259,21 +236,6 @@ export function MixingOrderDisplay({
                     </div>
                   ))}
                 </div>
-
-                {/* Step Notes */}
-                {step.notes && step.notes.length > 0 && (
-                  <div className="mt-4 pt-3 border-t border-current border-opacity-30">
-                    <div className="text-sm font-medium mb-2">ข้อควรทราบ:</div>
-                    <ul className="space-y-1">
-                      {step.notes.map((note, noteIndex) => (
-                        <li key={noteIndex} className="text-sm flex items-start gap-2">
-                          <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                          <span>{note}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
@@ -302,28 +264,10 @@ export function MixingOrderDisplay({
             <div>
               <h4 className="font-medium mb-3">ข้อมูลเพิ่มเติม</h4>
               <div className="space-y-2 text-sm">
-                {/* For 200L mode, show fixed water volume */}
-                {isFor200L ? (
-                  <div className="flex justify-between">
-                    <span>ปริมาณน้ำ:</span>
-                    <span className="font-medium">200 ลิตร</span>
-                  </div>
-                ) : (
-                  <>
-                    {result.estimatedTime && (
-                      <div className="flex justify-between">
-                        <span>เวลาที่ใช้โดยประมาณ:</span>
-                        <span className="font-medium">{result.estimatedTime}</span>
-                      </div>
-                    )}
-                    {result.waterAmount && (
-                      <div className="flex justify-between">
-                        <span>ปริมาณน้ำที่แนะนำ:</span>
-                        <span className="font-medium">{result.waterAmount} ลิตร</span>
-                      </div>
-                    )}
-                  </>
-                )}
+                <div className="flex justify-between">
+                  <span>ปริมาณน้ำ:</span>
+                  <span className="font-medium">200 ลิตร</span>
+                </div>
                 <div className="flex justify-between">
                   <span>จำนวนขั้นตอน:</span>
                   <span className="font-medium">{result.totalSteps} ขั้นตอน</span>
