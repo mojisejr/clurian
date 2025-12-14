@@ -15,7 +15,13 @@ export async function getOrchards() {
 export async function createOrchard(name: string) {
   const userId = await requireAuth();
   const result = await orchardService.createOrchard(userId, name);
+
+  // Invalidate the dashboard page
   revalidatePath('/dashboard');
+
+  // TODO: Implement revalidateTag when properly configured
+  // revalidateTag('orchard-list');
+
   return result;
 }
 

@@ -10,6 +10,7 @@ import {
   updateLogServer
 } from '@/app/actions/orchard';
 import type { Tree, Log } from '@/lib/types';
+import { queryKeys } from './use-orchard-queries';
 
 export function useOrchardMutations() {
   const queryClient = useQueryClient();
@@ -19,11 +20,11 @@ export function useOrchardMutations() {
     mutationFn: createOrchard,
     onSuccess: (newOrchard) => {
       // Invalidate and refetch orchards list
-      queryClient.invalidateQueries({ queryKey: ['orchards'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orchards() });
 
       // Optionally, add the new orchard to the cache immediately
       if (newOrchard) {
-        queryClient.setQueryData(['orchard', newOrchard.id], newOrchard);
+        queryClient.setQueryData(queryKeys.orchard(newOrchard.id), newOrchard);
       }
     },
     onError: (error) => {
@@ -36,13 +37,13 @@ export function useOrchardMutations() {
     mutationFn: (treeData: Tree) => createTreeServer(treeData),
     onMutate: async (newTree) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['orchardData', newTree.orchardId] });
+      await queryClient.cancelQueries({ queryKey: queryKeys.orchardData(newTree.orchardId) });
 
       // Snapshot the previous value
-      const previousData = queryClient.getQueryData(['orchardData', newTree.orchardId]);
+      const previousData = queryClient.getQueryData(queryKeys.orchardData(newTree.orchardId));
 
       // Optimistically update to the new value
-      queryClient.setQueryData(['orchardData', newTree.orchardId], (old: { trees: Tree[], logs: Log[] } | undefined) => {
+      queryClient.setQueryData(queryKeys.orchardData(newTree.orchardId), (old: { trees: Tree[], logs: Log[] } | undefined) => {
         if (!old) return old;
         const optimisticTree = {
           ...newTree,
