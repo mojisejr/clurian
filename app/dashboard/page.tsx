@@ -19,6 +19,7 @@ import { AddTreeForm } from "@/components/forms/add-tree-form";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { SlidableTabs } from "@/components/ui/slidable-tabs";
+import { useMixingFormulas } from '@/hooks/useMixingFormulas';
 
 // Types
 type ViewState = 'dashboard' | 'add_tree' | 'add_batch_log' | 'tree_detail' | 'batch_activities' | 'scheduled_activities' | 'mixing';
@@ -47,6 +48,12 @@ function DashboardContent() {
   const [isAddingBatchLog, setIsAddingBatchLog] = useState(false);
   const [activeTab, setActiveTab] = useState<'trees' | 'batch_activities' | 'scheduled_activities' | 'mixing'>('trees');
 
+  // Load mixing formulas when viewing batch log form
+  const { mixingFormulas, isLoading: isLoadingFormulas } = useMixingFormulas({
+    enabled: view === 'add_batch_log',
+    orchardId: currentOrchardId
+  });
+
   const selectedTree = trees.find(t => t.id === selectedTreeId);
 
   // --- Deep Linking ---
@@ -65,7 +72,6 @@ function DashboardContent() {
       setLoadingTreeId(null);
     }
   }, [searchParams, trees, view]);
-
 
   // --- Actions ---
 
@@ -200,6 +206,8 @@ function DashboardContent() {
             }}
             onSubmit={handleAddBatchLog}
             isLoading={isAddingBatchLog}
+            mixingFormulas={mixingFormulas}
+            isLoadingFormulas={isLoadingFormulas}
           />
         </div>
       );
