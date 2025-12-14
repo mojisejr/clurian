@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Leaf, Sprout, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,6 +97,15 @@ export function AddLogForm({
     [mixingFormulas, selectedFormula]
   );
 
+  // Auto-select first formula when switching to chemical action
+  useEffect(() => {
+    if (requiresFormula && mixingFormulas.length > 0 && !selectedFormula) {
+      setSelectedFormula(mixingFormulas[0].id);
+    } else if (!requiresFormula) {
+      setSelectedFormula("");
+    }
+  }, [requiresFormula, mixingFormulas, selectedFormula]);
+
   const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -114,9 +123,9 @@ export function AddLogForm({
       date: formData.get("date") as string,
       note: formData.get("note") as string,
       followUpDate: formData.get("followUpDate") as string || undefined,
-      mixingFormulaId: requiresFormula ? (formData.get("mixingFormula") as string) || undefined : undefined,
+      mixingFormulaId: requiresFormula ? selectedFormula : undefined,
     });
-  }, [isCustomAction, isBatch, isLoading, onSubmit, requiresFormula]);
+  }, [isCustomAction, isBatch, isLoading, onSubmit, requiresFormula, selectedFormula]);
 
   return (
     <Card className={cn("max-w-lg mx-auto mt-4", className)} data-testid={dataTestId || "add-log-form"}>
@@ -241,7 +250,6 @@ export function AddLogForm({
                     <SelectValue placeholder="เลือกสูตรผสม" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">ไม่เลือกสูตร</SelectItem>
                     {mixingFormulas.map((formula) => (
                       <SelectItem key={formula.id} value={formula.id}>
                         {formula.name}
