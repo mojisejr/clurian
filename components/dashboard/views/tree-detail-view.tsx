@@ -11,6 +11,7 @@ import { FollowUpModal } from "@/components/modals/follow-up-modal";
 import { AddLogForm } from "@/components/forms/add-log-form";
 import { TreeProfileCard } from '@/components/dashboard/detail/tree-profile-card';
 import { TreeHistorySection } from '@/components/dashboard/detail/tree-history-section';
+import { useMixingFormulas } from '@/hooks/useMixingFormulas';
 
 interface TreeDetailViewProps {
   tree: Tree;
@@ -19,12 +20,18 @@ interface TreeDetailViewProps {
 
 export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
   const { logs, currentOrchardId, updateTree, addTree, addLog, updateLogs } = useOrchard();
-  
+
   // Local State
   const [isAddingLog, setIsAddingLog] = useState(false);
   const [isSubmittingLog, setIsSubmittingLog] = useState(false);
   const [viewLog, setViewLog] = useState<Log | null>(null);
   const [followUpLog, setFollowUpLog] = useState<Log | null>(null);
+
+  // Load mixing formulas when adding individual log
+  const { mixingFormulas, isLoading: isLoadingFormulas } = useMixingFormulas({
+    enabled: isAddingLog,
+    orchardId: currentOrchardId
+  });
 
   // --- Actions ---
 
@@ -102,6 +109,7 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
     note: string;
     date: string;
     followUpDate?: string;
+    mixingFormulaId?: string;
   }
 
   const handleAddLogSubmit = async (data: LogSubmissionData) => {
@@ -117,6 +125,7 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
           performDate: data.date,
           status: data.followUpDate ? 'IN_PROGRESS' : 'COMPLETED',
           followUpDate: data.followUpDate,
+          mixingFormulaId: data.mixingFormulaId,
           createdAt: new Date().toISOString()
       } as Log);
       setIsAddingLog(false);
@@ -141,6 +150,8 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
               isBatch={false}
               treeCode={tree.code}
               isLoading={isSubmittingLog}
+              mixingFormulas={mixingFormulas}
+              isLoadingFormulas={isLoadingFormulas}
           />
       );
   }
