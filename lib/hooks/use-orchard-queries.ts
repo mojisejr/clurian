@@ -23,8 +23,8 @@ export const CACHE_CONFIG = {
   },
   // Semi-static data - changes occasionally
   ORCHARD_DATA: {
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 1000, // Reduced from 2 minutes to 30 seconds
+    gcTime: 2 * 60 * 1000, // 2 minutes
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     retry: 2,
@@ -32,8 +32,8 @@ export const CACHE_CONFIG = {
   },
   // Dynamic data - changes frequently
   TREES: {
-    staleTime: 1 * 60 * 1000, // 1 minute
-    gcTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 45 * 1000, // Reduced from 1 minute to 45 seconds
+    gcTime: 90 * 1000, // 1.5 minutes
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     retry: 2,
@@ -41,8 +41,8 @@ export const CACHE_CONFIG = {
   },
   // Very dynamic data - real-time updates
   ACTIVITY_LOGS: {
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 15 * 1000, // Reduced from 30 seconds to 15 seconds
+    gcTime: 45 * 1000, // 45 seconds
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     retry: 1,
@@ -50,14 +50,42 @@ export const CACHE_CONFIG = {
   },
   // Dashboard data - needs to be fresh
   DASHBOARD: {
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 1 * 60 * 1000, // 1 minute
-    refetchInterval: 30 * 1000, // Auto-refresh every 30 seconds
+    staleTime: 20 * 1000, // Reduced from 30 seconds to 20 seconds
+    gcTime: 60 * 1000, // 1 minute
+    refetchInterval: 20 * 1000, // Reduced from 30 seconds to 20 seconds
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     retry: 2,
     retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 5000),
+  },
+} as const;
+
+// Optimized cache configuration for even fresher data
+export const OPTIMIZED_CACHE_CONFIG = {
+  ...CACHE_CONFIG,
+  ORCHARD_DATA: {
+    ...CACHE_CONFIG.ORCHARD_DATA,
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 2 * 60 * 1000, // 2 minutes
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+  },
+  TREES: {
+    ...CACHE_CONFIG.TREES,
+    staleTime: 45 * 1000, // 45 seconds
+    gcTime: 90 * 1000, // 1.5 minutes
+  },
+  ACTIVITY_LOGS: {
+    ...CACHE_CONFIG.ACTIVITY_LOGS,
+    staleTime: 15 * 1000, // 15 seconds
+    gcTime: 45 * 1000, // 45 seconds
+  },
+  DASHBOARD: {
+    ...CACHE_CONFIG.DASHBOARD,
+    staleTime: 20 * 1000, // 20 seconds
+    gcTime: 60 * 1000, // 1 minute
+    refetchInterval: 20 * 1000, // 20 seconds
   },
 } as const;
 
@@ -153,6 +181,85 @@ export function useInvalidateOrchardData() {
         }
       });
     },
+  };
+}
+
+// Enhanced cache invalidation with tag-based strategy
+export function useEnhancedInvalidateOrchardData() {
+  const queryClient = useQueryClient();
+
+  // Cache tag generation
+  const generateTags = {
+    orchard: (orchardId: string) => `orchard-${orchardId}`,
+    trees: (orchardId: string) => `trees-${orchardId}`,
+    logs: (orchardId: string) => `logs-${orchardId}`,
+    dashboard: (orchardId: string, userId: string) => `dashboard-${orchardId}-${userId}`,
+    global: 'orchard-list' as const,
+  };
+
+  // Invalidate by tag (simulated - React Query doesn't have native tag support)
+  const invalidateByTag = (tag: string) => {
+    // This simulates tag-based invalidation
+    // In a real implementation, you might use a different caching strategy
+    console.log(`[Cache] Invalidating tag: ${tag}`);
+
+    if (tag.startsWith('orchard-')) {
+      const orchardId = tag.replace('orchard-', '');
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey;
+          return Array.isArray(key) && key.includes(orchardId);
+        }
+      });
+    } else if (tag === 'orchard-list') {
+      queryClient.invalidateQueries({ queryKey: queryKeys.orchards() });
+    }
+  };
+
+  return {
+    // Enhanced invalidation methods
+    invalidateOrchardData: (orchardId: string) => {
+      const tags = [
+        generateTags.orchard(orchardId),
+        generateTags.trees(orchardId),
+        generateTags.logs(orchardId),
+      ];
+      tags.forEach(invalidateByTag);
+    },
+
+    invalidateTrees: (orchardId: string) => {
+      invalidateByTag(generateTags.trees(orchardId));
+      // Also invalidate the orchard data since trees are part of it
+      invalidateByTag(generateTags.orchard(orchardId));
+    },
+
+    invalidateActivityLogs: (orchardId: string) => {
+      invalidateByTag(generateTags.logs(orchardId));
+      // Also invalidate the orchard data since logs are part of it
+      invalidateByTag(generateTags.orchard(orchardId));
+    },
+
+    invalidateDashboard: (orchardId: string, userId: string) => {
+      invalidateByTag(generateTags.dashboard(orchardId, userId));
+      // Also invalidate orchard data since dashboard stats depend on it
+      invalidateByTag(generateTags.orchard(orchardId));
+    },
+
+    invalidateAllOrchardData: (orchardId: string) => {
+      const tags = [
+        generateTags.orchard(orchardId),
+        generateTags.trees(orchardId),
+        generateTags.logs(orchardId),
+      ];
+      tags.forEach(invalidateByTag);
+    },
+
+    invalidateGlobal: () => {
+      invalidateByTag(generateTags.global);
+    },
+
+    // Export tag generators for use in server actions
+    generateTags,
   };
 }
 

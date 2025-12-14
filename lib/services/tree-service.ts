@@ -63,6 +63,44 @@ export async function archiveTree(treeId: string, newCode: string) {
     }
 }
 
+export async function getTreeById(treeId: string) {
+    try {
+        const tree = await prisma.tree.findUnique({
+            where: { id: treeId },
+            select: {
+                id: true,
+                orchardId: true,
+                code: true,
+                zone: true,
+                type: true,
+                variety: true,
+                plantedDate: true,
+                status: true,
+                createdAt: true
+            }
+        });
+
+        if (!tree) {
+            return null;
+        }
+
+        return {
+            id: tree.id,
+            orchardId: tree.orchardId,
+            code: tree.code,
+            zone: tree.zone,
+            type: tree.type,
+            variety: tree.variety,
+            plantedDate: tree.plantedDate?.toISOString().split('T')[0] || null,
+            status: treeStatusToUI(tree.status),
+            createdAt: tree.createdAt.toISOString()
+        } as Tree;
+    } catch (error) {
+        handleServiceError(error, 'getTreeById');
+        return null;
+    }
+}
+
 export async function getOrchardTrees(
     orchardId: string,
     page: number = 1,
