@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useMemo, useState } from 'react';
-import { ClipboardList, PlusCircle, Search, ArrowUpDown } from "lucide-react";
+import { ClipboardList, PlusCircle, Search, ArrowUpDown, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useOrchard } from "@/components/providers/orchard-provider";
+import { useInvalidateOrchardData } from '@/lib/hooks/use-orchard-queries';
+import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { BatchActivityItem } from "@/components/dashboard/batch/batch-activity-item";
 import { LogDetailModal } from "@/components/modals/log-detail-modal";
 import { FollowUpModal, type FollowUpResult } from "@/components/modals/follow-up-modal";
@@ -17,6 +19,11 @@ interface BatchActivitiesViewProps {
 
 export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps) {
   const { logs, currentOrchardId, updateLogs } = useOrchard();
+  const { invalidateActivityLogs } = useInvalidateOrchardData();
+
+  const handleRefresh = async () => {
+    await invalidateActivityLogs(currentOrchardId);
+  };
 
   // Filter and sort state
   const [searchTerm, setSearchTerm] = useState('');
@@ -128,14 +135,27 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
   };
 
   return (
-    <div className="space-y-4">
-      {/* Add Button */}
-      <Button
-        className="w-full gap-2"
-        onClick={onAddBatchLog}
-      >
-        <PlusCircle size={18} /> บันทึกงานทั้งแปลง
-      </Button>
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="space-y-4">
+        {/* Header with Refresh Button */}
+        <div className="flex items-center justify-between gap-2">
+          <Button
+            className="flex-1 gap-2"
+            onClick={onAddBatchLog}
+          >
+            <PlusCircle size={18} /> บันทึกงานทั้งแปลง
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            aria-label="รีเฟรชกิจกรรม"
+            title="ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์"
+          >
+            <RotateCw size={16} />
+            <span className="hidden sm:inline">รีเฟรช</span>
+          </Button>
+        </div>
 
       {/* Filters */}
       <div className="space-y-3">
@@ -265,5 +285,6 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
         />
       )}
     </div>
+    </PullToRefresh>
   );
 }

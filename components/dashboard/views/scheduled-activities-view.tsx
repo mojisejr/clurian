@@ -8,7 +8,8 @@ import {
   Clock,
   Search,
   Filter,
-  ChevronDown
+  ChevronDown,
+  RotateCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,8 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { useOrchard } from "@/components/providers/orchard-provider";
+import { useInvalidateOrchardData } from '@/lib/hooks/use-orchard-queries';
+import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { LogDetailModal } from "@/components/modals/log-detail-modal";
 import { FollowUpModal, type FollowUpResult } from "@/components/modals/follow-up-modal";
 import { cn } from "@/lib/utils";
@@ -34,6 +37,11 @@ type ScheduledActivitiesViewProps = Record<string, never>;
 
 export function ScheduledActivitiesView({}: ScheduledActivitiesViewProps) {
   const { logs, trees, currentOrchardId, updateLogs } = useOrchard();
+  const { invalidateActivityLogs } = useInvalidateOrchardData();
+
+  const handleRefresh = async () => {
+    await invalidateActivityLogs(currentOrchardId);
+  };
 
   // State
   const [searchTerm, setSearchTerm] = useState('');
@@ -268,19 +276,30 @@ export function ScheduledActivitiesView({}: ScheduledActivitiesViewProps) {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Calendar size={20} />
-            งานที่ต้องทำ
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            ติดตามงานที่มีนัดหมาย
-          </p>
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Calendar size={20} />
+              งานที่ต้องทำ
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              ติดตามงานที่มีนัดหมาย
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            aria-label="รีเฟรชกิจกรรมที่ต้องทำ"
+            title="ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์"
+          >
+            <RotateCw size={16} />
+            <span className="hidden sm:inline">รีเฟรช</span>
+          </Button>
         </div>
-      </div>
 
       {/* Filters */}
       <div className="flex gap-2 flex-wrap">
@@ -457,6 +476,7 @@ export function ScheduledActivitiesView({}: ScheduledActivitiesViewProps) {
           onSubmit={handleFollowUpSubmit}
         />
       )}
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }
