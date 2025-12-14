@@ -8,11 +8,21 @@ import { ArrowLeft, Calculator, History, Plus } from 'lucide-react';
 import { useOrchard } from '@/components/providers/orchard-provider';
 import { MixingCalculator } from '@/components/mixing/MixingCalculator';
 import { MixingHistory } from '@/components/mixing/MixingHistory';
-import { MixingOrderDisplay, type MixingOrderDisplayResult } from '@/components/mixing/MixingOrderDisplay';
+import { MixingOrderDisplay200L } from '@/components/mixing/MixingOrderDisplay200L';
 import { createGlobalMixingFormula } from '@/app/actions/mixing-formulas';
-import { calculateMixingOrder } from '@/lib/mixing-calculator';
+import { calculateMixingOrderFor200L } from '@/lib/mixing-calculator';
 import type { MixingFormula } from '@prisma/client';
-import type { ChemicalInput } from '@/lib/mixing-calculator';
+import type { ChemicalInput, MixingOrderResultFor200L } from '@/lib/mixing-calculator';
+
+type MixingOrderDisplayResult = {
+  steps: Array<{
+    step: number;
+    chemicals: ChemicalInput[];
+    description: string;
+  }>;
+  warnings: string[];
+  totalSteps: number;
+};
 
 type MixingView = 'calculator' | 'history' | 'result';
 
@@ -32,7 +42,7 @@ export default function MixingPage() {
   const { currentOrchard } = useOrchard();
   const [view, setView] = useState<MixingView>('calculator');
   const [selectedFormula, setSelectedFormula] = useState<FormulaWithComponents | null>(null);
-  const [calculationResult, setCalculationResult] = useState<MixingOrderDisplayResult | null>(null);
+  const [calculationResult200L, setCalculationResult200L] = useState<MixingOrderResultFor200L | null>(null);
   const [chemicals, setChemicals] = useState<ChemicalInput[]>([]);
 
   const handleBackToDashboard = () => {
@@ -49,10 +59,12 @@ export default function MixingPage() {
         unit: comp.unit
       }));
 
-      const result = calculateMixingOrder(chemicalInputs);
+      // Use the new 200L calculation
+      const result = calculateMixingOrderFor200L(chemicalInputs);
+
       setSelectedFormula(formula);
       setChemicals(chemicalInputs);
-      setCalculationResult(result);
+      setCalculationResult200L(result);
       setView('result');
     } catch (error) {
       console.error('Error calculating formula:', error);
@@ -170,6 +182,11 @@ export default function MixingPage() {
           <div data-testid="mixing-calculator">
             <MixingCalculator
               onSaveFormula={handleSaveFormula}
+              onCalculate={(result, chemicals) => {
+                setCalculationResult200L(result);
+                setChemicals(chemicals);
+                setView('result');
+              }}
             />
           </div>
         )}
@@ -183,10 +200,10 @@ export default function MixingPage() {
           </div>
         )}
 
-        {view === 'result' && calculationResult && (
+        {view === 'result' && calculationResult200L && (
           <div>
             <div className="mb-4 flex justify-between items-center">
-              <h2 className="text-xl font-semibold">ผลลัพธ์การคำนวณ</h2>
+              <h2 className="text-xl font-semibold">ผลลัพธ์การคำนวณ (สำหรับน้ำ 200 ลิตร)</h2>
               <Button
                 variant="outline"
                 onClick={() => setView('calculator')}
@@ -196,8 +213,8 @@ export default function MixingPage() {
               </Button>
             </div>
 
-            <MixingOrderDisplay
-              result={calculationResult}
+            <MixingOrderDisplay200L
+              result={calculationResult200L}
               chemicals={chemicals}
               formulaName={selectedFormula?.name}
               formulaDescription={selectedFormula?.description || undefined}
