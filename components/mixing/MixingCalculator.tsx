@@ -184,7 +184,7 @@ const ChemicalInputRow = memo<{
 ChemicalInputRow.displayName = 'ChemicalInputRow';
 
 interface MixingCalculatorProps {
-  orchardId: string;
+  orchardId?: string;
   onSaveFormula?: (formula: {
     name: string;
     description?: string;
@@ -192,8 +192,7 @@ interface MixingCalculatorProps {
   }) => Promise<void>;
 }
 
-export function MixingCalculator({ orchardId: _orchardId, onSaveFormula }: MixingCalculatorProps) {
-  // _orchardId is available for future use when saving formulas to specific orchards
+export function MixingCalculator({ onSaveFormula }: MixingCalculatorProps) {
   const [chemicals, setChemicals] = useState<ChemicalInput[]>([
     { name: '', type: 'SL', quantity: 0, unit: 'มล.' }
   ]);

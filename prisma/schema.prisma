@@ -149,7 +149,7 @@ enum LogStatus {
 
 model MixingFormula {
   id          String         @id @default(cuid())
-  orchardId   String
+  orchardId   String?
   name        String
   description String?
   components  Json           // [{name, type, quantity, unit, step}]
@@ -157,7 +157,7 @@ model MixingFormula {
   usedCount   Int            @default(0)
   activities  ActivityLog[]
 
-  orchard     Orchard        @relation(fields: [orchardId], references: [id])
+  orchard     Orchard?       @relation(fields: [orchardId], references: [id])
 
   @@map("mixing_formulas")
 }

@@ -1,9 +1,10 @@
 import { config } from 'dotenv'
 import path from 'path'
-import { vi, beforeAll, afterEach, afterAll } from 'vitest'
+import { vi, beforeAll, afterEach, afterAll, expect } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import { configure } from '@testing-library/dom'
 import { resetPrismaMocks, setupAllMocks } from './mocks/prisma'
+import '@testing-library/jest-dom/vitest'
 
 // Load environment variables from .env file
 config({ path: path.resolve(__dirname, '../.env') })
