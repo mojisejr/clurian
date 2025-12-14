@@ -78,7 +78,7 @@ export interface MixingFormulaComponent {
 
 export interface MixingFormula {
   id: string
-  orchardId: string
+  orchardId?: string | null
   name: string
   description?: string
   components: MixingFormulaComponent[]
@@ -207,7 +207,7 @@ export async function findFormulasNeedingMigration(): Promise<MixingFormula[]> {
   // Filter formulas that contain legacy types
   const legacyTypes = Object.keys(TYPE_MIGRATION_MAP)
 
-  return formulas
+  const filteredFormulas = formulas
     .filter(formula => {
       // Safely cast and validate components
       const components = formula.components as unknown as MixingFormulaComponent[]
@@ -226,8 +226,13 @@ export async function findFormulasNeedingMigration(): Promise<MixingFormula[]> {
       orchardId: formula.orchardId,
       name: formula.name,
       description: formula.description || undefined,
-      components: formula.components as unknown as MixingFormulaComponent[]
+      components: formula.components,
+      createdAt: new Date(), // Required field but not needed for this function
+      usedCount: 0 // Required field but not needed for this function
     }))
+
+  // Cast to MixingFormula[] since the shape matches the Prisma type
+  return filteredFormulas as unknown as MixingFormula[]
 }
 
 /**
@@ -272,7 +277,7 @@ export async function migrateFormulaInDB(formulaId: string): Promise<MigrationRe
 
       const migrationFormula: MixingFormula = {
         id: formula.id,
-        orchardId: formula.orchardId,
+        orchardId: formula.orchardId || undefined,
         name: formula.name,
         description: formula.description || undefined,
         components

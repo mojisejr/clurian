@@ -25,7 +25,7 @@ const ChemicalTypeSchema = z.enum([
 ]);
 
 const CreateMixingFormulaSchema = z.object({
-  orchardId: z.string().uuid(),
+  orchardId: z.string().uuid().optional(),
   name: z.string().min(1, 'ชื่อสูตรต้องไม่ว่างเปล่า'),
   description: z.string().optional(),
   components: z.array(z.object({
@@ -47,23 +47,25 @@ export async function createMixingFormula(data: z.infer<typeof CreateMixingFormu
       return { success: false, error: 'ไม่ได้รับอนุญาตให้เข้าใช้งาน' }
     }
 
-    // Validate orchard ownership
-    const orchard = await prisma.orchard.findFirst({
-      where: {
-        id: data.orchardId,
-        ownerId: session.user.id
-      }
-    })
-
-    if (!orchard) {
-      return { success: false, error: 'ไม่พบสวนที่ระบุ' }
-    }
-
     const validated = CreateMixingFormulaSchema.parse(data)
+
+    // If orchardId is provided, validate orchard ownership
+    if (validated.orchardId) {
+      const orchard = await prisma.orchard.findFirst({
+        where: {
+          id: validated.orchardId,
+          ownerId: session.user.id
+        }
+      })
+
+      if (!orchard) {
+        return { success: false, error: 'ไม่พบสวนที่ระบุ' }
+      }
+    }
 
     const formula = await prisma.mixingFormula.create({
       data: {
-        orchardId: validated.orchardId,
+        orchardId: validated.orchardId || null, // Allow null for global formulas
         name: validated.name,
         description: validated.description,
         components: validated.components,
@@ -102,8 +104,14 @@ export async function getMixingFormulasByOrchard(orchardId: string) {
       return { success: false, error: 'ไม่พบสวนที่ระบุ' }
     }
 
+    // Get both orchard-specific formulas and global formulas
     const formulas = await prisma.mixingFormula.findMany({
-      where: { orchardId },
+      where: {
+        OR: [
+          { orchardId }, // Orchard-specific formulas
+          { orchardId: null } // Global formulas available to all orchards
+        ]
+      },
       orderBy: { createdAt: 'desc' }
     })
 
@@ -199,6 +207,84 @@ export async function deleteMixingFormula(formulaId: string) {
   } catch (error) {
     console.error('Error deleting mixing formula:', error)
     return { success: false, error: 'ไม่สามารถลบสูตรได้ กรุณาลองใหม่' }
+  }
+}
+
+// Global Mixing Formula Functions
+
+const CreateGlobalMixingFormulaSchema = z.object({
+  name: z.string().min(1, 'ชื่อสูตรต้องไม่ว่างเปล่า'),
+  description: z.string().optional(),
+  components: z.array(z.object({
+    name: z.string(),
+    type: ChemicalTypeSchema,
+    quantity: z.number().positive(),
+    unit: z.string(),
+    formulaType: z.string().optional(),
+    step: z.number()
+  })).min(1, 'ต้องมีสารเคมีอย่างน้อย 1 ชนิด')
+})
+
+export async function createGlobalMixingFormula(data: z.infer<typeof CreateGlobalMixingFormulaSchema>) {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers()
+    })
+    if (!session?.user) {
+      return { success: false, error: 'ไม่ได้รับอนุญาตให้เข้าใช้งาน' }
+    }
+
+    const validated = CreateGlobalMixingFormulaSchema.parse(data)
+
+    // Create formula without orchardId for global access
+    const formula = await prisma.mixingFormula.create({
+      data: {
+        name: validated.name,
+        description: validated.description,
+        components: validated.components,
+        usedCount: 0,
+        orchardId: null // Global formula has no orchard
+      }
+    })
+
+    return { success: true, data: formula }
+  } catch (error) {
+    console.error('Error creating global mixing formula:', error)
+    if (error instanceof z.ZodError) {
+      return { success: false, error: error.issues?.[0]?.message || 'ข้อมูลไม่ถูกต้อง' }
+    }
+    return { success: false, error: 'ไม่สามารถสร้างสูตรได้ กรุณาลองใหม่' }
+  }
+}
+
+export async function getGlobalMixingFormulas() {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers()
+    })
+    if (!session?.user) {
+      return { success: false, error: 'ไม่ได้รับอนุญาตให้เข้าใช้งาน' }
+    }
+
+    // Get all formulas that belong to the user (both global and orchard-specific)
+    const formulas = await prisma.mixingFormula.findMany({
+      where: {
+        OR: [
+          { orchardId: null }, // Global formulas
+          {
+            orchard: {
+              ownerId: session.user.id
+            }
+          }
+        ]
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return { success: true, data: formulas }
+  } catch (error) {
+    console.error('Error getting global mixing formulas:', error)
+    return { success: false, error: 'ไม่สามารถดึงข้อมูลสูตรได้ กรุณาลองใหม่' }
   }
 }
 

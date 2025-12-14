@@ -9,7 +9,7 @@ import { useOrchard } from '@/components/providers/orchard-provider';
 import { MixingCalculator } from '@/components/mixing/MixingCalculator';
 import { MixingHistory } from '@/components/mixing/MixingHistory';
 import { MixingOrderDisplay, type MixingOrderDisplayResult } from '@/components/mixing/MixingOrderDisplay';
-import { createMixingFormula } from '@/app/actions/mixing-formulas';
+import { createGlobalMixingFormula } from '@/app/actions/mixing-formulas';
 import { calculateMixingOrder } from '@/lib/mixing-calculator';
 import type { MixingFormula } from '@prisma/client';
 import type { ChemicalInput } from '@/lib/mixing-calculator';
@@ -29,7 +29,7 @@ type FormulaWithComponents = MixingFormula & {
 
 export default function MixingPage() {
   const router = useRouter();
-  const { currentOrchardId, currentOrchard } = useOrchard();
+  const { currentOrchard } = useOrchard();
   const [view, setView] = useState<MixingView>('calculator');
   const [selectedFormula, setSelectedFormula] = useState<FormulaWithComponents | null>(null);
   const [calculationResult, setCalculationResult] = useState<MixingOrderDisplayResult | null>(null);
@@ -65,14 +65,8 @@ export default function MixingPage() {
     description?: string;
     components: ChemicalInput[];
   }) => {
-    if (!currentOrchardId) {
-      alert('ไม่พบข้อมูลสวน กรุณาลองใหม่อีกครั้ง');
-      return;
-    }
-
     try {
-      const result = await createMixingFormula({
-        orchardId: currentOrchardId,
+      const result = await createGlobalMixingFormula({
         name: formulaData.name,
         description: formulaData.description,
         components: formulaData.components.map((c, index) => ({
@@ -175,7 +169,6 @@ export default function MixingPage() {
         {view === 'calculator' && (
           <div data-testid="mixing-calculator">
             <MixingCalculator
-              orchardId={currentOrchardId}
               onSaveFormula={handleSaveFormula}
             />
           </div>
@@ -184,7 +177,6 @@ export default function MixingPage() {
         {view === 'history' && (
           <div data-testid="mixing-history">
             <MixingHistory
-              orchardId={currentOrchardId}
               onSelectFormula={handleSelectFormula}
               onShowCalculator={() => setView('calculator')}
             />

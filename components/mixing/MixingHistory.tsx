@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Clock, Search, Filter, Trash2, Eye, Plus } from 'lucide-react';
-import { getMixingFormulasByOrchard, deleteMixingFormula, updateMixingFormulaUsage } from '@/app/actions/mixing-formulas';
+import { getGlobalMixingFormulas, deleteMixingFormula, updateMixingFormulaUsage } from '@/app/actions/mixing-formulas';
 import type { MixingFormula } from '@prisma/client';
 
 interface FormulaWithComponents extends MixingFormula {
@@ -22,12 +22,11 @@ interface FormulaWithComponents extends MixingFormula {
 }
 
 interface MixingHistoryProps {
-  orchardId: string;
   onSelectFormula?: (formula: FormulaWithComponents) => void;
   onShowCalculator?: () => void;
 }
 
-export function MixingHistory({ orchardId, onSelectFormula, onShowCalculator }: MixingHistoryProps) {
+export function MixingHistory({ onSelectFormula, onShowCalculator }: MixingHistoryProps) {
   const [formulas, setFormulas] = useState<FormulaWithComponents[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,7 +36,8 @@ export function MixingHistory({ orchardId, onSelectFormula, onShowCalculator }: 
   const loadFormulas = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getMixingFormulasByOrchard(orchardId);
+      // Always use global formulas now
+      const result = await getGlobalMixingFormulas();
       if (result.success && result.data) {
         // Transform the data to include components
         const formulasWithComponents = result.data.map(formula => ({
@@ -55,13 +55,11 @@ export function MixingHistory({ orchardId, onSelectFormula, onShowCalculator }: 
     } finally {
       setLoading(false);
     }
-  }, [orchardId]);
+  }, []);
 
   useEffect(() => {
-    if (orchardId) {
-      loadFormulas();
-    }
-  }, [orchardId, loadFormulas]);
+    loadFormulas();
+  }, [loadFormulas]);
 
   const handleDeleteFormula = async (formulaId: string) => {
     if (!confirm('คุณแน่ใจว่าต้องการลบสูตรนี้หรือไม่?')) {
