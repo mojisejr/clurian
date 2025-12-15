@@ -5,7 +5,7 @@ import { ClipboardList, PlusCircle, Search, ArrowUpDown, RotateCw } from "lucide
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useOrchard } from "@/components/providers/orchard-provider";
-import { useInvalidateOrchardData } from '@/lib/hooks/use-orchard-queries';
+import { useInvalidateOrchardData, useOrchardActivityLogs } from '@/lib/hooks/use-orchard-queries';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { BatchActivityItem } from "@/components/dashboard/batch/batch-activity-item";
 import { LogDetailModal } from "@/components/modals/log-detail-modal";
@@ -18,8 +18,17 @@ interface BatchActivitiesViewProps {
 }
 
 export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps) {
-  const { logs, currentOrchardId, updateLogs } = useOrchard();
+  const { currentOrchardId, updateLogs } = useOrchard();
   const { invalidateActivityLogs } = useInvalidateOrchardData();
+
+  // Use React Query for activity logs instead of Context state
+  const { data: logsData, isLoading, error, refetch } = useOrchardActivityLogs(currentOrchardId, {
+    page: 1,
+    limit: 1000, // Load all logs for filtering
+    filters: { logType: 'BATCH' }
+  });
+
+  const logs = useMemo(() => logsData?.logs || [], [logsData]);
 
   const handleRefresh = async () => {
     await invalidateActivityLogs(currentOrchardId);
@@ -35,12 +44,9 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
   const [showLogDetail, setShowLogDetail] = useState(false);
   const [showFollowUp, setShowFollowUp] = useState(false);
 
-  // Filter and sort batch logs
+  // Filter and sort batch logs (already filtered by logType in query)
   const filteredBatchLogs = useMemo(() => {
-    let result = logs.filter(log =>
-      log.logType === 'BATCH' &&
-      log.orchardId === currentOrchardId
-    );
+    let result = logs.filter(log => log.orchardId === currentOrchardId);
 
     // Apply status filter
     if (statusFilter === 'completed') {
@@ -149,13 +155,37 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
             variant="outline"
             size="sm"
             onClick={handleRefresh}
+            disabled={isLoading}
             aria-label="รีเฟรชกิจกรรม"
             title="ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์"
           >
-            <RotateCw size={16} />
+            <RotateCw size={16} className={isLoading ? "animate-spin" : ""} />
             <span className="hidden sm:inline">รีเฟรช</span>
           </Button>
         </div>
+
+        {/* Error State */}
+        {error && (
+          <div className="bg-destructive/15 border border-destructive/20 text-destructive p-3 rounded-lg">
+            <p className="text-sm">เกิดข้อผิดพลาดในการโหลดข้อมูล: {error.message}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              className="mt-2"
+            >
+              ลองใหม่
+            </Button>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-8">
+            <RotateCw size={24} className="animate-spin text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">กำลังโหลดข้อมูล...</span>
+          </div>
+        )}
 
       {/* Filters */}
       <div className="space-y-3">
@@ -222,9 +252,10 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
         </div>
       </div>
 
-      {/* Activity List */}
-      <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-        {filteredBatchLogs.length === 0 ? (
+      {/* Activity List - Only show when not loading */}
+      {!isLoading && (
+        <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+          {filteredBatchLogs.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
             <ClipboardList className="mx-auto mb-4 opacity-50" size={48} />
             {hasActiveFilters ? (
@@ -250,17 +281,20 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
             ))}
           </div>
         )}
-      </div>
+        </div>
+      )}
 
-      {/* Footer */}
-      <div className="pt-4 border-t text-center text-xs text-muted-foreground">
-        CLURIAN: Orchard Manager v1.1
-        {filteredBatchLogs.length > 0 && (
-          <span className="ml-2">
-            แสดง {filteredBatchLogs.length} รายการ
-          </span>
-        )}
-      </div>
+      {/* Footer - Only show when not loading */}
+      {!isLoading && (
+        <div className="pt-4 border-t text-center text-xs text-muted-foreground">
+          CLURIAN: Orchard Manager v1.1
+          {filteredBatchLogs.length > 0 && (
+            <span className="ml-2">
+              แสดง {filteredBatchLogs.length} รายการ
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Log Detail Modal */}
       {selectedLog && (

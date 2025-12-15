@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import type { Tree } from "@/lib/types";
 import { useSearchParams, useRouter } from 'next/navigation';
 
 // Context
 import { useOrchard } from "@/components/providers/orchard-provider";
+// React Query
+import { useOrchardTrees } from "@/lib/hooks/use-orchard-queries";
 
 // Views & Forms
 import { DashboardView } from '@/components/dashboard/views/dashboard-view';
@@ -20,6 +22,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { SlidableTabs } from "@/components/ui/slidable-tabs";
 import { useMixingFormulas } from '@/hooks/useMixingFormulas';
+import { OrchardSwitchingOverlay } from '@/components/ui/orchard-switching-overlay';
 
 // Types
 type ViewState = 'dashboard' | 'add_tree' | 'add_batch_log' | 'tree_detail' | 'batch_activities' | 'scheduled_activities' | 'mixing';
@@ -28,15 +31,31 @@ function DashboardContent() {
   const {
     currentOrchardId,
     currentOrchard,
-    trees,
     addTree,
     addLog,
     addOrchard,
     isLoadingOrchards,
-    isLoadingOrchardData,
+    isFetchingOrchardData,
     batchActivityCount,
-    scheduledActivityCount
+    scheduledActivityCount,
+    filterZone,
+    filterStatus,
+    searchTerm,
+    currentPage
   } = useOrchard();
+
+  // Fetch trees using React Query
+  const { data: treesData, isLoading: isLoadingTrees } = useOrchardTrees(currentOrchardId, {
+    page: currentPage,
+    limit: 1000,
+    filters: {
+      status: filterStatus !== 'ALL' ? filterStatus : undefined,
+      zone: filterZone !== 'ALL' ? filterZone : undefined,
+      searchTerm: searchTerm || undefined
+    }
+  });
+  const trees = useMemo(() => treesData?.trees || [], [treesData?.trees]);
+
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -166,7 +185,7 @@ function DashboardContent() {
 
   
   // --- Loading State ---
-  if (isLoadingOrchards || isLoadingOrchardData) {
+  if (isLoadingOrchards || isLoadingTrees) {
       return <DashboardSkeleton />;
   }
 
@@ -291,9 +310,15 @@ function DashboardContent() {
   
   // Consistency Wrapper
   return (
-    <div className="min-h-screen bg-gray-50 p-4 pb-24 md:pb-8 max-w-md mx-auto space-y-4">
+    <>
+      <div className="min-h-screen bg-gray-50 p-4 pb-24 md:pb-8 max-w-md mx-auto space-y-4">
         {viewContent}
-    </div>
+      </div>
+      <OrchardSwitchingOverlay
+        isVisible={isFetchingOrchardData && !isLoadingOrchards}
+        orchardName={currentOrchard?.name}
+      />
+    </>
   );
 }
 

@@ -160,13 +160,41 @@ export function useInvalidateOrchardData() {
     invalidateOrchardData: (orchardId: string) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.orchardData(orchardId) });
     },
-    invalidateTrees: (orchardId: string) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.orchardTrees(orchardId) });
+    invalidateTrees: (orchardId: string, filters?: Record<string, unknown>) => {
+      // Invalidate specific tree queries with filters
+      if (filters) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.orchardTrees(orchardId, filters) });
+      } else {
+        // Invalidate all tree queries for this orchard using predicate
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            return Array.isArray(key) &&
+                   key.includes('orchard') &&
+                   key.includes(orchardId) &&
+                   key.includes('trees');
+          }
+        });
+      }
       // Also invalidate orchard data since it includes trees
       queryClient.invalidateQueries({ queryKey: queryKeys.orchardData(orchardId) });
     },
-    invalidateActivityLogs: (orchardId: string) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.orchardActivityLogs(orchardId) });
+    invalidateActivityLogs: (orchardId: string, filters?: Record<string, unknown>) => {
+      // Invalidate specific activity log queries with filters
+      if (filters) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.orchardActivityLogs(orchardId, filters) });
+      } else {
+        // Invalidate all activity log queries for this orchard using predicate
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            return Array.isArray(key) &&
+                   key.includes('orchard') &&
+                   key.includes(orchardId) &&
+                   key.includes('logs');
+          }
+        });
+      }
       // Also invalidate orchard data since it includes logs
       queryClient.invalidateQueries({ queryKey: queryKeys.orchardData(orchardId) });
     },

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import type { Tree, Log } from "@/lib/types";
 import { useOrchard } from "@/components/providers/orchard-provider";
+import { useOrchardActivityLogs } from "@/lib/hooks/use-orchard-queries";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
@@ -19,7 +20,14 @@ interface TreeDetailViewProps {
 }
 
 export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
-  const { logs, currentOrchardId, updateTree, addTree, addLog, updateLogs } = useOrchard();
+  const { currentOrchardId, updateTree, addTree, addLog, updateLogs } = useOrchard();
+
+  // Fetch logs using React Query
+  const { data: logsData } = useOrchardActivityLogs(currentOrchardId, {
+    page: 1,
+    limit: 1000 // Get all logs for tree history
+  });
+  const logs = logsData?.logs || [];
 
   // Local State
   const [isAddingLog, setIsAddingLog] = useState(false);

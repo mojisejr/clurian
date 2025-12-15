@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useOrchard } from "@/components/providers/orchard-provider";
+import { useOrchardTrees } from '@/lib/hooks/use-orchard-queries';
 import { useInvalidateOrchardData } from '@/lib/hooks/use-orchard-queries';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { TreeCard } from "@/components/tree-card";
@@ -21,28 +22,42 @@ interface DashboardViewProps {
 }
 
 export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isAddingNewTree = false }: DashboardViewProps) {
+  // React Query for trees data
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filterZone, setFilterZone] = useState('ALL');
+  const [filterStatus, setFilterStatus] = useState('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
+
   const {
-    trees,
-    totalTrees,
-    currentPage,
-    totalPages,
-    pagination,
-    setCurrentPage,
     currentOrchard,
-    currentOrchardId,
-    filterZone,
-    filterStatus,
-    searchTerm,
-    setFilterZone,
-    setFilterStatus,
-    setSearchTerm,
-    clearFilters
+    currentOrchardId
   } = useOrchard();
+
+  const { data: treesData, isLoading, error, refetch } = useOrchardTrees(currentOrchardId, {
+    page: currentPage,
+    filters: {
+      zone: filterZone !== 'ALL' ? filterZone : undefined,
+      status: filterStatus !== 'ALL' ? filterStatus : undefined,
+      searchTerm: searchTerm || undefined,
+    }
+  });
 
   const { invalidateTrees } = useInvalidateOrchardData();
 
+  const trees = treesData?.trees || [];
+  const pagination = treesData?.pagination;
+  const totalTrees = pagination?.total || 0;
+  const totalPages = pagination?.totalPages || 0;
+
   const handleRefresh = async () => {
     await invalidateTrees(currentOrchardId);
+  };
+
+  const clearFilters = () => {
+    setFilterZone('ALL');
+    setFilterStatus('ALL');
+    setSearchTerm('');
+    setCurrentPage(1);
   };
 
   const [logoBase64, setLogoBase64] = useState<string>('');
@@ -180,12 +195,40 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
 
       {/* Tree List */}
       <div className="space-y-2">
-        {trees.length === 0 && !isAddingNewTree ? (
+        {/* Error State */}
+        {error && (
+          <div className="bg-destructive/15 border border-destructive/20 text-destructive p-4 rounded-lg">
+            <p className="text-sm">เกิดข้อผิดพลาดในการโหลดข้อมูล: {error.message}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              className="mt-2"
+            >
+              ลองใหม่
+            </Button>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoading && !isAddingNewTree && (
+          <div className="space-y-2">
+            <TreeCardSkeleton />
+            <TreeCardSkeleton />
+            <TreeCardSkeleton />
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && !error && trees.length === 0 && !isAddingNewTree && (
             <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-xl">
                 <Sprout className="mx-auto mb-2 opacity-50" size={48} />
                 <p>ไม่พบข้อมูลต้นไม้</p>
             </div>
-        ) : (
+        )}
+
+        {/* Tree List Content */}
+        {!isLoading && !error && (trees.length > 0 || isAddingNewTree) && (
             <>
               {/* Show skeleton when adding new tree */}
               {isAddingNewTree && (
