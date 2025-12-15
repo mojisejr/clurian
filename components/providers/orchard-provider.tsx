@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import type { Orchard, Tree, Log, PaginationMetadata } from "@/lib/types";
 import {
     useOrchards,
@@ -51,6 +52,8 @@ interface OrchardContextType {
 const OrchardContext = createContext<OrchardContextType | undefined>(undefined);
 
 export function OrchardProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+
   // React Query hooks
   const { data: orchards = [], isLoading: isLoadingOrchards, error: orchardsError } = useOrchards();
   const [currentOrchardId, setCurrentOrchardId] = useState<string>("");
@@ -141,6 +144,37 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
       setCurrentPage(1);
     }, 0);
   }, [currentOrchardId, clearFilters, setCurrentPage]);
+
+  // Clear treeId from URL when orchard changes to prevent cross-orchard contamination
+  const previousOrchardIdRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    // Only run on client side and when we have a current orchard
+    if (typeof window === 'undefined' || !currentOrchardId) return;
+
+    // Only clear treeId if we're switching to a different orchard (not initial load)
+    if (previousOrchardIdRef.current && previousOrchardIdRef.current !== currentOrchardId) {
+      // Check if URL has treeId parameter
+      const currentUrl = new URL(window.location.href);
+      const treeId = currentUrl.searchParams.get('treeId');
+
+      if (treeId) {
+        // Remove treeId parameter while preserving other params
+        currentUrl.searchParams.delete('treeId');
+
+        // Create clean URL without treeId
+        const newPathname = currentUrl.pathname;
+        const newSearch = currentUrl.searchParams.toString();
+        const newUrl = `${newPathname}${newSearch ? `?${newSearch}` : ''}`;
+
+        // Use replace to avoid adding to history
+        router.replace(newUrl);
+      }
+    }
+
+    // Update ref for next comparison
+    previousOrchardIdRef.current = currentOrchardId;
+  }, [currentOrchardId, router]);
 
   // Initialize with first orchard using a ref and setTimeout to avoid cascade
   const hasInitialized = useRef(false);
