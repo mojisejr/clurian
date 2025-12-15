@@ -3,14 +3,16 @@
 import React, { useState, useMemo } from 'react';
 import type { Tree, Log } from "@/lib/types";
 import { useOrchard } from "@/components/providers/orchard-provider";
-import { useOrchardActivityLogs } from "@/lib/hooks/use-orchard-queries";
+import { useTreeHistory } from "@/hooks/useTreeHistory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-    ClipboardList, 
+import {
+    ClipboardList,
     Search,
     ArrowUpDown,
-    Clock
+    Clock,
+    AlertCircle,
+    RotateCcw
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -23,12 +25,12 @@ interface TreeHistorySectionProps {
 export function TreeHistorySection({ tree, onLogClick }: TreeHistorySectionProps) {
   const { currentOrchardId } = useOrchard();
 
-  // Fetch logs using React Query
-  const { data: logsData } = useOrchardActivityLogs(currentOrchardId, {
-    page: 1,
-    limit: 1000 // Get all logs for tree history
+  // Use custom hook that handles race conditions and proper loading states
+  const { logs, isLoading, error, refetch } = useTreeHistory({
+    tree,
+    orchardId: currentOrchardId,
+    enabled: !!currentOrchardId,
   });
-  const logs = useMemo(() => logsData?.logs || [], [logsData?.logs]);
   
   // History Filter State
   const [historyTab, setHistoryTab] = useState<'all' | 'batch' | 'followup'>('all');
@@ -37,10 +39,7 @@ export function TreeHistorySection({ tree, onLogClick }: TreeHistorySectionProps
 
   // --- Derived Data ---
   const filteredHistory = useMemo(() => {
-    let result = logs.filter(l =>
-        (l.logType === 'INDIVIDUAL' && l.treeId === tree.id) ||
-        (l.logType === 'BATCH' && l.targetZone === tree.zone && l.orchardId === currentOrchardId)
-    );
+    let result = [...logs];
 
     if (historyTab === 'followup') {
         result = result.filter(l => l.status === 'IN_PROGRESS');
@@ -63,7 +62,52 @@ export function TreeHistorySection({ tree, onLogClick }: TreeHistorySectionProps
     });
 
     return result;
-  }, [logs, tree.id, tree.zone, currentOrchardId, historyTab, historySearch, historySort]);
+  }, [logs, historyTab, historySearch, historySort]);
+
+  // --- Loading State ---
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 mb-2 px-1">
+          <ClipboardList size={20} className="text-primary" />
+          <h3 className="font-bold text-lg">ประวัติการดูแล</h3>
+        </div>
+        <div className="bg-card rounded-xl border shadow-sm overflow-hidden p-8">
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mb-4"></div>
+            <p className="text-muted-foreground">กำลังโหลดประวัติการดูแล...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Error State ---
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 mb-2 px-1">
+          <ClipboardList size={20} className="text-primary" />
+          <h3 className="font-bold text-lg">ประวัติการดูแล</h3>
+        </div>
+        <div className="bg-card rounded-xl border shadow-sm overflow-hidden p-8">
+          <div className="flex flex-col items-center justify-center text-center">
+            <AlertCircle className="h-8 w-8 text-red-500 mb-4" />
+            <p className="text-muted-foreground mb-4">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              className="gap-2"
+            >
+              <RotateCcw size={14} />
+              ลองใหม่
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
       <div className="space-y-4">
@@ -105,8 +149,8 @@ export function TreeHistorySection({ tree, onLogClick }: TreeHistorySectionProps
                            : "border-transparent text-muted-foreground hover:text-foreground"
                    )}
                >
-                   ⏰ ติดตาม/นัดหมาย 
-                   {logs.some(l => l.treeId === tree.id && l.status === 'IN_PROGRESS') && (
+                   ⏰ ติดตาม/นัดหมาย
+                   {logs.some(l => l.status === 'IN_PROGRESS') && (
                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
                    )}
                </button>
