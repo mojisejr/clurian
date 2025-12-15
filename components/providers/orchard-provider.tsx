@@ -19,23 +19,12 @@ interface OrchardContextType {
   addOrchard: (name: string) => Promise<void>;
   isFetchingOrchardData: boolean;
 
-  trees: Tree[];
-  isLoadingOrchardData: boolean;
-  addTree: (tree: Tree) => Promise<Tree | null>;
-  updateTree: (treeId: string, updates: Partial<Tree>) => Promise<void>;
-
-  logs: Log[];
-  addLog: (log: Log) => Promise<void>;
-  updateLogs: (logs: Log[]) => Promise<void>;
-
-  // Pagination state
+  // Filter state
   currentPage: number;
   totalPages: number;
   totalTrees: number;
   pagination: PaginationMetadata | undefined;
   setCurrentPage: (page: number) => void;
-
-  // Filter state
   filterZone: string;
   filterStatus: string;
   searchTerm: string;
@@ -44,7 +33,15 @@ interface OrchardContextType {
   setSearchTerm: (term: string) => void;
   clearFilters: () => void;
 
-  // Computed values for activity counts
+  // Tree management functions (still needed for mutations)
+  addTree: (tree: Tree) => Promise<Tree | null>;
+  updateTree: (treeId: string, updates: Partial<Tree>) => Promise<void>;
+
+  // Log management functions (still needed for mutations)
+  addLog: (log: Log) => Promise<void>;
+  updateLogs: (logs: Log[]) => Promise<void>;
+
+  // Computed values - these will be calculated from orchardData
   batchActivityCount: number;
   scheduledActivityCount: number;
   inProgressLogsCount: number;
@@ -74,15 +71,16 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
     }
   }), [currentPage, filterZone, filterStatus, searchTerm]);
 
-  const { data: orchardData, isLoading: isLoadingOrchardData, isFetching: isFetchingOrchardData, error: orchardDataError } = useOrchardData(currentOrchardId, queryOptions);
+  const { data: orchardData, isFetching: isFetchingOrchardData, error: orchardDataError } = useOrchardData(currentOrchardId, queryOptions);
   const mutations = useOrchardMutations();
 
-  // Extract trees, logs, and pagination from orchardData
-  const trees = orchardData?.trees || [];
-  const logs = orchardData?.logs || [];
+  // Extract pagination from orchardData
   const pagination = orchardData?.pagination;
   const totalPages = pagination?.totalPages || 0;
   const totalTrees = pagination?.total || 0;
+
+  // Extract logs for computed values (not exposing directly)
+  const logs = orchardData?.logs || [];
 
   // Clear filters helper
   const clearFilters = useCallback(() => {
@@ -213,13 +211,6 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
         setCurrentOrchardId,
         addOrchard: handleAddOrchard,
         isFetchingOrchardData,
-        trees,
-        isLoadingOrchardData,
-        addTree: handleAddTree,
-        updateTree: handleUpdateTree,
-        logs,
-        addLog: handleAddLog,
-        updateLogs: handleUpdateLogs,
         currentPage,
         totalPages,
         totalTrees,
@@ -232,6 +223,10 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
         setFilterStatus,
         setSearchTerm,
         clearFilters,
+        addTree: handleAddTree,
+        updateTree: handleUpdateTree,
+        addLog: handleAddLog,
+        updateLogs: handleUpdateLogs,
         batchActivityCount,
         scheduledActivityCount,
         inProgressLogsCount,

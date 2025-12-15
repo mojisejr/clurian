@@ -6,6 +6,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 
 // Context
 import { useOrchard } from "@/components/providers/orchard-provider";
+// React Query
+import { useOrchardTrees } from "@/lib/hooks/use-orchard-queries";
 
 // Views & Forms
 import { DashboardView } from '@/components/dashboard/views/dashboard-view';
@@ -29,16 +31,31 @@ function DashboardContent() {
   const {
     currentOrchardId,
     currentOrchard,
-    trees,
     addTree,
     addLog,
     addOrchard,
     isLoadingOrchards,
-    isLoadingOrchardData,
     isFetchingOrchardData,
     batchActivityCount,
-    scheduledActivityCount
+    scheduledActivityCount,
+    filterZone,
+    filterStatus,
+    searchTerm,
+    currentPage
   } = useOrchard();
+
+  // Fetch trees using React Query
+  const { data: treesData, isLoading: isLoadingTrees } = useOrchardTrees(currentOrchardId, {
+    page: currentPage,
+    limit: 1000,
+    filters: {
+      status: filterStatus !== 'ALL' ? filterStatus : undefined,
+      zone: filterZone !== 'ALL' ? filterZone : undefined,
+      searchTerm: searchTerm || undefined
+    }
+  });
+  const trees = treesData?.trees || [];
+
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -168,7 +185,7 @@ function DashboardContent() {
 
   
   // --- Loading State ---
-  if (isLoadingOrchards || isLoadingOrchardData) {
+  if (isLoadingOrchards || isLoadingTrees) {
       return <DashboardSkeleton />;
   }
 
@@ -298,7 +315,7 @@ function DashboardContent() {
         {viewContent}
       </div>
       <OrchardSwitchingOverlay
-        isVisible={isFetchingOrchardData && !isLoadingOrchardData}
+        isVisible={isFetchingOrchardData && !isLoadingOrchards}
         orchardName={currentOrchard?.name}
       />
     </>

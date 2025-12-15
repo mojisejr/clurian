@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import type { Tree, Log } from "@/lib/types";
 import { useOrchard } from "@/components/providers/orchard-provider";
+import { useOrchardActivityLogs } from "@/lib/hooks/use-orchard-queries";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -20,7 +21,14 @@ interface TreeHistorySectionProps {
 }
 
 export function TreeHistorySection({ tree, onLogClick }: TreeHistorySectionProps) {
-  const { logs, currentOrchardId } = useOrchard();
+  const { currentOrchardId } = useOrchard();
+
+  // Fetch logs using React Query
+  const { data: logsData } = useOrchardActivityLogs(currentOrchardId, {
+    page: 1,
+    limit: 1000 // Get all logs for tree history
+  });
+  const logs = logsData?.logs || [];
   
   // History Filter State
   const [historyTab, setHistoryTab] = useState<'all' | 'batch' | 'followup'>('all');
