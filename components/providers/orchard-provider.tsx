@@ -17,6 +17,7 @@ interface OrchardContextType {
   currentOrchard: Orchard | undefined;
   setCurrentOrchardId: (id: string) => void;
   addOrchard: (name: string) => Promise<void>;
+  isFetchingOrchardData: boolean;
 
   trees: Tree[];
   isLoadingOrchardData: boolean;
@@ -73,7 +74,7 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
     }
   }), [currentPage, filterZone, filterStatus, searchTerm]);
 
-  const { data: orchardData, isLoading: isLoadingOrchardData, error: orchardDataError } = useOrchardData(currentOrchardId, queryOptions);
+  const { data: orchardData, isLoading: isLoadingOrchardData, isFetching: isFetchingOrchardData, error: orchardDataError } = useOrchardData(currentOrchardId, queryOptions);
   const mutations = useOrchardMutations();
 
   // Extract trees, logs, and pagination from orchardData
@@ -211,6 +212,7 @@ export function OrchardProvider({ children }: { children: React.ReactNode }) {
         currentOrchard,
         setCurrentOrchardId,
         addOrchard: handleAddOrchard,
+        isFetchingOrchardData,
         trees,
         isLoadingOrchardData,
         addTree: handleAddTree,

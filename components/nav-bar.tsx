@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { LogOut, ChevronDown, CheckCircle, PlusCircle } from "lucide-react";
+import { LogOut, ChevronDown, CheckCircle, PlusCircle, RotateCw } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import {
@@ -19,7 +19,7 @@ import { useOrchard } from "@/components/providers/orchard-provider";
 export function NavBar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { orchards, currentOrchardId, currentOrchard, setCurrentOrchardId, addOrchard } = useOrchard();
+  const { orchards, currentOrchardId, currentOrchard, setCurrentOrchardId, addOrchard, isFetchingOrchardData } = useOrchard();
 
   const handleLogout = async () => {
     await authClient.signOut({
@@ -60,20 +60,43 @@ export function NavBar() {
             {/* Orchard Selector */}
             {orchards.length > 0 && currentOrchard ? (
               <DropdownMenu>
-                  <DropdownMenuTrigger className="flex items-center gap-1 font-bold text-lg hover:opacity-80 outline-none">
+                  <DropdownMenuTrigger
+                    className="flex items-center gap-1 font-bold text-lg hover:opacity-80 outline-none"
+                    disabled={isFetchingOrchardData}
+                  >
                       {currentOrchard.name}
-                      <ChevronDown size={16} />
+                      {isFetchingOrchardData ? (
+                        <RotateCw size={16} className="animate-spin" />
+                      ) : (
+                        <ChevronDown size={16} />
+                      )}
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56" align="start">
-                      <DropdownMenuLabel className="text-muted-foreground text-xs">เลือกสวนของคุณ</DropdownMenuLabel>
+                      <DropdownMenuLabel className="text-muted-foreground text-xs">
+                        เลือกสวนของคุณ
+                        {isFetchingOrchardData && (
+                          <span className="ml-2 text-xs text-blue-600">
+                            (กำลังโหลด...)
+                          </span>
+                        )}
+                      </DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       {orchards.map((o) => (
-                          <DropdownMenuItem 
-                              key={o.id} 
-                              onClick={() => setCurrentOrchardId(o.id)}
-                              className="flex justify-between items-center cursor-pointer"
+                          <DropdownMenuItem
+                              key={o.id}
+                              onClick={() => !isFetchingOrchardData && setCurrentOrchardId(o.id)}
+                              disabled={isFetchingOrchardData}
+                              className={cn(
+                                "flex justify-between items-center cursor-pointer",
+                                isFetchingOrchardData && "opacity-50 cursor-not-allowed"
+                              )}
                           >
-                              <span className={cn(currentOrchardId === o.id && "font-bold text-primary")}>{o.name}</span>
+                              <span className={cn(currentOrchardId === o.id && "font-bold text-primary")}>
+                                {o.name}
+                                {isFetchingOrchardData && currentOrchardId === o.id && (
+                                  <RotateCw size={12} className="ml-2 inline animate-spin" />
+                                )}
+                              </span>
                               {currentOrchardId === o.id && <CheckCircle size={14} className="text-primary" />}
                           </DropdownMenuItem>
                       ))}
