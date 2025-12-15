@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { useOrchard } from "@/components/providers/orchard-provider";
+import { useOrchardActivityLogs, useOrchardTrees } from '@/lib/hooks/use-orchard-queries';
 import { useInvalidateOrchardData } from '@/lib/hooks/use-orchard-queries';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { LogDetailModal } from "@/components/modals/log-detail-modal";
@@ -36,12 +37,32 @@ import {
 type ScheduledActivitiesViewProps = Record<string, never>;
 
 export function ScheduledActivitiesView({}: ScheduledActivitiesViewProps) {
-  const { logs, trees, currentOrchardId, updateLogs } = useOrchard();
+  // React Query for logs and trees data
+  const { currentOrchardId, updateLogs } = useOrchard();
+
+  const { data: logsData, isLoading: isLoadingLogs, error: logsError, refetch: refetchLogs } = useOrchardActivityLogs(currentOrchardId, {
+    page: 1,
+    limit: 1000,
+    filters: {}
+  });
+
+  const { data: treesData, isLoading: isLoadingTrees } = useOrchardTrees(currentOrchardId, {
+    page: 1,
+    limit: 1000,
+    filters: {}
+  });
+
+  const logs = logsData?.logs || [];
+  const trees = treesData?.trees || [];
+
   const { invalidateActivityLogs } = useInvalidateOrchardData();
 
   const handleRefresh = async () => {
     await invalidateActivityLogs(currentOrchardId);
   };
+
+  const isLoading = isLoadingLogs || isLoadingTrees;
+  const error = logsError;
 
   // State
   const [searchTerm, setSearchTerm] = useState('');
@@ -301,41 +322,67 @@ export function ScheduledActivitiesView({}: ScheduledActivitiesViewProps) {
           </Button>
         </div>
 
-      {/* Filters */}
-      <div className="flex gap-2 flex-wrap">
-        {/* Zone Filter */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Filter size={14} />
-              {zoneFilter === 'all' ? 'ทุกโซน' : `โซน: ${zoneFilter}`}
+        {/* Error State */}
+        {error && (
+          <div className="bg-destructive/15 border border-destructive/20 text-destructive p-4 rounded-lg">
+            <p className="text-sm">เกิดข้อผิดพลาดในการโหลดข้อมูล: {error.message}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetchLogs()}
+              className="mt-2"
+            >
+              ลองใหม่
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => setZoneFilter('all')}>
-              ทุกโซน
-            </DropdownMenuItem>
-            {availableZones.map(zone => (
-              <DropdownMenuItem key={zone} onClick={() => setZoneFilter(zone)}>
-                โซน {zone}
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-8">
+            <RotateCw size={24} className="animate-spin text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">กำลังโหลดข้อมูล...</span>
+          </div>
+        )}
+
+      {/* Filters - Only show when not loading */}
+      {!isLoading && (
+        <div className="flex gap-2 flex-wrap">
+          {/* Zone Filter */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Filter size={14} />
+                {zoneFilter === 'all' ? 'ทุกโซน' : `โซน: ${zoneFilter}`}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={() => setZoneFilter('all')}>
+                ทุกโซน
               </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              {availableZones.map(zone => (
+                <DropdownMenuItem key={zone} onClick={() => setZoneFilter(zone)}>
+                  โซน {zone}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-        {/* Search */}
-        <div className="relative flex-1 min-w-[200px]">
-          <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 h-9"
-            placeholder="ค้นหา..."
-          />
+          {/* Search */}
+          <div className="relative flex-1 min-w-[200px]">
+            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 h-9"
+              placeholder="ค้นหา..."
+            />
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Activity Groups */}
+      {/* Activity Groups - Only show when not loading */}
+      {!isLoading && !error && (
       <div className="space-y-4">
         {/* Overdue */}
         {groupedActivities.overdue.length > 0 && (
@@ -445,14 +492,17 @@ export function ScheduledActivitiesView({}: ScheduledActivitiesViewProps) {
           </div>
         )}
       </div>
+      )}
 
-      {/* Footer */}
-      <div className="pt-4 border-t text-center text-xs text-muted-foreground">
-        CLURIAN: Orchard Manager v1.1
-        <span className="ml-2">
-          ทั้งหมด {scheduledActivities.length} รายการ
-        </span>
-      </div>
+      {/* Footer - Only show when not loading */}
+      {!isLoading && !error && (
+        <div className="pt-4 border-t text-center text-xs text-muted-foreground">
+          CLURIAN: Orchard Manager v1.1
+          <span className="ml-2">
+            ทั้งหมด {scheduledActivities.length} รายการ
+          </span>
+        </div>
+      )}
 
       {/* Log Detail Modal */}
       {selectedLog && (
