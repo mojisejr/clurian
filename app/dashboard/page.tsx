@@ -24,6 +24,13 @@ import { SlidableTabs } from "@/components/ui/slidable-tabs";
 import { useMixingFormulas } from '@/hooks/useMixingFormulas';
 import { OrchardSwitchingOverlay } from '@/components/ui/orchard-switching-overlay';
 
+// Deep linking components
+import { TreeNotFoundError } from '@/components/dashboard/error/tree-not-found-error';
+import { TreeDetailLoading } from '@/components/dashboard/loading/tree-detail-loading';
+
+// Custom hooks
+import { useDashboardDeepLinking } from '@/hooks/useDashboardDeepLinking';
+
 // Types
 type ViewState = 'dashboard' | 'add_tree' | 'add_batch_log' | 'tree_detail' | 'batch_activities' | 'scheduled_activities' | 'mixing';
 
@@ -73,24 +80,30 @@ function DashboardContent() {
     orchardId: currentOrchardId
   });
 
+  // Use custom hook for deep linking logic
+  const {
+    selectedTreeId: deepLinkedTreeId,
+    isLoadingTreeDetail,
+    treeNotFound,
+  } = useDashboardDeepLinking({
+    trees,
+    isLoadingTrees,
+  });
+
+  // Sync deep linking with component state
   const selectedTree = trees.find(t => t.id === selectedTreeId);
 
-  // --- Deep Linking ---
   useEffect(() => {
-    const treeId = searchParams.get('treeId');
-    if (treeId && trees.length > 0) {
-      if (trees.some(t => t.id === treeId)) {
-        setSelectedTreeId(treeId);
-        setView('tree_detail');
-        setLoadingTreeId(null); // Clear loading state when view is shown
-      }
-    } else if (!treeId && view === 'tree_detail') {
-      // If no treeId in URL but view is tree_detail, go back to dashboard
+    if (deepLinkedTreeId && !selectedTreeId) {
+      setSelectedTreeId(deepLinkedTreeId);
+      setView('tree_detail');
+      setLoadingTreeId(null);
+    } else if (!deepLinkedTreeId && view === 'tree_detail') {
       setView('dashboard');
       setSelectedTreeId(null);
       setLoadingTreeId(null);
     }
-  }, [searchParams, trees, view]);
+  }, [deepLinkedTreeId, view, selectedTreeId]);
 
   // --- Actions ---
 
@@ -192,6 +205,16 @@ function DashboardContent() {
   // --- Empty State ---
   if (!currentOrchard) {
       return <EmptyDashboardView onCreateOrchard={handleCreateFirstOrchard} />;
+  }
+
+  // --- Deep Linking Loading State ---
+  if (isLoadingTreeDetail) {
+      return <TreeDetailLoading />;
+  }
+
+  // --- Deep Linking Error State ---
+  if (treeNotFound) {
+      return <TreeNotFoundError onBackToDashboard={handleBackToDashboard} />;
   }
 
   // --- Render Views ---
