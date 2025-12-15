@@ -20,6 +20,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { SlidableTabs } from "@/components/ui/slidable-tabs";
 import { useMixingFormulas } from '@/hooks/useMixingFormulas';
+import { OrchardSwitchingOverlay } from '@/components/ui/orchard-switching-overlay';
 
 // Types
 type ViewState = 'dashboard' | 'add_tree' | 'add_batch_log' | 'tree_detail' | 'batch_activities' | 'scheduled_activities' | 'mixing';
@@ -34,6 +35,7 @@ function DashboardContent() {
     addOrchard,
     isLoadingOrchards,
     isLoadingOrchardData,
+    isFetchingOrchardData,
     batchActivityCount,
     scheduledActivityCount
   } = useOrchard();
@@ -291,9 +293,15 @@ function DashboardContent() {
   
   // Consistency Wrapper
   return (
-    <div className="min-h-screen bg-gray-50 p-4 pb-24 md:pb-8 max-w-md mx-auto space-y-4">
+    <>
+      <div className="min-h-screen bg-gray-50 p-4 pb-24 md:pb-8 max-w-md mx-auto space-y-4">
         {viewContent}
-    </div>
+      </div>
+      <OrchardSwitchingOverlay
+        isVisible={isFetchingOrchardData && !isLoadingOrchardData}
+        orchardName={currentOrchard?.name}
+      />
+    </>
   );
 }
 
