@@ -5,7 +5,7 @@ import { ClipboardList, PlusCircle, Search, ArrowUpDown, RotateCw } from "lucide
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useOrchard } from "@/components/providers/orchard-provider";
-import { useInvalidateOrchardData, useOrchardActivityLogs } from '@/lib/hooks/use-orchard-queries';
+import { useOrchardActivityLogs, useSpecificCacheInvalidation } from '@/lib/hooks/use-orchard-queries';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { BatchActivityItem } from "@/components/dashboard/batch/batch-activity-item";
 import { LogDetailModal } from "@/components/modals/log-detail-modal";
@@ -19,7 +19,7 @@ interface BatchActivitiesViewProps {
 
 export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps) {
   const { currentOrchardId, updateLogs } = useOrchard();
-  const { invalidateActivityLogs } = useInvalidateOrchardData();
+  const { invalidateSpecificActivityLogs } = useSpecificCacheInvalidation();
 
   // Use React Query for activity logs instead of Context state
   const { data: logsData, isLoading, error, refetch } = useOrchardActivityLogs(currentOrchardId, {
@@ -31,7 +31,7 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
   const logs = useMemo(() => logsData?.logs || [], [logsData]);
 
   const handleRefresh = async () => {
-    await invalidateActivityLogs(currentOrchardId);
+    await invalidateSpecificActivityLogs(currentOrchardId);
   };
 
   // Filter and sort state

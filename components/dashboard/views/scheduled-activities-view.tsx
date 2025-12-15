@@ -21,8 +21,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { useOrchard } from "@/components/providers/orchard-provider";
-import { useOrchardActivityLogs, useOrchardTrees } from '@/lib/hooks/use-orchard-queries';
-import { useInvalidateOrchardData } from '@/lib/hooks/use-orchard-queries';
+import { useOrchardActivityLogs, useOrchardTrees, useSpecificCacheInvalidation } from '@/lib/hooks/use-orchard-queries';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { LogDetailModal } from "@/components/modals/log-detail-modal";
 import { FollowUpModal, type FollowUpResult } from "@/components/modals/follow-up-modal";
@@ -55,10 +54,10 @@ export function ScheduledActivitiesView({}: ScheduledActivitiesViewProps) {
   const logs = useMemo(() => logsData?.logs || [], [logsData?.logs]);
   const trees = useMemo(() => treesData?.trees || [], [treesData?.trees]);
 
-  const { invalidateActivityLogs } = useInvalidateOrchardData();
+  const { invalidateSpecificActivityLogs } = useSpecificCacheInvalidation();
 
   const handleRefresh = async () => {
-    await invalidateActivityLogs(currentOrchardId);
+    await invalidateSpecificActivityLogs(currentOrchardId);
   };
 
   const isLoading = isLoadingLogs || isLoadingTrees;

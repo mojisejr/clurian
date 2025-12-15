@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOrchard } from "@/components/providers/orchard-provider";
 import { useOrchardTrees } from '@/lib/hooks/use-orchard-queries';
-import { useInvalidateOrchardData } from '@/lib/hooks/use-orchard-queries';
+import { useSpecificCacheInvalidation } from '@/lib/hooks/use-orchard-queries';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { TreeCard } from "@/components/tree-card";
 import { TreeCardSkeleton } from "@/components/ui/tree-card-skeleton";
@@ -42,7 +42,7 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
     }
   });
 
-  const { invalidateTrees } = useInvalidateOrchardData();
+  const { invalidateSpecificTrees } = useSpecificCacheInvalidation();
 
   const trees = treesData?.trees || [];
   const pagination = treesData?.pagination;
@@ -50,7 +50,7 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
   const totalPages = pagination?.totalPages || 0;
 
   const handleRefresh = async () => {
-    await invalidateTrees(currentOrchardId);
+    await invalidateSpecificTrees(currentOrchardId);
   };
 
   const clearFilters = () => {
