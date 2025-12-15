@@ -23,7 +23,7 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
   const { currentOrchardId, updateTree, addTree, addLog, updateLogs } = useOrchard();
 
   // Fetch logs using React Query
-  const { data: logsData, isLoading: isLoadingLogs } = useOrchardActivityLogs(currentOrchardId, {
+  const { data: logsData } = useOrchardActivityLogs(currentOrchardId, {
     page: 1,
     limit: 1000 // Get all logs for tree history
   });

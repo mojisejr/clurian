@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import type { Tree } from "@/lib/types";
 import { useSearchParams, useRouter } from 'next/navigation';
 
@@ -54,7 +54,7 @@ function DashboardContent() {
       searchTerm: searchTerm || undefined
     }
   });
-  const trees = treesData?.trees || [];
+  const trees = useMemo(() => treesData?.trees || [], [treesData?.trees]);
 
   const searchParams = useSearchParams();
   const router = useRouter();

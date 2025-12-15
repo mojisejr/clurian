@@ -28,7 +28,7 @@ export function TreeHistorySection({ tree, onLogClick }: TreeHistorySectionProps
     page: 1,
     limit: 1000 // Get all logs for tree history
   });
-  const logs = logsData?.logs || [];
+  const logs = useMemo(() => logsData?.logs || [], [logsData?.logs]);
   
   // History Filter State
   const [historyTab, setHistoryTab] = useState<'all' | 'batch' | 'followup'>('all');

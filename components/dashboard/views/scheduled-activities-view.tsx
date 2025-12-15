@@ -52,8 +52,8 @@ export function ScheduledActivitiesView({}: ScheduledActivitiesViewProps) {
     filters: {}
   });
 
-  const logs = logsData?.logs || [];
-  const trees = treesData?.trees || [];
+  const logs = useMemo(() => logsData?.logs || [], [logsData?.logs]);
+  const trees = useMemo(() => treesData?.trees || [], [treesData?.trees]);
 
   const { invalidateActivityLogs } = useInvalidateOrchardData();
 

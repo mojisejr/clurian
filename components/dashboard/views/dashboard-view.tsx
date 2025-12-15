@@ -30,9 +30,7 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
 
   const {
     currentOrchard,
-    currentOrchardId,
-    addTree,
-    updateTree
+    currentOrchardId
   } = useOrchard();
 
   const { data: treesData, isLoading, error, refetch } = useOrchardTrees(currentOrchardId, {
