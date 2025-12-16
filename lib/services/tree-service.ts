@@ -3,7 +3,6 @@ import { Tree, TreeStatus } from '@/lib/types';
 import { treeStatusToUI, treeStatusFromUI } from '@/lib/domain/mappers';
 import { addZoneToOrchard } from './orchard-service';
 import { handleServiceError } from '@/lib/errors';
-import { sortTrees } from '@/lib/utils/tree-sorting';
 
 export async function createTree(data: Tree): Promise<Tree | null> {
   try {
@@ -112,95 +111,13 @@ export async function getOrchardTrees(
         searchTerm?: string;
     }
 ) {
-    try {
-        const skip = (page - 1) * limit;
+    // Import the database-level sorting implementation
+    const { getOrchardTreesSorted } = await import('./tree-service-db');
 
-        // Build where clause
-        const where: Record<string, unknown> = { orchardId };
-
-        if (filters?.status) {
-            where.status = filters.status;
-        }
-
-        if (filters?.zone) {
-            where.zone = filters.zone;
-        }
-
-        if (filters?.searchTerm) {
-            (where as Record<string, unknown>).OR = [
-                { code: { contains: filters.searchTerm, mode: 'insensitive' } },
-                { variety: { contains: filters.searchTerm, mode: 'insensitive' } }
-            ];
-        }
-
-        // Execute queries in parallel for efficiency
-        const [trees, total] = await Promise.all([
-            prisma.tree.findMany({
-                where,
-                select: {
-                    id: true,
-                    orchardId: true,
-                    code: true,
-                    zone: true,
-                    type: true,
-                    variety: true,
-                    plantedDate: true,
-                    status: true,
-                    createdAt: true,
-                    updatedAt: true
-                },
-                orderBy: [
-                    { status: 'asc' }, // Basic ordering, will be refined below
-                    { code: 'asc' }
-                ],
-                skip,
-                take: limit
-            }),
-            prisma.tree.count({ where })
-        ]);
-
-        const totalPages = Math.ceil(total / limit);
-
-        // Convert to Tree objects and apply proper sorting
-        const treeObjects: Tree[] = trees.map(tree => ({
-            id: tree.id,
-            orchardId: tree.orchardId,
-            code: tree.code,
-            zone: tree.zone,
-            type: tree.type,
-            variety: tree.variety,
-            plantedDate: tree.plantedDate?.toISOString().split('T')[0] || undefined,
-            status: treeStatusToUI(tree.status),
-            createdAt: tree.createdAt.toISOString(),
-            updatedAt: tree.updatedAt.toISOString()
-        }));
-
-        // Apply proper sorting logic
-        const sortedTrees = sortTrees(treeObjects);
-
-        return {
-            trees: sortedTrees,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages,
-                hasNext: page < totalPages,
-                hasPrev: page > 1
-            }
-        };
-    } catch (error) {
-        handleServiceError(error, 'getOrchardTrees');
-        return {
-            trees: [],
-            pagination: {
-                page,
-                limit,
-                total: 0,
-                totalPages: 0,
-                hasNext: false,
-                hasPrev: false
-            }
-        };
-    }
+    return getOrchardTreesSorted({
+        orchardId,
+        page,
+        limit,
+        filters
+    });
 }
