@@ -6,6 +6,7 @@ import * as treeService from '@/lib/services/tree-service';
 import * as activityService from '@/lib/services/activity-service';
 import * as dashboardService from '@/lib/services/dashboard-service';
 import { requireAuth } from '@/lib/auth-helpers';
+import { convertUIStatusToDB } from '@/lib/domain/status-utils';
 
 export async function getOrchards() {
   const userId = await requireAuth();
@@ -66,7 +67,7 @@ export async function getOrchardTreesServer(
 ) {
   await requireAuth();
   return treeService.getOrchardTrees(orchardId, page, limit, {
-    status: filters?.status?.toUpperCase() as 'HEALTHY' | 'SICK' | 'DEAD' | 'ARCHIVED',
+    status: convertUIStatusToDB(filters?.status),
     zone: filters?.zone,
     searchTerm: filters?.searchTerm
   });
