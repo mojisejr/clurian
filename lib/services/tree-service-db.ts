@@ -25,33 +25,37 @@ export async function getOrchardTreesSorted(options: GetOrchardTreesOptions) {
     try {
         // Use raw SQL with parameter binding for security
         const queryParams: (string | number | boolean)[] = [];
-        let paramIndex = 1;
+        const whereParts = [];
 
-        // Build WHERE conditions
-        const whereConditions = [`t."orchardId" = $${paramIndex++}`];
+        // Always filter by orchardId
+        whereParts.push(`t."orchardId" = $1`);
         queryParams.push(orchardId);
+        let paramIndex = 2;
 
         if (filters?.status) {
-            whereConditions.push(`t.status = $${paramIndex++}`);
+            whereParts.push(`t.status = $${paramIndex}`);
             queryParams.push(filters.status);
+            paramIndex++;
         }
 
         if (filters?.zone) {
-            whereConditions.push(`t.zone = $${paramIndex++}`);
+            whereParts.push(`t.zone = $${paramIndex}`);
             queryParams.push(filters.zone);
+            paramIndex++;
         }
 
         if (filters?.searchTerm) {
-            whereConditions.push(`(
-                t.code ILIKE $${paramIndex++}
-                OR t.variety ILIKE $${paramIndex++}
-            )`);
+            whereParts.push(`(t.code ILIKE $${paramIndex} OR t.variety ILIKE $${paramIndex + 1})`);
             queryParams.push(`%${filters.searchTerm}%`, `%${filters.searchTerm}%`);
+            paramIndex += 2;
         }
 
-        const whereClause = whereConditions.join(' AND ');
+        const whereClause = whereParts.join(' AND ');
 
-        // Main query with proper sorting
+        // Build query with proper parameter numbers
+        const limitParam = paramIndex;
+        const offsetParam = paramIndex + 1;
+
         const query = `
             SELECT
                 t.id,
@@ -74,20 +78,16 @@ export async function getOrchardTreesSorted(options: GetOrchardTreesOptions) {
                     WHEN 'ARCHIVED' THEN 4
                     ELSE 5
                 END,
-                -- Extract prefix (everything before the numbers)
                 CASE
                     WHEN t.code ~ '^[A-Za-z]+' THEN SUBSTRING(t.code FROM '^[A-Za-z]+')
                     ELSE ''
                 END,
-                -- Extract and sort by number (handle edge cases)
                 CASE
                     WHEN t.code ~ '[0-9]' THEN CAST(REGEXP_REPLACE(t.code, '[^0-9]', '') AS INTEGER)
                     ELSE 999999
                 END,
-                -- Finally sort by the full code as tiebreaker
                 t.code
-            LIMIT $${paramIndex++}
-            OFFSET $${paramIndex++}
+            LIMIT $${limitParam} OFFSET $${offsetParam}
         `;
 
         // Count query
