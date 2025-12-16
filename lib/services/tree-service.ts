@@ -133,9 +133,15 @@ export async function getOrchardTrees(
             ];
         }
 
-        // Execute queries in parallel for efficiency
-        const [trees, total] = await Promise.all([
-            prisma.tree.findMany({
+        // Get total count first
+        const total = await prisma.tree.count({ where });
+        const totalPages = Math.ceil(total / limit);
+
+        // For small datasets (< 1000 trees), fetch all and sort client-side
+        // For larger datasets, we'd need database-level sorting
+        if (total <= 1000) {
+            // Fetch all trees for this orchard
+            const allTrees = await prisma.tree.findMany({
                 where,
                 select: {
                     id: true,
@@ -148,20 +154,64 @@ export async function getOrchardTrees(
                     status: true,
                     createdAt: true,
                     updatedAt: true
-                },
-                orderBy: [
-                    { status: 'asc' }, // Basic ordering, will be refined below
-                    { code: 'asc' }
-                ],
-                skip,
-                take: limit
-            }),
-            prisma.tree.count({ where })
-        ]);
+                }
+            });
 
-        const totalPages = Math.ceil(total / limit);
+            // Convert to Tree objects with proper date formatting
+            const treeObjects: Tree[] = allTrees.map(tree => ({
+                id: tree.id,
+                orchardId: tree.orchardId,
+                code: tree.code,
+                zone: tree.zone,
+                type: tree.type,
+                variety: tree.variety,
+                plantedDate: tree.plantedDate?.toISOString().split('T')[0] || undefined,
+                status: treeStatusToUI(tree.status),
+                createdAt: tree.createdAt.toISOString(),
+                updatedAt: tree.updatedAt.toISOString()
+            }));
 
-        // Convert to Tree objects and apply proper sorting
+            // Sort all trees on the client side
+            const sortedTrees = sortTrees(treeObjects);
+
+            // Apply pagination to sorted results
+            const startIndex = (page - 1) * limit;
+            const endIndex = startIndex + limit;
+            const paginatedTrees = sortedTrees.slice(startIndex, endIndex);
+
+            return {
+                trees: paginatedTrees,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    totalPages,
+                    hasNext: page < totalPages,
+                    hasPrev: page > 1
+                }
+            };
+        }
+
+        // For large datasets, fall back to database pagination without sorting
+        const trees = await prisma.tree.findMany({
+            where,
+            skip,
+            take: limit,
+            select: {
+                id: true,
+                orchardId: true,
+                code: true,
+                zone: true,
+                type: true,
+                variety: true,
+                plantedDate: true,
+                status: true,
+                createdAt: true,
+                updatedAt: true
+            }
+        });
+
+        // Convert to Tree objects with proper date formatting
         const treeObjects: Tree[] = trees.map(tree => ({
             id: tree.id,
             orchardId: tree.orchardId,
@@ -175,7 +225,7 @@ export async function getOrchardTrees(
             updatedAt: tree.updatedAt.toISOString()
         }));
 
-        // Apply proper sorting logic
+        // Sort trees on the client side using the sortTrees utility
         const sortedTrees = sortTrees(treeObjects);
 
         return {

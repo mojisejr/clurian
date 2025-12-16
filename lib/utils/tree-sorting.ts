@@ -3,7 +3,7 @@ import type { Tree } from '@/lib/types';
 /**
  * Extract numeric part from tree code (e.g., "T100" -> 100, "M50" -> 50)
  */
-function extractNumberFromCode(code: string): number {
+export function extractNumberFromCode(code: string): number {
   const match = code.match(/(\d+)/);
   return match ? parseInt(match[1], 10) : 0;
 }
@@ -11,7 +11,7 @@ function extractNumberFromCode(code: string): number {
 /**
  * Extract prefix from tree code (e.g., "T100" -> "T", "M50" -> "M")
  */
-function extractPrefixFromCode(code: string): string {
+export function extractPrefixFromCode(code: string): string {
   const match = code.match(/^([A-Za-z]+)/);
   return match ? match[1] : '';
 }
@@ -19,21 +19,22 @@ function extractPrefixFromCode(code: string): string {
 /**
  * Define priority for tree status
  */
-function getStatusPriority(status: string): number {
+export function getStatusPriority(status: string): number {
   switch (status) {
-    case 'SICK': return 1;    // Highest priority - need attention
-    case 'HEALTHY': return 2;  // Normal
-    case 'DEAD': return 3;     // Low priority
-    case 'ARCHIVED': return 4; // Lowest priority
+    case 'sick': return 1;     // Highest priority - need attention (UI lowercase)
+    case 'SICK': return 1;     // Direct database value
+    case 'healthy': return 2;  // Normal (UI lowercase)
+    case 'HEALTHY': return 2;  // Direct database value
+    case 'dead': return 3;     // Low priority (UI lowercase)
+    case 'DEAD': return 3;     // Direct database value
+    case 'archived': return 4; // Lowest priority (UI lowercase)
+    case 'ARCHIVED': return 4; // Direct database value
     default: return 5;
   }
 }
 
 /**
- * Sort trees by:
- * 1. Status priority (SICK first, then HEALTHY, etc.)
- * 2. Tree code prefix alphabetically
- * 3. Tree code number numerically
+ * Sort trees by status priority, then by code prefix, then by code number
  */
 export function sortTrees(trees: Tree[]): Tree[] {
   return [...trees].sort((a, b) => {
@@ -45,16 +46,15 @@ export function sortTrees(trees: Tree[]): Tree[] {
       return statusPriorityA - statusPriorityB;
     }
 
-    // If status is the same, sort by tree code
+    // If status is the same, sort by code prefix (alphabetically)
     const prefixA = extractPrefixFromCode(a.code);
     const prefixB = extractPrefixFromCode(b.code);
 
-    // First by prefix alphabetically
     if (prefixA !== prefixB) {
       return prefixA.localeCompare(prefixB);
     }
 
-    // Then by number numerically
+    // If prefix is the same, sort by code number (numerically)
     const numberA = extractNumberFromCode(a.code);
     const numberB = extractNumberFromCode(b.code);
 
