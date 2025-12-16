@@ -4,6 +4,9 @@
 ```
 /impl [task description] [issue-number]
 /impl [issue-number]
+/impl full issue <number>          # Autonomous mode - run all phases automatically
+/impl autonomous issue <number>   # Alternative name for autonomous mode
+/impl phase <n> of issue <number> # Run specific phase only
 ```
 
 ## Implementation Workflow (TDD Red-Green-Refactor)
@@ -93,6 +96,65 @@
 - Use Task tool with subagent_type='Explore' for codebase exploration
 - Use Task tool with subagent_type='Plan' for architecture planning
 - Run agents in parallel when possible for efficiency
+
+### 🤖 Autonomous Mode (NEW - /impl full)
+When using `/impl full issue <number>`:
+
+#### Autonomous Workflow
+1. **Phase 0: Load Issue**
+   - Parse GitHub issue for requirements
+   - Extract implementation phases
+   - Validate prerequisites
+
+2. **Phase Loop (Automatic)**
+   For each phase in the issue:
+   - **Call TDD Autonomous Implementer Agent**
+     - RED: Write failing tests
+     - GREEN: Implement minimal code
+     - REFACTOR: Apply best practices
+     - Validate 100% test pass rate
+   - **Call Auto-Fix Code Reviewer Agent**
+     - Review all code changes
+     - Auto-fix minor issues
+     - Report critical issues only
+   - **Continue to next phase** or stop if critical block
+
+3. **Phase Final: Complete**
+   - **Call GitHub Reporter Agent**
+     - Generate retrospective report
+     - Create commit message
+     - Update GitHub issue
+   - **Return final report** to user
+   - Wait for user decision: /approve-merge, /rollback, /report
+
+#### Autonomous Agent Orchestration
+```typescript
+// Main Agent coordination logic
+async function runAutonomousImplementation(issueNumber: number) {
+  const issue = await loadGitHubIssue(issueNumber);
+  const phases = extractPhases(issue);
+
+  for (const phase of phases) {
+    // Implement phase
+    await callAgent('tdd-autonomous-implementer', phase);
+
+    // Review and fix
+    await callAgent('auto-fix-reviewer', phase);
+
+    // Report progress
+    reportProgress(phase);
+  }
+
+  // Generate final report
+  await callAgent('github-reporter', { issueNumber, phases });
+}
+```
+
+#### Error Recovery in Autonomous Mode
+- **Minor errors**: Auto-retry with different approach
+- **Build failures**: Stop and report issue
+- **Test failures**: Debug and fix automatically
+- **Critical blocks**: Stop and ask for human decision
 
 ### 📊 Continuous Progress Tracking
 - Use TodoWrite tool to track Red-Green-Refactor phases
