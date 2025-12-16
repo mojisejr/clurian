@@ -26,7 +26,7 @@ export interface BatchProgress {
 export type BatchProgressCallback = (progress: BatchProgress) => void;
 
 export class BatchPDFGenerator {
-  private readonly TREES_PER_PAGE = 8; // Optimized for A4 page layout
+  private readonly TREES_PER_PAGE = 6; // Optimized for A4 page layout (2x3 grid)
   public readonly DEFAULT_BATCH_SIZE = 50;
   public readonly MAX_BATCH_SIZE = 100;
   private readonly MEMORY_WARNING_THRESHOLD = 80; // 80%

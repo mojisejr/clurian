@@ -23,15 +23,16 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 15,
+    gap: 20, // Increased gap for better spacing
+    justifyContent: 'space-between', // Better distribution
   },
   card: {
-    width: '48%', // 2 cards per row approx
-    height: 200,
+    width: '48%', // 2 cards per row with better spacing
+    height: 210, // Slightly increased height for better proportions
     border: '1px solid #e2e8f0',
     borderRadius: 8,
     padding: 20,
-    marginBottom: 10,
+    marginBottom: 15, // Increased bottom margin
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
@@ -144,7 +145,7 @@ interface OrchardQRDocumentProps {
 }
 
 export const OrchardQRDocument = ({ trees, orchardName, logoUrl }: OrchardQRDocumentProps) => {
-  const TREES_PER_PAGE = 8; // Optimized for A4 page layout (2x4 grid)
+  const TREES_PER_PAGE = 6; // Optimized for A4 page layout (2x3 grid)
 
   // Split trees into pages with proper distribution
   const pages: typeof trees[] = [];
