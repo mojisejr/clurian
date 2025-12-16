@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOrchard } from "@/components/providers/orchard-provider";
 import { useOrchardTrees } from '@/lib/hooks/use-orchard-queries';
-import { useInvalidateOrchardData } from '@/lib/hooks/use-orchard-queries';
+import { useSpecificCacheInvalidation } from '@/lib/hooks/use-orchard-queries';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { TreeCard } from "@/components/tree-card";
 import { TreeCardSkeleton } from "@/components/ui/tree-card-skeleton";
@@ -42,15 +42,28 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
     }
   });
 
-  const { invalidateTrees } = useInvalidateOrchardData();
+  // Fetch ALL trees for PDF export (ignoring pagination)
+  const { data: allTreesData } = useOrchardTrees(currentOrchardId, {
+    page: 1,
+    limit: 10000, // Get all trees for export
+    filters: {
+      // Apply same filters for export consistency
+      zone: filterZone !== 'ALL' ? filterZone : undefined,
+      status: filterStatus !== 'ALL' ? filterStatus : undefined,
+      searchTerm: searchTerm || undefined,
+    }
+  });
+
+  const { invalidateSpecificTrees } = useSpecificCacheInvalidation();
 
   const trees = treesData?.trees || [];
+  const allTrees = allTreesData?.trees || []; // All trees for PDF export
   const pagination = treesData?.pagination;
   const totalTrees = pagination?.total || 0;
   const totalPages = pagination?.totalPages || 0;
 
   const handleRefresh = async () => {
-    await invalidateTrees(currentOrchardId);
+    await invalidateSpecificTrees(currentOrchardId);
   };
 
   const clearFilters = () => {
@@ -278,9 +291,8 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
       <PDFGeneratorModal
         isOpen={isPDFModalOpen}
         onClose={() => setIsPDFModalOpen(false)}
-        // For PDF export, we'll need all trees, not just current page
-        // This is a limitation for now - in Phase 2 we'll implement proper export
-        trees={trees}
+        // Use ALL trees for PDF export (not just current page)
+        trees={allTrees}
         orchardName={currentOrchard?.name || ''}
         logoBase64={logoBase64}
       />

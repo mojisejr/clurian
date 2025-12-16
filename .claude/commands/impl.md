@@ -133,6 +133,12 @@ Bash git checkout staging
 
 # OPTIONAL: Create feature branch FROM staging:
 Bash git checkout -b feature/task-123-description
+
+# MANDATORY: Ensure .tmp folder exists for temporary files
+Bash mkdir -p .tmp
+
+# MANDATORY: Ensure .tmp/ is in .gitignore
+Bash grep -q "^\.tmp/$" .gitignore || echo ".tmp/" >> .gitignore
 ```
 
 #### Step 2: TDD Execution Flow
@@ -242,6 +248,15 @@ Closes #123"
 - **ALWAYS use TypeScript strict mode**
 - **ALWAYS use Prisma for database operations**
 - **ALWAYS validate with orchard domain knowledge**
+- **TEMPORARY FILES POLICY: ALWAYS use .tmp/ folder ONLY**
+- **NEVER create temporary files in project root or other folders**
+- **ALWAYS ensure .tmp/ exists before creating temporary files**
+- **ALWAYS ensure .tmp/ is in .gitignore**
+- **ALWAYS clean up .tmp/ folder after operation completion**
+
+## Response Format
+When completing /impl workflow, use response template from:
+`.claude/templates/impl-response.md`
 
 ## Success Criteria:
 - All tests written first (RED phase confirmed)

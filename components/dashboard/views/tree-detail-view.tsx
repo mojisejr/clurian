@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import type { Tree, Log } from "@/lib/types";
 import { useOrchard } from "@/components/providers/orchard-provider";
-import { useOrchardActivityLogs } from "@/lib/hooks/use-orchard-queries";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
@@ -21,13 +20,6 @@ interface TreeDetailViewProps {
 
 export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
   const { currentOrchardId, updateTree, addTree, addLog, updateLogs } = useOrchard();
-
-  // Fetch logs using React Query
-  const { data: logsData } = useOrchardActivityLogs(currentOrchardId, {
-    page: 1,
-    limit: 1000 // Get all logs for tree history
-  });
-  const logs = logsData?.logs || [];
 
   // Local State
   const [isAddingLog, setIsAddingLog] = useState(false);
@@ -77,7 +69,6 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
   const handleFollowUpSubmit = (result: { type: 'cured' | 'continue', note: string, nextDate?: string }) => {
     if (!followUpLog) return;
     const today = new Date().toISOString().split('T')[0];
-    const updatedAllLogs = logs.map(l => l.id === followUpLog.id ? { ...l, status: 'COMPLETED' as const } : l);
 
     if (result.type === 'cured') {
         const cureLog: Log = {
@@ -92,8 +83,12 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
             createdAt: new Date().toISOString()
         } as Log;
 
+        // First update the original log to COMPLETED
+        updateLogs([{ ...followUpLog, status: 'COMPLETED' as const }]);
+        // Then add the cure log
+        addLog(cureLog);
+
         if (followUpLog.treeId) updateTree(followUpLog.treeId, { status: 'healthy' });
-        updateLogs([cureLog, ...updatedAllLogs]);
     } else {
         const continueLog: Log = {
             id: `temp-${Date.now()}`,
@@ -107,7 +102,11 @@ export function TreeDetailView({ tree, onBack }: TreeDetailViewProps) {
             followUpDate: result.nextDate,
             createdAt: new Date().toISOString()
         } as Log;
-        updateLogs([continueLog, ...updatedAllLogs]);
+
+        // First update the original log to COMPLETED
+        updateLogs([{ ...followUpLog, status: 'COMPLETED' as const }]);
+        // Then add the continue log
+        addLog(continueLog);
     }
     setFollowUpLog(null);
   };

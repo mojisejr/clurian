@@ -474,3 +474,54 @@ export function useRecentActivityLogs(orchardId: string, limit = 10) {
     refetchInterval: 60 * 1000, // Refresh every minute
   });
 }
+
+/**
+ * Hook for specific cache invalidation that doesn't trigger orchard-wide refetching
+ * This prevents the orchard switching overlay from appearing during refresh
+ */
+export function useSpecificCacheInvalidation() {
+  const queryClient = useQueryClient();
+
+  return {
+    invalidateSpecificTrees: (orchardId: string, filters?: Record<string, unknown>) => {
+      // Invalidate ONLY trees queries without affecting orchardData
+      if (filters) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.orchardTrees(orchardId, filters) });
+      } else {
+        // Invalidate all tree queries for this orchard using predicate
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            return Array.isArray(key) &&
+                   key.includes('orchard') &&
+                   key.includes(orchardId) &&
+                   key.includes('trees');
+          }
+        });
+      }
+      // NOTE: We do NOT invalidate orchardData here to avoid triggering the overlay
+    },
+    invalidateSpecificActivityLogs: (orchardId: string, filters?: Record<string, unknown>) => {
+      // Invalidate ONLY activity logs queries without affecting orchardData
+      if (filters) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.orchardActivityLogs(orchardId, filters) });
+      } else {
+        // Invalidate all activity log queries for this orchard using predicate
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            return Array.isArray(key) &&
+                   key.includes('orchard') &&
+                   key.includes(orchardId) &&
+                   key.includes('logs');
+          }
+        });
+      }
+      // NOTE: We do NOT invalidate orchardData here to avoid triggering the overlay
+    },
+    invalidateSpecificDashboard: (orchardId: string, userId: string) => {
+      // Invalidate ONLY dashboard stats without affecting orchardData
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(orchardId, userId) });
+    }
+  };
+}

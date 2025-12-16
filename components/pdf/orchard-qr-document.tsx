@@ -23,15 +23,16 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 15,
+    gap: 20, // Increased gap for better spacing
+    justifyContent: 'space-between', // Better distribution
   },
   card: {
-    width: '48%', // 2 cards per row approx
-    height: 180,
+    width: '48%', // 2 cards per row with better spacing
+    height: 210, // Slightly increased height for better proportions
     border: '1px solid #e2e8f0',
     borderRadius: 8,
     padding: 20,
-    marginBottom: 10,
+    marginBottom: 15, // Increased bottom margin
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
@@ -91,14 +92,40 @@ const styles = StyleSheet.create({
     minWidth: 50,
     textAlign: 'center'
   },
+  runningNumber: {
+    position: 'absolute',
+    top: 15,
+    left: 15,
+    backgroundColor: '#3b82f6',
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    padding: '4 8',
+    borderRadius: 4,
+    minWidth: 20,
+    textAlign: 'center'
+  },
   logo: {
     position: 'absolute',
     bottom: 15,
     right: 15,
-    width: 40, 
+    width: 40,
     height: 20, // Approximate aspect ratio, will fit object-contain usually if supported, or manual sizing
     objectFit: 'contain',
     opacity: 0.8
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    textAlign: 'center' as const,
+    borderTop: '1pt solid #e2e8f0',
+    paddingTop: 8
+  },
+  footerText: {
+    fontSize: 8,
+    color: '#94a3b8'
   }
 });
 
@@ -109,53 +136,80 @@ interface OrchardQRDocumentProps {
     variety: string;
     zone: string;
     plantedDate?: string;
-    url: string; 
-    qrDataUrl?: string; 
+    url: string;
+    qrDataUrl?: string;
+    runningNumber?: number;
   }[];
   orchardName: string;
   logoUrl?: string;
 }
 
-export const OrchardQRDocument = ({ trees, orchardName, logoUrl }: OrchardQRDocumentProps) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.grid}>
-        {trees.map((tree, index) => (
-          <View key={index} style={styles.card} wrap={false}>
-            {/* Zone Badge */}
-            <Text style={styles.zoneBadge}>Zone {tree.zone}</Text>
-            
-            {/* Left: QR */}
-            <View style={styles.qrSection}>
-              {tree.qrDataUrl ? (
-                // eslint-disable-next-line jsx-a11y/alt-text
-                <Image src={tree.qrDataUrl} style={styles.qrImage} />
-              ) : (
-                <Text style={{fontSize: 8}}>QR</Text>
-              )}
-            </View>
+export const OrchardQRDocument = ({ trees, orchardName, logoUrl }: OrchardQRDocumentProps) => {
+  const TREES_PER_PAGE = 6; // Optimized for A4 page layout (2x3 grid)
 
-            {/* Right: Info */}
-            <View style={styles.infoSection}>
-              <Text style={styles.orchardName}>{orchardName}</Text>
-              <Text style={styles.treeCode}>{tree.code}</Text>
-              <Text style={styles.treeDetails}>{tree.type}</Text>
-              <Text style={styles.treeDetails}>{tree.variety}</Text>
-              {tree.plantedDate && (
-                  <Text style={styles.plantedDate}>Planted: {tree.plantedDate}</Text>
-              )}
-            </View>
+  // Split trees into pages with proper distribution
+  const pages: typeof trees[] = [];
+  for (let i = 0; i < trees.length; i += TREES_PER_PAGE) {
+    pages.push(trees.slice(i, i + TREES_PER_PAGE));
+  }
 
-            {/* Brand/Logo */}
-            {logoUrl ? (
-                 // eslint-disable-next-line jsx-a11y/alt-text
-                 <Image src={logoUrl} style={styles.logo} />
-            ) : (
-                 <Text style={{...styles.logo, fontSize: 10, width: 'auto', height: 'auto'}}>Clurian</Text>
-            )}
+  return (
+    <Document>
+      {pages.map((pageTrees, pageIndex) => (
+        <Page key={pageIndex} size="A4" style={styles.page}>
+          <View style={styles.grid}>
+            {pageTrees.map((tree, index) => (
+              <View key={`${pageIndex}-${index}`} style={styles.card} wrap={false}>
+                {/* Running Number */}
+                {tree.runningNumber && (
+                  <Text style={styles.runningNumber}>{tree.runningNumber}</Text>
+                )}
+
+                {/* Zone Badge */}
+                <Text style={styles.zoneBadge}>Zone {tree.zone}</Text>
+
+                {/* Left: QR */}
+                <View style={styles.qrSection}>
+                  {tree.qrDataUrl ? (
+                    // eslint-disable-next-line jsx-a11y/alt-text
+                    <Image src={tree.qrDataUrl} style={styles.qrImage} />
+                  ) : (
+                    <Text style={{fontSize: 8}}>QR</Text>
+                  )}
+                </View>
+
+                {/* Right: Info */}
+                <View style={styles.infoSection}>
+                  <Text style={styles.orchardName}>{orchardName}</Text>
+                  <Text style={styles.treeCode}>{tree.code}</Text>
+                  <Text style={styles.treeDetails}>{tree.type}</Text>
+                  <Text style={styles.treeDetails}>{tree.variety}</Text>
+                  {tree.plantedDate && (
+                      <Text style={styles.plantedDate}>Planted: {tree.plantedDate}</Text>
+                  )}
+                </View>
+
+                {/* Brand/Logo */}
+                {logoUrl ? (
+                     // eslint-disable-next-line jsx-a11y/alt-text
+                     <Image src={logoUrl} style={styles.logo} />
+                ) : (
+                     <Text style={{...styles.logo, fontSize: 10, width: 'auto', height: 'auto'}}>Clurian</Text>
+                )}
+              </View>
+            ))}
           </View>
-        ))}
-      </View>
-    </Page>
-  </Document>
-);
+
+          {/* Page Footer */}
+          {pages.length > 1 && (
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>
+                Page {pageIndex + 1} of {pages.length}
+              </Text>
+            </View>
+          )}
+        </Page>
+      ))}
+    </Document>
+  );
+};

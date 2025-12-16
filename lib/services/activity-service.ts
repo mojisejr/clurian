@@ -74,13 +74,13 @@ export async function getOrchardActivityLogs(
             logs: logs.map(log => ({
                 id: log.id,
                 orchardId: orchardId,
-                logType: log.logType.toLowerCase() as Log['logType'],
+                logType: log.logType as Log['logType'],
                 treeId: log.treeId || undefined,
                 targetZone: log.targetZone || undefined,
                 action: log.action,
                 note: log.note || '',
                 performDate: log.performDate.toISOString().split('T')[0],
-                status: log.status.toLowerCase() as Log['status'],
+                status: log.status as Log['status'],
                 followUpDate: log.followUpDate?.toISOString().split('T')[0] || null,
                 createdAt: log.createdAt.toISOString()
             })) as Log[],
@@ -145,13 +145,13 @@ export async function getUpcomingFollowUps(orchardId: string, limit: number = 10
         return logs.map(log => ({
             id: log.id,
             orchardId: orchardId,
-            logType: log.logType.toLowerCase() as Log['logType'],
+            logType: log.logType as Log['logType'],
             treeId: log.treeId || undefined,
             targetZone: log.targetZone || undefined,
             action: log.action,
             note: log.note || '',
             performDate: log.performDate.toISOString().split('T')[0],
-            status: log.status.toLowerCase() as Log['status'],
+            status: log.status as Log['status'],
             followUpDate: log.followUpDate?.toISOString().split('T')[0] || null,
             tree: log.tree ? {
                 id: log.tree.id,
