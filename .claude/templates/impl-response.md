@@ -1,68 +1,68 @@
-## 🚀 Implementation: {{TASK_TITLE}}
+## ✅ {{TASK_TITLE}} - เสร็จแล้ว
 
-### Phase 0: Analysis & Planning ✅
-- Requirements analyzed: {{REQUIREMENT_COUNT}} items
-- Dependencies identified: {{DEPENDENCY_COUNT}} items
-- Success criteria defined: {{SUCCESS_CRITERIA}}
-- Risk assessment completed: {{RISK_LEVEL}}
+### 📊 สรุปเลย
+- **สิ่งที่ทำ**: {{SUMMARY_OF_CHANGES}}
+- **เวลาที่ใช้**: {{DURATION}}
+- **Branch**: `{{BRANCH_NAME}}`
+- **สถานะ**: ✅ ผ่าน QA ทุกขั้นตอน
 
-### Phase 1: RED - Testing ✅
-- Tests written: {{TEST_COUNT}} files
-- Test coverage: {{TEST_COVERAGE}}%
-- Test files created: {{TEST_FILES_LIST}}
-- All tests confirmed FAILING: ✅
+### 🔍 ทำอะไรบ้าง
+{{#if TEST_FILES_CREATED}}
+**Tests ก่อน (Red Phase)**:
+- เขียนไป: {{TEST_FILES_CREATED}} ไฟล์
+- Cover: {{TEST_COVERAGE}}%
+{{/if}}
 
-### Phase 2: GREEN - Implementation ✅
-- Files created/modified: {{FILE_COUNT}}
-- Lines of code: {{LOC_COUNT}}
-- Key components implemented: {{KEY_COMPONENTS}}
-- All tests PASSING: ✅
+**Implementation (Green Phase)**:
+- Files: {{FILES_MODIFIED}}
+- LOC: {{LOC_COUNT}}
+- สิ่งสำคัญที่ implement:
+{{#each KEY_COMPONENTS}}
+  - {{this}}
+{{/each}}
 
-### Phase 3: REFACTOR - Code Quality ✅
-- Code optimizations applied: {{OPTIMIZATION_COUNT}}
-- Performance improvements: {{PERFORMANCE_GAINS}}
-- Code quality improvements: {{QUALITY_IMPROVEMENTS}}
-- Maintained 100% test pass rate: ✅
+{{#if REFACTOR_DONE}}
+**Refactor (Blue Phase)**:
+- Optimize: {{OPTIMIZATIONS_COUNT}}
+- Performance up: {{PERFORMANCE_GAIN}}
+{{/if}}
 
-### Phase 4: QA - Final Validation ✅
-- **Build**: ✅ PASS
-- **Lint**: ✅ PASS ({{LINT_ERRORS}} errors)
-- **Test**: ✅ PASS ({{TEST_PASSED}}/{{TEST_TOTAL}})
-- **TypeScript**: ✅ PASS
-- **Coverage**: {{FINAL_COVERAGE}}%
+### ✅ QA Results
+| Check | Status | Details |
+|-------|--------|---------|
+| Build | ✅ PASS | - |
+| Lint | ✅ PASS | {{LINT_ERRORS}} errors |
+| Test | ✅ PASS | {{TEST_PASSED}}/{{TEST_TOTAL}} |
+| TypeScript | ✅ PASS | - |
 
-### 📦 Summary
-- **Changes committed to**: `{{BRANCH_NAME}}`
-- **Duration**: {{DURATION}}
-- **Features implemented**: {{FEATURE_COUNT}}
-- **Bugs fixed**: {{BUG_COUNT}}
-{{#if PR_URL}}- **Ready for review**: [PR Link]({{PR_URL}}){{/if}}
+### 💥 Breaking Changes?
+{{#if HAS_BREAKING_CHANGES}}
+**มี breaking changes**:
+{{#each BREAKING_CHANGES}}
+- {{this}}
+{{/each}}
+**ต้อง migrate**: {{MIGRATION_NOTE}}
+{{else}}
+❌ ไม่มี breaking changes
+{{/if}}
 
-### 🔍 Technical Details
+### 📁 Files ที่เปลี่ยน
 <details>
-<summary>Files Modified</summary>
+<summary>Click to expand</summary>
 
 {{FILES_MODIFIED_LIST}}
 </details>
 
-<details>
-<summary>Test Results</summary>
+### 🎯 ต่อไปทำอะไร
+1. {{NEXT_STEP_1}}
+2. {{NEXT_STEP_2}}
+{{#if PR_URL}}
+3. Review PR: {{PR_URL}}
+{{/if}}
 
-{{TEST_RESULTS_DETAILS}}
-</details>
-
-### 🎯 Next Steps
-1. Review implementation
-2. Run manual tests if required
-3. Deploy to staging when ready
-4. Monitor performance metrics
-
-### 📊 Metrics
-- **Development velocity**: {{VELOCITY_METRIC}}
-- **Code quality score**: {{QUALITY_SCORE}}
-- **Test efficiency**: {{TEST_EFFICIENCY}}
+### 🤔 ที่น่าสังเกต
+- {{NOTE_1}}
+- {{#if NOTE_2}}- {{NOTE_2}}{{/if}}
 
 ---
-
-*Generated using Clurian Response Templates System*
-*ภาษาไทย support enabled*
+**All done!** ✨ พร้อมใช้งานแล้ว

@@ -1,89 +1,62 @@
-## ❌ Error Report
+## ❌ Error: {{ERROR_TYPE}}
 
-### Error Type: {{ERROR_TYPE}}
-- **Severity**: {{SEVERITY_LEVEL}} (High/Medium/Low)
-- **Category**: {{ERROR_CATEGORY}}
-- **Timestamp**: {{ERROR_TIMESTAMP}}
-
-### 📍 File Location
-- **File**: `{{FILE_PATH}}:{{LINE_NUMBER}}`
+### 📍 เกิดอะไรขึ้น
+- **ไฟล์**: `{{FILE_PATH}}:{{LINE_NUMBER}}`
 - **Function**: {{FUNCTION_NAME}}
-- **Component**: {{COMPONENT_NAME}}
+- **Severity**: {{SEVERITY_LEVEL}} (สูง/กลาง/ต่ำ)
 
-### 🔍 Error Analysis
+### 🔍 ข้อความ error
 ```bash
 {{ERROR_COMMAND}}
 ```
 
-**Error Message:**
 ```
 {{ERROR_MESSAGE}}
 ```
 
-### 🔧 Solution Applied
-{{#if ROOT_CAUSE}}
-#### Root Cause
-{{ROOT_CAUSE}}
-{{/if}}
+### 💥 กระทบอะไรบ้าง
+- **Feature**: {{AFFECTED_FEATURES}}
+- **User**: {{USER_IMPACT}}
+- **Data**: {{DATA_IMPACT}}
 
-#### Fix Implementation
-{{SOLUTION_DESCRIPTION}}
+### 🔧 แก้ยังไง
+**Root cause**: {{ROOT_CAUSE}}
 
-**Files Modified:**
+**Solution**: {{SOLUTION_DESCRIPTION}}
+
+**Files ที่ต้องแก้**:
 {{#if FILES_MODIFIED}}
-- `{{FILES_MODIFIED}}`
+{{#each FILES_MODIFIED}}
+- `{{this}}`
+{{/each}}
 {{/if}}
 
-### ✅ Verification
-- [ ] Build passes: `npm run build`
-- [ ] Lint passes: `npm run lint`
-- [ ] Tests pass: `npm test`
-- [ ] TypeScript passes: `npx tsc --noEmit`
-- [ ] Manual testing completed
+### ✅ Check แล้ว
+- [x] Build: `npm run build`
+- [x] Lint: `npm run lint`
+- [x] Test: `npm test`
+- [x] TypeScript: `npx tsc --noEmit`
 
-### 🔄 Rollback Plan
 {{#if ROLLBACK_AVAILABLE}}
-**Rollback Commands:**
+### 🔙 ถ้าแก้ไม่ได้
 ```bash
 {{ROLLBACK_COMMANDS}}
 ```
 {{/if}}
 
-### 📊 Impact Assessment
-- **Affected Features**: {{AFFECTED_FEATURES}}
-- **User Impact**: {{USER_IMPACT}}
-- **Data Impact**: {{DATA_IMPACT}}
-- **Performance Impact**: {{PERFORMANCE_IMPACT}}
-
-### 🚨 Prevention Measures
+### 🛡️ ป้องกันให้ไม่เกิดอีก
 {{#if PREVENTION_STEPS}}
-#### Steps to Prevent Recurrence
-{{PREVENTION_STEPS}}
+- {{PREVENTION_STEPS}}
 {{/if}}
 
-{{#if MONITORING_NEEDED}}
-#### Monitoring Required
-- **Metrics to watch**: {{MONITORING_METRICS}}
-- **Alert thresholds**: {{ALERT_THRESHOLDS}}
-{{/if}}
-
-### 📋 Additional Context
+### 📝 ข้อสังเกต
 {{#if ADDITIONAL_CONTEXT}}
 {{ADDITIONAL_CONTEXT}}
 {{/if}}
 
-### 🎯 Next Steps
-1. **Immediate**: {{IMMEDIATE_NEXT_STEPS}}
-2. **Short-term**: {{SHORT_TERM_ACTIONS}}
-3. **Long-term**: {{LONG_TERM_IMPROVEMENTS}}
-
-### 📚 Related Issues
-{{#if RELATED_ISSUES}}
-- Related issue: #{{RELATED_ISSUES}}
-- Duplicate of: #{{DUPLICATE_ISSUES}}
-{{/if}}
+### 🎯 ต่อไปทำอะไร
+1. **ทันที**: {{IMMEDIATE_NEXT_STEPS}}
+2. **ถ้ามีเวลา**: {{SHORT_TERM_ACTIONS}}
 
 ---
-
-*Error report generated using Clurian Error Template*
-*ภาษาไทย support enabled*
+**Fixed!** ✅ พร้อมใช้งานแล้ว
