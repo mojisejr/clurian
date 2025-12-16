@@ -103,4 +103,39 @@ describe('Domain Integration Tests', () => {
     expect(orchard?.logs).toHaveLength(1)
     expect(orchard?.trees[0].code).toBe('A01')
   })
+
+  describe('Tree Sorting Utilities', () => {
+    it('should extract number from tree code correctly', async () => {
+      const { extractNumberFromCode } = await import('../lib/utils/tree-sorting')
+
+      expect(extractNumberFromCode('T1')).toBe(1)
+      expect(extractNumberFromCode('T100')).toBe(100)
+      expect(extractNumberFromCode('M50')).toBe(50)
+      expect(extractNumberFromCode('A001')).toBe(1)
+      expect(extractNumberFromCode('B')).toBe(0)
+      expect(extractNumberFromCode('C123TEST')).toBe(123)
+    })
+
+    it('should extract prefix from tree code correctly', async () => {
+      const { extractPrefixFromCode } = await import('../lib/utils/tree-sorting')
+
+      expect(extractPrefixFromCode('T1')).toBe('T')
+      expect(extractPrefixFromCode('M50')).toBe('M')
+      expect(extractPrefixFromCode('A100')).toBe('A')
+      expect(extractPrefixFromCode('ABC123')).toBe('ABC')
+      expect(extractPrefixFromCode('123')).toBe('')
+    })
+
+    it('should get status priority correctly', async () => {
+      const { getStatusPriority } = await import('../lib/utils/tree-sorting')
+
+      expect(getStatusPriority('SICK')).toBe(1)
+      expect(getStatusPriority('HEALTHY')).toBe(2)
+      expect(getStatusPriority('DEAD')).toBe(3)
+      expect(getStatusPriority('ARCHIVED')).toBe(4)
+      expect(getStatusPriority('UNKNOWN')).toBe(5)
+    })
+
+    // Note: sortTrees tests removed as sorting is now handled at database level
+  })
 })

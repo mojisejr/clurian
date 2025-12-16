@@ -5,11 +5,11 @@ import { sortTrees, assignRunningNumbers } from '../../lib/utils/tree-sorting';
 describe('Tree Code Sorting', () => {
   it('should sort tree codes numerically, not alphabetically', () => {
     const unsortedTrees: Tree[] = [
-      { id: '1', code: 'T100', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'HEALTHY', orchardId: '1', plantedDate: '2024-01-01' },
-      { id: '2', code: 'T2', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'HEALTHY', orchardId: '1', plantedDate: '2024-01-01' },
-      { id: '3', code: 'T10', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'HEALTHY', orchardId: '1', plantedDate: '2024-01-01' },
-      { id: '4', code: 'T1', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'HEALTHY', orchardId: '1', plantedDate: '2024-01-01' },
-      { id: '5', code: 'T20', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'HEALTHY', orchardId: '1', plantedDate: '2024-01-01' },
+      { id: '1', code: 'T100', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'healthy', orchardId: '1', plantedDate: '2024-01-01' },
+      { id: '2', code: 'T2', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'healthy', orchardId: '1', plantedDate: '2024-01-01' },
+      { id: '3', code: 'T10', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'healthy', orchardId: '1', plantedDate: '2024-01-01' },
+      { id: '4', code: 'T1', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'healthy', orchardId: '1', plantedDate: '2024-01-01' },
+      { id: '5', code: 'T20', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'healthy', orchardId: '1', plantedDate: '2024-01-01' },
     ];
 
     const sorted = sortTrees(unsortedTrees);
@@ -22,10 +22,10 @@ describe('Tree Code Sorting', () => {
 
   it('should handle mixed prefix codes', () => {
     const unsortedTrees: Tree[] = [
-      { id: '1', code: 'M100', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'HEALTHY', orchardId: '1', plantedDate: '2024-01-01' },
-      { id: '2', code: 'T2', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'HEALTHY', orchardId: '1', plantedDate: '2024-01-01' },
-      { id: '3', code: 'M10', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'HEALTHY', orchardId: '1', plantedDate: '2024-01-01' },
-      { id: '4', code: 'T1', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'HEALTHY', orchardId: '1', plantedDate: '2024-01-01' },
+      { id: '1', code: 'M100', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'healthy', orchardId: '1', plantedDate: '2024-01-01' },
+      { id: '2', code: 'T2', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'healthy', orchardId: '1', plantedDate: '2024-01-01' },
+      { id: '3', code: 'M10', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'healthy', orchardId: '1', plantedDate: '2024-01-01' },
+      { id: '4', code: 'T1', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'healthy', orchardId: '1', plantedDate: '2024-01-01' },
     ];
 
     const sorted = sortTrees(unsortedTrees);
@@ -37,17 +37,17 @@ describe('Tree Code Sorting', () => {
 
   it('should prioritize sick trees in sorting', () => {
     const unsortedTrees: Tree[] = [
-      { id: '1', code: 'T1', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'HEALTHY', orchardId: '1', plantedDate: '2024-01-01' },
-      { id: '2', code: 'T2', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'SICK', orchardId: '1', plantedDate: '2024-01-01' },
-      { id: '3', code: 'T3', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'HEALTHY', orchardId: '1', plantedDate: '2024-01-01' },
-      { id: '4', code: 'T4', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'DEAD', orchardId: '1', plantedDate: '2024-01-01' },
+      { id: '1', code: 'T1', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'healthy', orchardId: '1', plantedDate: '2024-01-01' },
+      { id: '2', code: 'T2', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'sick', orchardId: '1', plantedDate: '2024-01-01' },
+      { id: '3', code: 'T3', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'healthy', orchardId: '1', plantedDate: '2024-01-01' },
+      { id: '4', code: 'T4', zone: 'A', type: 'มะม่วง', variety: 'หมอนทอง', status: 'dead', orchardId: '1', plantedDate: '2024-01-01' },
     ];
 
     const sorted = sortTrees(unsortedTrees);
     const codes = sorted.map(t => `${t.code} (${t.status})`);
 
     // Expected: SICK first, then HEALTHY, then DEAD/ARCHIVED
-    expect(codes).toEqual(['T2 (SICK)', 'T1 (HEALTHY)', 'T3 (HEALTHY)', 'T4 (DEAD)']);
+    expect(codes).toEqual(['T2 (sick)', 'T1 (healthy)', 'T3 (healthy)', 'T4 (dead)']);
   });
 });
 
