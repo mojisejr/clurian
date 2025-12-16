@@ -67,6 +67,11 @@ This command is for analysis, discussion, planning, and exploration WITHOUT any 
 ```
 
 ## Transition to Implementation:
+## Response Format
+When completing /discuss workflow, use response template from:
+`.claude/templates/discuss-response.md`
+
+## Transition to Implementation
 When discussion is complete and you're ready to implement:
 ```
 /impl [task description]

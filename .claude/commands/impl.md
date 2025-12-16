@@ -243,6 +243,10 @@ Closes #123"
 - **ALWAYS use Prisma for database operations**
 - **ALWAYS validate with orchard domain knowledge**
 
+## Response Format
+When completing /impl workflow, use response template from:
+`.claude/templates/impl-response.md`
+
 ## Success Criteria:
 - All tests written first (RED phase confirmed)
 - Implementation makes all tests pass (GREEN phase)
