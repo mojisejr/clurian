@@ -3,6 +3,7 @@ import { Tree, TreeStatus } from '@/lib/types';
 import { treeStatusToUI, treeStatusFromUI } from '@/lib/domain/mappers';
 import { addZoneToOrchard } from './orchard-service';
 import { handleServiceError } from '@/lib/errors';
+import { sortTrees } from '@/lib/utils/tree-sorting';
 
 export async function createTree(data: Tree): Promise<Tree | null> {
   try {
@@ -91,7 +92,7 @@ export async function getTreeById(treeId: string) {
             zone: tree.zone,
             type: tree.type,
             variety: tree.variety,
-            plantedDate: tree.plantedDate?.toISOString().split('T')[0] || null,
+            plantedDate: tree.plantedDate?.toISOString().split('T')[0] || undefined,
             status: treeStatusToUI(tree.status),
             createdAt: tree.createdAt.toISOString()
         } as Tree;
@@ -145,10 +146,11 @@ export async function getOrchardTrees(
                     variety: true,
                     plantedDate: true,
                     status: true,
-                    createdAt: true
+                    createdAt: true,
+                    updatedAt: true
                 },
                 orderBy: [
-                    { status: 'asc' }, // Show sick trees first
+                    { status: 'asc' }, // Basic ordering, will be refined below
                     { code: 'asc' }
                 ],
                 skip,
@@ -159,18 +161,25 @@ export async function getOrchardTrees(
 
         const totalPages = Math.ceil(total / limit);
 
+        // Convert to Tree objects and apply proper sorting
+        const treeObjects: Tree[] = trees.map(tree => ({
+            id: tree.id,
+            orchardId: tree.orchardId,
+            code: tree.code,
+            zone: tree.zone,
+            type: tree.type,
+            variety: tree.variety,
+            plantedDate: tree.plantedDate?.toISOString().split('T')[0] || undefined,
+            status: treeStatusToUI(tree.status),
+            createdAt: tree.createdAt.toISOString(),
+            updatedAt: tree.updatedAt.toISOString()
+        }));
+
+        // Apply proper sorting logic
+        const sortedTrees = sortTrees(treeObjects);
+
         return {
-            trees: trees.map(tree => ({
-                id: tree.id,
-                orchardId: tree.orchardId,
-                code: tree.code,
-                zone: tree.zone,
-                type: tree.type,
-                variety: tree.variety,
-                plantedDate: tree.plantedDate?.toISOString().split('T')[0] || null,
-                status: treeStatusToUI(tree.status),
-                createdAt: tree.createdAt.toISOString()
-            })) as Tree[],
+            trees: sortedTrees,
             pagination: {
                 page,
                 limit,

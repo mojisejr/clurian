@@ -2,6 +2,7 @@ import { pdf } from '@react-pdf/renderer';
 import { OrchardQRDocument } from '@/components/pdf/orchard-qr-document';
 import QRCode from 'qrcode';
 import JSZip from 'jszip';
+import { getSortedTreesForPDF } from './tree-sorting';
 import type { Tree } from '@/lib/types';
 
 export interface QRItem extends Tree {
@@ -196,7 +197,9 @@ export class BatchPDFGenerator {
     orchardName: string,
     logoBase64: string
   ): Promise<Blob> {
-    const qrData = await this.generateQRCodes(batch);
+    // Apply proper sorting and assign running numbers
+    const sortedTrees = getSortedTreesForPDF(batch);
+    const qrData = await this.generateQRCodes(sortedTrees);
 
     try {
       const doc = OrchardQRDocument({

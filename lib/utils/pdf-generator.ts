@@ -1,6 +1,7 @@
 import { pdf } from '@react-pdf/renderer';
 import { OrchardQRDocument } from '@/components/pdf/orchard-qr-document';
 import QRCode from 'qrcode';
+import { getSortedTreesForPDF } from './tree-sorting';
 import type { Tree } from '@/lib/types';
 
 interface QRItem extends Tree {
@@ -26,12 +27,15 @@ export async function generatePDFBlob(
     throw new Error('No trees to generate PDF for');
   }
 
+  // Apply proper sorting and assign running numbers
+  const sortedTrees = getSortedTreesForPDF(trees);
+
   // Generate QR codes for all trees
   const qrData: QRItem[] = [];
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://clurian.vercel.app';
 
-  for (let i = 0; i < trees.length; i++) {
-    const tree = trees[i];
+  for (let i = 0; i < sortedTrees.length; i++) {
+    const tree = sortedTrees[i];
     const treeDetailPath = `/dashboard?treeId=${tree.id}`;
     const loginUrl = `${baseUrl}/login?redirect=${encodeURIComponent(treeDetailPath)}`;
 
@@ -50,7 +54,7 @@ export async function generatePDFBlob(
 
       // Report progress
       if (onProgress) {
-        onProgress(i + 1, trees.length);
+        onProgress(i + 1, sortedTrees.length);
       }
     } catch (error) {
       console.error(`Failed to generate QR for tree ${tree.code}:`, error);

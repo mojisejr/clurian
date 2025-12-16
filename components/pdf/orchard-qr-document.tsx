@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '48%', // 2 cards per row approx
-    height: 180,
+    height: 200,
     border: '1px solid #e2e8f0',
     borderRadius: 8,
     padding: 20,
@@ -91,6 +91,19 @@ const styles = StyleSheet.create({
     minWidth: 50,
     textAlign: 'center'
   },
+  runningNumber: {
+    position: 'absolute',
+    top: 15,
+    left: 15,
+    backgroundColor: '#3b82f6',
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    padding: '4 8',
+    borderRadius: 4,
+    minWidth: 20,
+    textAlign: 'center'
+  },
   logo: {
     position: 'absolute',
     bottom: 15,
@@ -122,8 +135,9 @@ interface OrchardQRDocumentProps {
     variety: string;
     zone: string;
     plantedDate?: string;
-    url: string; 
-    qrDataUrl?: string; 
+    url: string;
+    qrDataUrl?: string;
+    runningNumber?: number;
   }[];
   orchardName: string;
   logoUrl?: string;
@@ -132,7 +146,7 @@ interface OrchardQRDocumentProps {
 export const OrchardQRDocument = ({ trees, orchardName, logoUrl }: OrchardQRDocumentProps) => {
   const TREES_PER_PAGE = 8; // Optimized for A4 page layout (2x4 grid)
 
-  // Split trees into pages
+  // Split trees into pages with proper distribution
   const pages: typeof trees[] = [];
   for (let i = 0; i < trees.length; i += TREES_PER_PAGE) {
     pages.push(trees.slice(i, i + TREES_PER_PAGE));
@@ -145,6 +159,11 @@ export const OrchardQRDocument = ({ trees, orchardName, logoUrl }: OrchardQRDocu
           <View style={styles.grid}>
             {pageTrees.map((tree, index) => (
               <View key={`${pageIndex}-${index}`} style={styles.card} wrap={false}>
+                {/* Running Number */}
+                {tree.runningNumber && (
+                  <Text style={styles.runningNumber}>{tree.runningNumber}</Text>
+                )}
+
                 {/* Zone Badge */}
                 <Text style={styles.zoneBadge}>Zone {tree.zone}</Text>
 
