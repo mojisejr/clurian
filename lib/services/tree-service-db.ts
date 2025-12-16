@@ -24,7 +24,7 @@ export async function getOrchardTreesSorted(options: GetOrchardTreesOptions) {
 
     try {
         // Use raw SQL with parameter binding for security
-        const queryParams: any[] = [];
+        const queryParams: (string | number | boolean)[] = [];
         let paramIndex = 1;
 
         // Build WHERE conditions
@@ -106,11 +106,22 @@ export async function getOrchardTreesSorted(options: GetOrchardTreesOptions) {
             prisma.$queryRawUnsafe(countQuery, ...queryParams.slice(0, -2)) // Don't include limit/offset for count
         ]);
 
-        const total = Number((totalResult as any[])[0]?.total || 0);
+        const total = Number((totalResult as { total: number }[])[0]?.total || 0);
         const totalPages = Math.ceil(total / limit);
 
         // Convert to Tree objects
-        const trees: Tree[] = (treesResult as any[]).map(tree => ({
+        const trees: Tree[] = (treesResult as {
+            id: string;
+            orchardId: string;
+            code: string;
+            zone: string;
+            type: string;
+            variety: string;
+            planted_date?: Date;
+            status: string;
+            created_at: Date;
+            updated_at: Date;
+        }[]).map(tree => ({
             id: tree.id,
             orchardId: tree.orchardId,
             code: tree.code,

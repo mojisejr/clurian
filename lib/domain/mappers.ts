@@ -5,7 +5,7 @@ import { Tree as PrismaTree, ActivityLog as PrismaLog, TreeStatus as PrismaTreeS
 export type UITreeStatus = 'healthy' | 'sick' | 'dead' | 'archived';
 
 // Convert from Database (uppercase) to UI (lowercase)
-export const treeStatusToUI = (status: TreeStatus | PrismaTreeStatus): UITreeStatus => {
+export const treeStatusToUI = (status: TreeStatus | PrismaTreeStatus | string): UITreeStatus => {
   return status.toLowerCase() as UITreeStatus;
 };
 

@@ -26,6 +26,11 @@ export type {
   WorkflowInput
 } from './main-agent.js'
 
+// Type imports
+import { mainAgent } from './main-agent.js'
+import { agentContext } from './agent-context.js'
+import type { WorkflowInput } from './main-agent.js'
+
 // Convenience exports
 export const agents = {
   // Create new workflow
@@ -49,4 +54,4 @@ export const agents = {
 }
 
 // Type re-export
-export type { WorkflowInput } from './main-agent'
+// WorkflowInput already exported above

@@ -1,3 +1,7 @@
+import fs from 'fs'
+import fsPromises from 'fs/promises'
+import path from 'path'
+
 /**
  * Agent Context Management System
  *
@@ -125,7 +129,7 @@ class AgentContextManager {
     const filename = `checkpoint-${checkpoint.agentId}.json`
     const filepath = `${this.tmpContextPath}/${filename}`
 
-    await fs.writeFile(filepath, JSON.stringify(checkpoint, null, 2))
+    await fsPromises.writeFile(filepath, JSON.stringify(checkpoint, null, 2))
   }
 
   async loadCheckpoint(agentId: string): Promise<Checkpoint | null> {
@@ -133,7 +137,7 @@ class AgentContextManager {
     const filepath = `${this.tmpContextPath}/${filename}`
 
     try {
-      const content = await fs.readFile(filepath, 'utf-8')
+      const content = await fsPromises.readFile(filepath, 'utf-8')
       return JSON.parse(content)
     } catch {
       return null
@@ -199,13 +203,13 @@ tags: #agent/${entry.agentId} #completed #${date} ${entry.success ? '#success' :
     // เขียนลง folder 01-รวมงานที่ทำ
     const filename = `${date} ${entry.title.replace(/[/\\?%*:|"<>]/g, '-')}.md`
     const filepath = `${this.longTermPath}/01-รวมงานที่ทำ/${filename}`
-    await fs.writeFile(filepath, content)
+    await fsPromises.writeFile(filepath, content)
 
     // ถ้ามี learnings พิเศษ เก็บไว้ใน 02-สิ่งที่เรียนรู้
     if (entry.learnings.some(l => l.includes('เรียนรู้'))) {
       const learningFilename = `${date} Learning from ${entry.title}.md`
       const learningPath = `${this.longTermPath}/02-สิ่งที่เรียนรู้/${learningFilename}`
-      await fs.writeFile(learningPath, content)
+      await fsPromises.writeFile(learningPath, content)
     }
   }
 
@@ -250,7 +254,7 @@ tags: #agent/${entry.agentId} #completed #${date} ${entry.success ? '#success' :
 
     // Delete checkpoint
     try {
-      await fs.unlink(`${this.tmpContextPath}/checkpoint-${task.agentId}.json`)
+      await fsPromises.unlink(`${this.tmpContextPath}/checkpoint-${task.agentId}.json`)
     } catch {
       // Ignore if file doesn't exist
     }
@@ -258,13 +262,13 @@ tags: #agent/${entry.agentId} #completed #${date} ${entry.success ? '#success' :
 
   async cleanup(): Promise<void> {
     // Clean up old checkpoints (older than 1 hour)
-    const files = await fs.readdir(this.tmpContextPath)
+    const files = await fsPromises.readdir(this.tmpContextPath)
     for (const file of files) {
       if (file.startsWith('checkpoint-')) {
         const filepath = `${this.tmpContextPath}/${file}`
-        const stats = await fs.stat(filepath)
+        const stats = await fsPromises.stat(filepath)
         if (Date.now() - stats.mtime.getTime() > 60 * 60 * 1000) {
-          await fs.unlink(filepath)
+          await fsPromises.unlink(filepath)
         }
       }
     }
@@ -293,8 +297,8 @@ tags: #agent/${entry.agentId} #completed #${date} ${entry.success ? '#success' :
     return {
       activeTasks: this.tasks.size,
       agentStates: this.agentStates.size,
-      tmpFiles: (await fs.readdir(this.tmpContextPath)).length,
-      longTermFiles: (await fs.readdir(`${this.longTermPath}/01-รวมงานที่ทำ`)).length
+      tmpFiles: (await fsPromises.readdir(this.tmpContextPath)).length,
+      longTermFiles: (await fsPromises.readdir(`${this.longTermPath}/01-รวมงานที่ทำ`)).length
     }
   }
 }
@@ -303,4 +307,4 @@ tags: #agent/${entry.agentId} #completed #${date} ${entry.success ? '#success' :
 export const agentContext = new AgentContextManager()
 
 // Export for use in agents
-export type { AgentTask, AgentProgress, Checkpoint, LearningEntry }
+// Types are already exported above

@@ -364,4 +364,4 @@ export class MainAgent {
 export const mainAgent = new MainAgent()
 
 // Export for direct use
-export { WorkflowInput }
+// WorkflowInput is already exported above

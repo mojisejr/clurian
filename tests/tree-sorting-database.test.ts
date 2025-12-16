@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
 import { prisma } from '@/lib/prisma';
 import { getOrchardTrees } from '@/lib/services/tree-service';
-import { TreeStatus } from '@/lib/types';
+import { TreeStatus } from '@prisma/client';
 
 describe('Tree Sorting in Database', () => {
   let orchardId: string;
@@ -243,7 +243,7 @@ describe('Tree Sorting in Database', () => {
         zone: 'A',
         type: 'MANGO',
         variety: 'Nam Dok Mai',
-        status: i % 2 === 0 ? 'HEALTHY' : 'SICK',
+        status: i % 2 === 0 ? TreeStatus.HEALTHY : TreeStatus.SICK,
       });
     }
 

@@ -296,4 +296,4 @@ class AgentOrchestrator {
 export const orchestrator = new AgentOrchestrator()
 
 // Export types
-export type { AgentDefinition, TaskDefinition }
+// AgentDefinition and TaskDefinition are already exported above
