@@ -18,7 +18,7 @@ interface BatchPDFExportModalProps {
   logoBase64: string;
 }
 
-type ModalState = 'idle' | 'configuring' | 'generating' | 'ready' | 'error';
+type ModalState = 'idle' | 'configuring' | 'generating' | 'ready' | 'error' | 'cancelled';
 type ExportMode = 'zip' | 'individual';
 
 export function BatchPDFExportModal({
@@ -32,6 +32,7 @@ export function BatchPDFExportModal({
   const [progress, setProgress] = useState<BatchProgress | null>(null);
   const [error, setError] = useState<string>('');
   const [zipBlob, setZipBlob] = useState<Blob | null>(null);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
 
   // Configuration options
   const [batchSize, setBatchSize] = useState<number>(50);
@@ -60,8 +61,11 @@ export function BatchPDFExportModal({
   // Initialize modal state
   useEffect(() => {
     if (isOpen && trees.length > 0) {
-      setState(batchGenerator.shouldUseBatchProcessing(trees.length) ? 'configuring' : 'idle');
-      setProcessingInfo(batchGenerator.getProcessingInfo(trees.length));
+      const useBatch = batchGenerator.shouldUseBatchProcessing(trees.length);
+      const info = batchGenerator.getProcessingInfo(trees.length);
+
+      setState(useBatch ? 'configuring' : 'idle');
+      setProcessingInfo(info);
       setError('');
       setZipBlob(null);
       setProgress(null);
@@ -69,6 +73,9 @@ export function BatchPDFExportModal({
   }, [isOpen, trees.length, batchGenerator]);
 
   const handleGenerate = useCallback(async () => {
+    const controller = new AbortController();
+    setAbortController(controller);
+
     setState('generating');
     setError('');
     setProgress(null);
@@ -78,20 +85,46 @@ export function BatchPDFExportModal({
         trees,
         batchSize,
         (progressData) => {
+          // Check if operation was cancelled
+          if (controller.signal.aborted) {
+            throw new Error('Operation cancelled by user');
+          }
           setProgress(progressData);
         },
         orchardName,
         logoBase64
       );
 
+      // Check if cancelled after completion
+      if (controller.signal.aborted) {
+        setState('cancelled');
+        return;
+      }
+
       setZipBlob(blob);
       setState('ready');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to generate PDF';
-      setError(errorMessage);
-      setState('error');
+      if (controller.signal.aborted || err instanceof Error && err.message === 'Operation cancelled by user') {
+        setState('cancelled');
+        setError('การสร้าง PDF ถูกยกเลิก');
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to generate PDF';
+        setError(errorMessage);
+        setState('error');
+      }
+    } finally {
+      setAbortController(null);
     }
   }, [trees, batchSize, orchardName, logoBase64, batchGenerator]);
+
+  const handleCancel = () => {
+    if (abortController) {
+      abortController.abort();
+    }
+    batchGenerator.cleanup();
+    setState('cancelled');
+    setError('การสร้าง PDF ถูกยกเลิก');
+  };
 
   const handleDownload = useCallback(() => {
     if (!zipBlob) return;
@@ -114,9 +147,13 @@ export function BatchPDFExportModal({
   };
 
   const handleClose = () => {
+    if (abortController) {
+      abortController.abort();
+    }
     if (zipBlob) {
       URL.revokeObjectURL(URL.createObjectURL(zipBlob));
     }
+    batchGenerator.cleanup();
     onClose();
   };
 
@@ -333,6 +370,18 @@ export function BatchPDFExportModal({
               </div>
             </div>
           )}
+
+          {state === 'cancelled' && (
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                <AlertCircle className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-medium text-yellow-700">การสร้าง PDF ถูกยกเลิก</p>
+                <p className="text-sm text-muted-foreground">{error}</p>
+              </div>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
@@ -349,8 +398,8 @@ export function BatchPDFExportModal({
           )}
 
           {state === 'generating' && (
-            <Button variant="outline" onClick={handleClose}>
-              ยกเลิก
+            <Button variant="destructive" onClick={handleCancel}>
+              หยุดการสร้าง
             </Button>
           )}
 
@@ -372,6 +421,17 @@ export function BatchPDFExportModal({
                 ปิด
               </Button>
               <Button onClick={handleRetry}>
+                ลองใหม่
+              </Button>
+            </>
+          )}
+
+          {state === 'cancelled' && (
+            <>
+              <Button variant="outline" onClick={handleClose}>
+                ปิด
+              </Button>
+              <Button onClick={handleGenerate}>
                 ลองใหม่
               </Button>
             </>

@@ -55,7 +55,8 @@ export function PDFGeneratorModal({ isOpen, onClose, trees, orchardName, logoBas
   useEffect(() => {
     if (isOpen && trees.length > 0) {
       // Check if we need batch processing
-      if (batchGenerator.shouldUseBatchProcessing(trees.length)) {
+      const shouldUseBatch = batchGenerator.shouldUseBatchProcessing(trees.length);
+      if (shouldUseBatch) {
         setShowBatchModal(true);
       } else {
         generatePDF();
