@@ -57,7 +57,7 @@ export function validateTreeVariety(variety: unknown): boolean {
 
   // Check if it's an English name that maps to a Thai variety
   const thaiName = englishToThai[normalized];
-  if (thaiName && DURIAN_VARIETIES.includes(thaiName as any)) {
+  if (thaiName && DURIAN_VARIETIES.includes(thaiName as typeof DURIAN_VARIETIES[number])) {
     return true;
   }
 
@@ -117,7 +117,7 @@ export function validateChemicalFormula(formula: unknown): boolean {
   const trimmed = formula.trim();
 
   // Check if it's in the predefined list
-  if (FERTILIZER_FORMULAS.includes(trimmed as any)) return true;
+  if (FERTILIZER_FORMULAS.includes(trimmed as typeof FERTILIZER_FORMULAS[number])) return true;
 
   // Validate NPK format: three numbers separated by dashes
   const npkRegex = /^(\d{1,2})-(\d{1,2})-(\d{1,2})$/;
@@ -184,7 +184,7 @@ export function validatePaginationParams(params: {
 export function validateLogAction(action: unknown): boolean {
   if (typeof action !== 'string') return false;
 
-  return LOG_ACTIONS.includes(action.trim() as any);
+  return LOG_ACTIONS.includes(action.trim() as typeof LOG_ACTIONS[number]);
 }
 
 /**
@@ -278,25 +278,25 @@ export function validateFollowUpDate(date: unknown): boolean {
 export function validateTreeCodes(codes: unknown[]): boolean {
   if (!Array.isArray(codes)) return false;
 
-  return codes.every(code => validateTreeCode(code));
+  return codes.every((code): code is string => validateTreeCode(code));
 }
 
 /**
  * Validates tree status (uppercase format)
  */
-export function validateTreeStatus(status: unknown): boolean {
+export function validateTreeStatus(status: unknown): status is 'HEALTHY' | 'SICK' | 'DEAD' | 'ARCHIVED' {
   if (typeof status !== 'string') return false;
 
   const validStatuses = ['HEALTHY', 'SICK', 'DEAD', 'ARCHIVED'];
-  return validStatuses.includes(status.trim());
+  return validStatuses.includes(status.trim() as 'HEALTHY' | 'SICK' | 'DEAD' | 'ARCHIVED');
 }
 
 /**
  * Validates UI tree status (lowercase format)
  */
-export function validateUITreeStatus(status: unknown): boolean {
+export function validateUITreeStatus(status: unknown): status is 'healthy' | 'sick' | 'dead' | 'archived' {
   if (typeof status !== 'string') return false;
 
   const validStatuses = ['healthy', 'sick', 'dead', 'archived'];
-  return validStatuses.includes(status.trim());
+  return validStatuses.includes(status.trim() as 'healthy' | 'sick' | 'dead' | 'archived');
 }
