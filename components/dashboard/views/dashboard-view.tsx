@@ -9,10 +9,10 @@ import { TreeCard } from "@/components/tree-card";
 import { TreeCardSkeleton } from "@/components/ui/tree-card-skeleton";
 import { Pagination } from "@/components/pagination";
 import { PDFGeneratorModal } from "@/components/modals/pdf-generator-modal";
-import { Card } from "@/components/ui/card";
+import { StatsCards } from "@/components/dashboard/StatsCards";
+import { FilterBar } from "@/components/dashboard/FilterBar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, Sprout, PlusCircle, Printer, RotateCw } from "lucide-react";
+import { Sprout, PlusCircle, RotateCw } from "lucide-react";
 
 interface DashboardViewProps {
   onViewChange: (view: 'add_tree' | 'add_batch_log' | 'tree_detail') => void;
@@ -79,9 +79,11 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
   const orchardZones = ['ALL', ...(currentOrchard?.zones || [])];
   const itemsPerPage = pagination?.limit || 100;
 
-  // Trees are already filtered on the server side
+  // Calculate stats from the paginated trees
   const sickTreesCount = trees.filter(t => t.status === 'sick').length;
-  const activeTreesCount = totalTrees;
+  const healthyTreesCount = trees.filter(t => t.status === 'healthy').length;
+  const deadTreesCount = trees.filter(t => t.status === 'dead').length;
+  const archivedTreesCount = trees.filter(t => t.status === 'archived').length;
 
   // --- Load Logo (Once) ---
   useEffect(() => {
@@ -106,16 +108,15 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
       <div className="space-y-4">
         {/* Header Stats with Refresh */}
         <div className="flex gap-4">
-          <div className="grid grid-cols-2 gap-4 flex-1">
-            <Card className="p-4 border shadow-sm">
-              <div className="text-muted-foreground text-xs">ทั้งหมดในสวนนี้</div>
-              <div className="text-2xl font-bold text-primary">{activeTreesCount} ต้น</div>
-            </Card>
-            <Card className="p-4 border shadow-sm">
-              <div className="text-muted-foreground text-xs">ต้องดูแลพิเศษ</div>
-              <div className="text-2xl font-bold text-destructive">{sickTreesCount} ต้น</div>
-            </Card>
-          </div>
+          <StatsCards
+            stats={{
+              totalTrees,
+              healthyTrees: healthyTreesCount,
+              sickTrees: sickTreesCount,
+              deadTrees: deadTreesCount,
+              archivedTrees: archivedTreesCount
+            }}
+          />
 
           {/* Refresh Button */}
           <Button
@@ -140,71 +141,19 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
       </Button>
 
       {/* Filter & Search */}
-      <Card className="p-3 space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          <Input
-            className="pl-10"
-            placeholder="ค้นหาเลขต้นหรือพันธุ์..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        <div className="flex justify-between items-center gap-2">
-          <div className="flex gap-2 flex-1">
-            {/* Zone Filter */}
-            <select
-              value={filterZone}
-              onChange={(e) => setFilterZone(e.target.value)}
-              className="text-xs px-2 py-1 border rounded"
-            >
-              {orchardZones.map(zone => (
-                <option key={zone} value={zone}>
-                  {zone === 'ALL' ? 'ทุกโซน' : `โซน ${zone}`}
-                </option>
-              ))}
-            </select>
-
-            {/* Status Filter */}
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="text-xs px-2 py-1 border rounded"
-            >
-              <option value="ALL">ทุกสถานะ</option>
-              <option value="healthy">สมบูรณ์</option>
-              <option value="sick">ป่วย</option>
-              <option value="dead">ตาย</option>
-              <option value="archived">เก็บรวบ</option>
-            </select>
-          </div>
-
-          {/* Clear Filters Button */}
-          {(filterZone !== 'ALL' || filterStatus !== 'ALL' || searchTerm) && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={clearFilters}
-              className="text-xs"
-            >
-              ล้างตัวกรอง
-            </Button>
-          )}
-
-          {/* Export PDF Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs text-muted-foreground whitespace-nowrap"
-            onClick={() => setIsPDFModalOpen(true)}
-            disabled={totalTrees === 0}
-          >
-            <Printer size={14} className="mr-1" />
-            พิมพ์ QR ({totalTrees})
-          </Button>
-        </div>
-      </Card>
+      <FilterBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        filterZone={filterZone}
+        onZoneChange={setFilterZone}
+        filterStatus={filterStatus}
+        onStatusChange={setFilterStatus}
+        onClearFilters={clearFilters}
+        onExportPDF={() => setIsPDFModalOpen(true)}
+        orchardZones={orchardZones}
+        totalTrees={totalTrees}
+        isLoading={isLoading}
+      />
 
       {/* Tree List */}
       <div className="space-y-2">
