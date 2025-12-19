@@ -25,6 +25,21 @@ vi.mock('@/app/actions/mixing-formulas', () => ({
   getMixingFormulasByOrchard: vi.fn()
 }))
 
+// Mock useOrchard
+vi.mock('@/components/providers/orchard-provider', () => ({
+  useOrchard: () => ({
+    currentOrchard: mockOrchard,
+    currentOrchardId: mockOrchard.id,
+    isLoadingOrchards: false,
+    orchards: [mockOrchard],
+    setCurrentOrchardId: vi.fn(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    addLog: vi.fn().mockResolvedValue({} as any),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    updateLogs: vi.fn().mockResolvedValue({} as any),
+  })
+}))
+
 // Mock next/navigation
 const mockPush = vi.fn()
 vi.mock('next/navigation', () => ({
@@ -74,7 +89,7 @@ describe('Dashboard - Batch Activities with Mixing Formulas', () => {
     it('ควรโหลดสูตรยาเมื่อเปิด modal สำหรับ batch log', async () => {
       const user = userEvent.setup()
 
-      render(<Dashboard orchard={mockOrchard} />)
+      render(<DashboardPage />)
 
       // Navigate to batch activities tab
       const batchTab = screen.getByRole('tab', { name: /กิจกรรมกลุ่ม/ })
@@ -93,7 +108,7 @@ describe('Dashboard - Batch Activities with Mixing Formulas', () => {
     it('ควรส่ง mixingFormulas ไปยัง AddLogForm', async () => {
       const user = userEvent.setup()
 
-      render(<Dashboard orchard={mockOrchard} />)
+      render(<DashboardPage />)
 
       // Navigate to batch activities tab
       const batchTab = screen.getByRole('tab', { name: /กิจกรรมกลุ่ม/ })
@@ -125,7 +140,7 @@ describe('Dashboard - Batch Activities with Mixing Formulas', () => {
 
       const user = userEvent.setup()
 
-      render(<Dashboard orchard={mockOrchard} />)
+      render(<DashboardPage />)
 
       // Navigate to batch activities tab
       const batchTab = screen.getByRole('tab', { name: /กิจกรรมกลุ่ม/ })
@@ -150,7 +165,7 @@ describe('Dashboard - Batch Activities with Mixing Formulas', () => {
 
       const user = userEvent.setup()
 
-      render(<Dashboard orchard={mockOrchard} />)
+      render(<DashboardPage />)
 
       // Navigate to batch activities tab
       const batchTab = screen.getByRole('tab', { name: /กิจกรรมกลุ่ม/ })
@@ -169,7 +184,7 @@ describe('Dashboard - Batch Activities with Mixing Formulas', () => {
     it('ควบคุมสถานะ isAddingBatchLog ถูกต้อง', async () => {
       const user = userEvent.setup()
 
-      render(<Dashboard orchard={mockOrchard} />)
+      render(<DashboardPage />)
 
       // Navigate to batch activities tab
       const batchTab = screen.getByRole('tab', { name: /กิจกรรมกลุ่ม/ })

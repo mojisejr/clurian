@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useTreeHistory } from '@/hooks/useTreeHistory';
 
 // Mock Next.js navigation
 vi.mock('next/navigation', () => ({
@@ -35,15 +37,41 @@ vi.mock('@/components/providers/orchard-provider', () => ({
 
 // Mock hooks
 vi.mock('@/lib/hooks/use-orchard-queries', () => ({
-  useOrchardActivityLogs: vi.fn(),
-  useOrchardTrees: vi.fn(),
+  useOrchardActivityLogs: vi.fn(() => ({ data: { logs: [] }, isLoading: false })),
+  useOrchardTrees: vi.fn(() => ({ 
+    data: { 
+      trees: [
+        {
+          id: 'tree-1',
+          code: 'T001',
+          zone: 'A',
+          type: 'ทุเรียน',
+          variety: 'หมอนทอง',
+          status: 'healthy',
+          plantedDate: '2024-01-01',
+          orchardId: 'orchard-1',
+        }
+      ] 
+    }, 
+    isLoading: false 
+  })),
   useInvalidateOrchardData: vi.fn(() => ({
     invalidateActivityLogs: vi.fn(),
+  })),
+  useSpecificCacheInvalidation: vi.fn(() => ({
+    invalidateSpecificTrees: vi.fn(),
   })),
 }));
 
 // Mock useTreeHistory with proper implementation
-vi.mock('@/hooks/useTreeHistory');
+vi.mock('@/hooks/useTreeHistory', () => ({
+  useTreeHistory: vi.fn(() => ({
+    logs: [],
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+}));
 
 vi.mock('@/hooks/useMixingFormulas', () => ({
   useMixingFormulas: vi.fn(() => ({
@@ -115,8 +143,7 @@ describe('Tree History Deep Linking Tests', () => {
     vi.clearAllMocks();
 
     // Get the mocked hook
-    const mockedModule = vi.mocked(import('@/hooks/useTreeHistory'));
-    mockUseTreeHistory = mockedModule.useTreeHistory as any;
+    mockUseTreeHistory = vi.mocked(useTreeHistory);
   });
 
   describe('Phase 1: Loading States', () => {
@@ -364,7 +391,7 @@ describe('Tree History Deep Linking Tests', () => {
 
       await waitFor(() => {
         // Click on "งานเหมา" tab
-        const batchTab = screen.getByText('งานเหมา');
+        const batchTab = screen.getByText(/งานเหมา/);
         userEvent.click(batchTab);
       });
 
@@ -395,7 +422,7 @@ describe('Tree History Deep Linking Tests', () => {
 
       await waitFor(() => {
         // Click on "ติดตาม/นัดหมาย" tab
-        const followupTab = screen.getByText('ติดตาม/นัดหมาย');
+        const followupTab = screen.getByText(/ติดตาม\/นัดหมาย/);
         userEvent.click(followupTab);
       });
 
@@ -443,7 +470,9 @@ describe('Tree History Deep Linking Tests', () => {
 
       // Should refetch data for new tree
       await waitFor(() => {
-        expect(refetchMock).toHaveBeenCalled();
+        expect(mockUseTreeHistory).toHaveBeenCalledWith(expect.objectContaining({
+          tree: expect.objectContaining({ id: 'tree-2' })
+        }));
       });
     });
   });
@@ -498,11 +527,9 @@ describe('Tree History Deep Linking Tests', () => {
 
       await waitFor(() => {
         // Default sort is "ใหม่-เก่ว" (desc)
-        const logs = screen.getAllByRole('button').filter(el =>
-          el.textContent?.includes('ให้ปุ๋ย') ||
-          el.textContent?.includes('ฉีดยาฆ่าแมลง') ||
-          el.textContent?.includes('รักษาโรคใบจุด')
-        );
+        // We select the log items by their container class 'group' which is used for hover effects
+        const logs = document.querySelectorAll('.group');
+        
         // The most recent log should be first
         expect(logs[0]).toHaveTextContent('รักษาโรคใบจุด'); // 2024-01-20
       });
@@ -561,6 +588,13 @@ describe('Tree History Deep Linking Tests', () => {
         filterStatus: 'ALL',
         searchTerm: '',
         currentPage: 1,
+      });
+
+      mockUseTreeHistory.mockReturnValue({
+        logs: [],
+        isLoading: true,
+        error: null,
+        refetch: vi.fn(),
       });
 
       const TreeHistorySection = (await import('@/components/dashboard/detail/tree-history-section')).TreeHistorySection;

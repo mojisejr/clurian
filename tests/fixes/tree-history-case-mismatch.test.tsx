@@ -15,7 +15,10 @@ vi.mock('@/components/providers/orchard-provider', () => ({
 
 // Mock React Query hook properly
 vi.mock('@/lib/hooks/use-orchard-queries', () => ({
-  useOrchardActivityLogs: vi.fn()
+  useOrchardActivityLogs: vi.fn(),
+  useSpecificCacheInvalidation: vi.fn(() => ({
+    invalidateSpecificTrees: vi.fn(),
+  })),
 }));
 
 const mockGetOrchardActivityLogs = vi.mocked(getOrchardActivityLogs);
@@ -218,7 +221,7 @@ describe('Phase 1: Tree History Case Mismatch Tests', () => {
       vi.clearAllMocks();
       mockUseOrchard.mockReturnValue({
         currentOrchardId: 'orchard1',
-        // @ts-ignore - we only need currentOrchardId for this test
+        // @ts-expect-error - we only need currentOrchardId for this test
         orchards: [],
         isLoading: false,
         error: null,
@@ -380,7 +383,7 @@ describe('Phase 1: Tree History Case Mismatch Tests', () => {
       vi.clearAllMocks();
       mockUseOrchard.mockReturnValue({
         currentOrchardId: 'orchard1',
-        // @ts-ignore
+        // @ts-expect-error - we only need currentOrchardId for this test
         orchards: [],
         isLoading: false,
         error: null,

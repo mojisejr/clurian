@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 
 // Real-time updates hook - placeholder for WebSocket implementation
 export function useRealTimeUpdates(options: {
@@ -8,6 +8,7 @@ export function useRealTimeUpdates(options: {
   userId: string;
   enabled?: boolean;
 }) {
+  const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const reconnectAttempts = useRef(0);
@@ -29,25 +30,7 @@ export function useRealTimeUpdates(options: {
     return () => clearInterval(intervalId);
   }, [options.orchardId]);
 
-  const connect = useCallback(() => {
-    if (!options.enabled) return;
-
-    try {
-      // WebSocket connection - placeholder
-      // In production, this would connect to your WebSocket server
-      console.log(`[Real-time] Connecting to WebSocket for orchard ${options.orchardId}`);
-
-      // Fallback to polling if WebSocket is not available
-      if (typeof window !== 'undefined' && !('WebSocket' in window)) {
-        console.log('[Real-time] WebSocket not supported, falling back to polling');
-        startPolling();
-        return;
-      }
-    } catch (error) {
-      console.error('[Real-time] Failed to connect:', error);
-      handleReconnect();
-    }
-  }, [options.orchardId, options.enabled, startPolling]);
+  const connectRef = useRef<() => void>(() => {});
 
   const handleReconnect = useCallback(() => {
     if (reconnectAttempts.current >= MAX_RECONNECT_ATTEMPTS) {
@@ -63,8 +46,43 @@ export function useRealTimeUpdates(options: {
 
     reconnectTimeoutRef.current = setTimeout(() => {
       reconnectAttempts.current++;
-      connect();
+      if (connectRef.current) {
+        connectRef.current();
+      }
     }, delay);
+  }, [MAX_RECONNECT_ATTEMPTS, RECONNECT_DELAY, RECONNECT_BACKOFF]);
+
+  const connect = useCallback(() => {
+    if (!options.enabled) return;
+
+    try {
+      // WebSocket connection - placeholder
+      // In production, this would connect to your WebSocket server
+      console.log(`[Real-time] Connecting to WebSocket for orchard ${options.orchardId}`);
+
+      // Fallback to polling if WebSocket is not available
+      if (typeof window !== 'undefined' && !('WebSocket' in window)) {
+        console.log('[Real-time] WebSocket not supported, falling back to polling');
+        startPolling();
+        return;
+      }
+      
+      // Simulate connection for now since we don't have a real WebSocket server
+      setTimeout(() => {
+        setIsConnected(true);
+      }, 0);
+    } catch (error) {
+      console.error('[Real-time] Failed to connect:', error);
+      handleReconnect();
+      setTimeout(() => {
+        setIsConnected(false);
+      }, 0);
+    }
+  }, [options.orchardId, options.enabled, startPolling, handleReconnect]);
+
+  // Update ref whenever connect changes
+  useEffect(() => {
+    connectRef.current = connect;
   }, [connect]);
 
   const disconnect = useCallback(() => {
@@ -78,6 +96,7 @@ export function useRealTimeUpdates(options: {
     }
 
     reconnectAttempts.current = 0;
+    setIsConnected(false);
   }, []);
 
   useEffect(() => {
@@ -90,26 +109,26 @@ export function useRealTimeUpdates(options: {
 
   // Event handlers for different update types
   const handlers = {
-    onTreeCreated: (data: any) => {
+    onTreeCreated: (data: unknown) => {
       console.log('[Real-time] Tree created:', data);
       // Trigger cache invalidation
     },
-    onTreeUpdated: (data: any) => {
+    onTreeUpdated: (data: unknown) => {
       console.log('[Real-time] Tree updated:', data);
       // Trigger cache invalidation
     },
-    onLogCreated: (data: any) => {
+    onLogCreated: (data: unknown) => {
       console.log('[Real-time] Log created:', data);
       // Trigger cache invalidation
     },
-    onLogUpdated: (data: any) => {
+    onLogUpdated: (data: unknown) => {
       console.log('[Real-time] Log updated:', data);
       // Trigger cache invalidation
     },
   };
 
   return {
-    isConnected: wsRef.current?.readyState === WebSocket.OPEN,
+    isConnected,
     connect,
     disconnect,
     handlers,

@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
+import { OrchardContext } from '@/components/providers/orchard-provider';
 
 interface MockOrchardProviderProps {
   children: ReactNode;
@@ -55,6 +57,20 @@ const createMockOrchardProvider = (overrides: Partial<MockOrchardProviderProps> 
       isLoadingTrees,
       isLoadingOrchards,
       isFetchingOrchardData: false,
+      orchards: [],
+      totalPages: 1,
+      totalTrees: trees.length,
+      pagination: {
+        page: currentPage,
+        limit: 10,
+        total: trees.length,
+        totalPages: 1,
+        hasNext: false,
+        hasPrev: false,
+      },
+      clearFilters: vi.fn(),
+      inProgressLogsCount: 0,
+      completedLogsCount: 0,
     };
 
     return (
@@ -67,10 +83,7 @@ const createMockOrchardProvider = (overrides: Partial<MockOrchardProviderProps> 
   return MockOrchardProvider;
 };
 
-// Mock Orchard Context
-export const OrchardContext = React.createContext<any>(null);
-
-export { createMockOrchardProvider };
+export { createMockOrchardProvider, OrchardContext };
 
 // Mock hook for useOrchard
 export const useOrchard = () => {

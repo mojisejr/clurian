@@ -46,10 +46,11 @@ export function useTreeHistory({
   }, [orchardId, tree.id, enabled, refetch]);
 
   // Filter logs for this specific tree
+  const allLogs = logsData?.logs;
   const logs = useMemo(() => {
-    if (!logsData?.logs) return [];
+    if (!allLogs) return [];
 
-    return logsData.logs.filter(log => {
+    return allLogs.filter(log => {
       // Individual logs for this tree
       if (log.logType === 'INDIVIDUAL' && log.treeId === tree.id) {
         return true;
@@ -60,7 +61,7 @@ export function useTreeHistory({
       }
       return false;
     });
-  }, [logsData?.logs, tree.id, tree.zone, orchardId]);
+  }, [allLogs, tree.id, tree.zone, orchardId]);
 
   return {
     logs,
