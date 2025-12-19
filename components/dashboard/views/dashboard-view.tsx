@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useOrchard } from "@/components/providers/orchard-provider";
 import { useOrchardTrees } from '@/lib/hooks/use-orchard-queries';
 import { useSpecificCacheInvalidation } from '@/lib/hooks/use-orchard-queries';
-import { PullToRefresh } from '@/components/ui/pull-to-refresh';
+import { RefreshButton } from '@/components/ui/refresh-button';
 import { TreeCard } from "@/components/tree-card";
 import { TreeCardSkeleton } from "@/components/ui/tree-card-skeleton";
 import { Pagination } from "@/components/pagination";
@@ -12,7 +12,7 @@ import { PDFGeneratorModal } from "@/components/modals/pdf-generator-modal";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { FilterBar } from "@/components/dashboard/FilterBar";
 import { Button } from "@/components/ui/button";
-import { Sprout, PlusCircle, RotateCw } from "lucide-react";
+import { Sprout, PlusCircle } from "lucide-react";
 
 interface DashboardViewProps {
   onViewChange: (view: 'add_tree' | 'add_batch_log' | 'tree_detail') => void;
@@ -104,33 +104,29 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
   }, []);
 
   return (
-    <PullToRefresh onRefresh={handleRefresh}>
-      <div className="space-y-4">
-        {/* Header Stats with Refresh */}
-        <div className="flex gap-4">
-          <StatsCards
-            stats={{
-              totalTrees,
-              healthyTrees: healthyTreesCount,
-              sickTrees: sickTreesCount,
-              deadTrees: deadTreesCount,
-              archivedTrees: archivedTreesCount
-            }}
-          />
+    <div className="space-y-4">
+      {/* Header Stats with Refresh */}
+      <div className="flex gap-4">
+        <StatsCards
+          stats={{
+            totalTrees,
+            healthyTrees: healthyTreesCount,
+            sickTrees: sickTreesCount,
+            deadTrees: deadTreesCount,
+            archivedTrees: archivedTreesCount
+          }}
+        />
 
-          {/* Refresh Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            aria-label="รีเฟรชข้อมูลต้นไม้"
-            title="ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์"
-            className="self-start"
-          >
-            <RotateCw size={16} />
-            <span className="hidden sm:inline ml-2">รีเฟรช</span>
-          </Button>
-        </div>
+        {/* Refresh Button */}
+        <RefreshButton
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          label="รีเฟรช"
+          tooltip="ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์"
+          className="self-start"
+        />
+      </div>
 
       {/* Action Button */}
       <Button
@@ -246,6 +242,5 @@ export function DashboardView({ onViewChange, onIdentifyTree, loadingTreeId, isA
         logoBase64={logoBase64}
       />
     </div>
-    </PullToRefresh>
   );
 }

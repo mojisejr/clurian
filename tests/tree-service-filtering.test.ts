@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { prisma } from '@/lib/prisma';
 import { getOrchardTrees } from '@/lib/services/tree-service';
-import { TreeStatus } from '@prisma/client';
+import { TreeStatus, Tree } from '@prisma/client';
 
 // Mock Prisma
 vi.mock('@/lib/prisma', () => ({
@@ -22,7 +22,7 @@ describe('Tree Service - Filtering', () => {
   const mockOrchardId = 'test-orchard-id';
 
   // Helper function to create mock tree
-  const createMockTree = (overrides: any = {}) => ({
+  const createMockTree = (overrides: Partial<Tree> = {}): Tree => ({
     id: 'tree-1',
     orchardId: mockOrchardId,
     code: 'T001',
@@ -47,7 +47,7 @@ describe('Tree Service - Filtering', () => {
         createMockTree({ id: '2', code: 'T002' }),
       ];
 
-      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as any);
+      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as unknown as Tree[]);
       vi.mocked(prisma.tree.count).mockResolvedValue(2);
 
       const result = await getOrchardTrees(mockOrchardId, 1, 20, {
@@ -72,7 +72,7 @@ describe('Tree Service - Filtering', () => {
         { id: '1', status: 'SICK', code: 'T003' },
       ];
 
-      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as any);
+      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as unknown as Tree[]);
       vi.mocked(prisma.tree.count).mockResolvedValue(1);
 
       const result = await getOrchardTrees(mockOrchardId, 1, 20, {
@@ -97,7 +97,7 @@ describe('Tree Service - Filtering', () => {
         { id: '3', status: 'DEAD', code: 'T003' },
       ];
 
-      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as any);
+      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as unknown as Tree[]);
       vi.mocked(prisma.tree.count).mockResolvedValue(3);
 
       const result = await getOrchardTrees(mockOrchardId, 1, 20, {});
@@ -125,7 +125,7 @@ describe('Tree Service - Filtering', () => {
         { id: '2', status: 'HEALTHY', code: 'T002', zone: 'A' },
       ];
 
-      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as any);
+      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as unknown as Tree[]);
       vi.mocked(prisma.tree.count).mockResolvedValue(2);
 
       const result = await getOrchardTrees(mockOrchardId, 1, 20, {
@@ -151,7 +151,7 @@ describe('Tree Service - Filtering', () => {
         { id: '1', status: 'HEALTHY', code: 'SEARCH001', zone: 'A' },
       ];
 
-      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as any);
+      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as unknown as Tree[]);
       vi.mocked(prisma.tree.count).mockResolvedValue(1);
 
       const result = await getOrchardTrees(mockOrchardId, 1, 20, {
@@ -177,7 +177,7 @@ describe('Tree Service - Filtering', () => {
         { id: '1', status: 'HEALTHY', code: 'T001', variety: 'Monthong', zone: 'A' },
       ];
 
-      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as any);
+      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as unknown as Tree[]);
       vi.mocked(prisma.tree.count).mockResolvedValue(1);
 
       const result = await getOrchardTrees(mockOrchardId, 1, 20, {
@@ -205,7 +205,7 @@ describe('Tree Service - Filtering', () => {
         { id: '1', status: 'SICK', code: 'T001', zone: 'B' },
       ];
 
-      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as any);
+      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as unknown as Tree[]);
       vi.mocked(prisma.tree.count).mockResolvedValue(1);
 
       const result = await getOrchardTrees(mockOrchardId, 1, 20, {
@@ -231,7 +231,7 @@ describe('Tree Service - Filtering', () => {
         { id: '1', status: 'HEALTHY', code: 'SPECIAL001', zone: 'A' },
       ];
 
-      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as any);
+      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as unknown as Tree[]);
       vi.mocked(prisma.tree.count).mockResolvedValue(1);
 
       const result = await getOrchardTrees(mockOrchardId, 1, 20, {
@@ -266,7 +266,7 @@ describe('Tree Service - Filtering', () => {
         code: `T${String(i + 1).padStart(3, '0')}`,
       }));
 
-      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as any);
+      vi.mocked(prisma.tree.findMany).mockResolvedValue(mockTrees as unknown as Tree[]);
       vi.mocked(prisma.tree.count).mockResolvedValue(100);
 
       const result = await getOrchardTrees(mockOrchardId, 2, 20, {});

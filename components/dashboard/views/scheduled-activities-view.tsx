@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useOrchard } from "@/components/providers/orchard-provider";
 import { useOrchardActivityLogs, useOrchardTrees, useSpecificCacheInvalidation } from '@/lib/hooks/use-orchard-queries';
-import { PullToRefresh } from '@/components/ui/pull-to-refresh';
+import { RefreshButton } from '@/components/ui/refresh-button';
 import { LogDetailModal } from "@/components/modals/log-detail-modal";
 import { FollowUpModal, type FollowUpResult } from "@/components/modals/follow-up-modal";
 import { cn } from "@/lib/utils";
@@ -296,30 +296,26 @@ export function ScheduledActivitiesView({}: ScheduledActivitiesViewProps) {
   };
 
   return (
-    <PullToRefresh onRefresh={handleRefresh}>
-      <div className="space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Calendar size={20} />
-              งานที่ต้องทำ
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              ติดตามงานที่มีนัดหมาย
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            aria-label="รีเฟรชกิจกรรมที่ต้องทำ"
-            title="ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์"
-          >
-            <RotateCw size={16} />
-            <span className="hidden sm:inline">รีเฟรช</span>
-          </Button>
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Calendar size={20} />
+            งานที่ต้องทำ
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            ติดตามงานที่มีนัดหมาย
+          </p>
         </div>
+        <RefreshButton
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          label="รีเฟรช"
+          tooltip="ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์"
+        />
+      </div>
 
         {/* Error State */}
         {error && (
@@ -526,6 +522,6 @@ export function ScheduledActivitiesView({}: ScheduledActivitiesViewProps) {
         />
       )}
       </div>
-    </PullToRefresh>
+
   );
 }

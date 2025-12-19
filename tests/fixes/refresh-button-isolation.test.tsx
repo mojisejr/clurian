@@ -6,13 +6,27 @@ import { useInvalidateOrchardData, useSpecificCacheInvalidation } from '@/lib/ho
 import { useOrchard } from '@/components/providers/orchard-provider';
 
 // Mock the hooks
-vi.mock('@/lib/hooks/use-orchard-queries');
-vi.mock('@/components/providers/orchard-provider');
+const { mockFnUseInvalidateOrchardData, mockFnUseSpecificCacheInvalidation, mockFnUseOrchard } = vi.hoisted(() => {
+  return {
+    mockFnUseInvalidateOrchardData: vi.fn(),
+    mockFnUseSpecificCacheInvalidation: vi.fn(),
+    mockFnUseOrchard: vi.fn(),
+  }
+})
+
+vi.mock('@/lib/hooks/use-orchard-queries', () => ({
+  useInvalidateOrchardData: mockFnUseInvalidateOrchardData,
+  useSpecificCacheInvalidation: mockFnUseSpecificCacheInvalidation,
+}));
+
+vi.mock('@/components/providers/orchard-provider', () => ({
+  useOrchard: mockFnUseOrchard,
+}));
 
 // Get mocked functions
-const mockUseInvalidateOrchardData = vi.mocked(useInvalidateOrchardData);
-const mockUseSpecificCacheInvalidation = vi.mocked(useSpecificCacheInvalidation);
-const mockUseOrchard = vi.mocked(useOrchard);
+const mockUseInvalidateOrchardData = mockFnUseInvalidateOrchardData;
+const mockUseSpecificCacheInvalidation = mockFnUseSpecificCacheInvalidation;
+const mockUseOrchard = mockFnUseOrchard;
 
 // Test wrapper component
 const TestWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -47,14 +61,15 @@ describe('Phase 2: Refresh Button Isolation Tests', () => {
     mockUseOrchard.mockReturnValue({
       currentOrchardId: 'orchard1',
       orchards: [mockOrchard],
-      isLoading: false,
+      isLoadingOrchards: false,
       error: null,
       setCurrentOrchardId: vi.fn(),
       addOrchard: vi.fn(),
       updateOrchard: vi.fn(),
       deleteOrchard: vi.fn(),
       isFetchingOrchardData: false
-    });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     // Default mock for invalidate functions
     mockUseInvalidateOrchardData.mockReturnValue({
@@ -62,7 +77,9 @@ describe('Phase 2: Refresh Button Isolation Tests', () => {
       invalidateOrchards: vi.fn(),
       invalidateOrchardData: vi.fn(),
       invalidateTrees: vi.fn(),
-      invalidateActivityLogs: vi.fn()
+      invalidateActivityLogs: vi.fn(),
+      invalidateDashboard: vi.fn(),
+      invalidateAllOrchardData: vi.fn()
     });
 
     // Mock for the new specific cache invalidation hook
@@ -143,7 +160,7 @@ describe('Phase 2: Refresh Button Isolation Tests', () => {
       // This test verifies that refresh doesn't break the component
       const TestComponent = () => {
         const { invalidateSpecificTrees } = useSpecificCacheInvalidation();
-        const [filterState, setFilterState] = React.useState('ALL');
+        const [filterState] = React.useState('ALL');
 
         const handleClick = async () => {
           await invalidateSpecificTrees('orchard1');
@@ -237,7 +254,7 @@ describe('Phase 2: Refresh Button Isolation Tests', () => {
 
     it('should not affect trees data during batch refresh', async () => {
       const TestComponent = () => {
-        const { invalidateSpecificActivityLogs, invalidateSpecificTrees } = useSpecificCacheInvalidation();
+        const { invalidateSpecificActivityLogs } = useSpecificCacheInvalidation();
 
         const handleClick = async () => {
           await invalidateSpecificActivityLogs('orchard1');
@@ -375,7 +392,7 @@ describe('Phase 2: Refresh Button Isolation Tests', () => {
 
     it('should not affect trees during scheduled refresh', async () => {
       const TestComponent = () => {
-        const { invalidateSpecificActivityLogs, invalidateSpecificTrees } = useSpecificCacheInvalidation();
+        const { invalidateSpecificActivityLogs } = useSpecificCacheInvalidation();
 
         const handleClick = async () => {
           await invalidateSpecificActivityLogs('orchard1');

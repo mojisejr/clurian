@@ -49,7 +49,7 @@ interface OrchardContextType {
   completedLogsCount: number;
 }
 
-const OrchardContext = createContext<OrchardContextType | undefined>(undefined);
+export const OrchardContext = createContext<OrchardContextType | undefined>(undefined);
 
 export function OrchardProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();

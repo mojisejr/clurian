@@ -35,6 +35,9 @@ vi.mock('@/components/providers/orchard-provider', () => ({
 
 // Mock hooks
 vi.mock('@/lib/hooks/use-orchard-queries', () => ({
+  useSpecificCacheInvalidation: vi.fn(() => ({
+    invalidateSpecificTrees: vi.fn(),
+  })),
   useOrchardTrees: vi.fn(() => ({
     data: {
       trees: [

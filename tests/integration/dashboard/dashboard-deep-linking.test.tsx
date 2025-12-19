@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import DashboardPage from '@/app/dashboard/page';
 import { createMockOrchardProvider } from '@/test-utils/mock-providers';
 import { vi, beforeAll, afterEach, describe, it, expect } from 'vitest';
+import { useOrchardTrees, useOrchardActivityLogs } from '@/lib/hooks/use-orchard-queries';
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
@@ -12,13 +13,52 @@ vi.mock('next/navigation', () => ({
     replace: vi.fn(),
     push: vi.fn(),
   }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: vi.fn(() => new URLSearchParams()),
   usePathname: () => '/dashboard',
 }));
 
 // Mock UUID generation
 vi.mock('uuid', () => ({
   v4: () => 'test-uuid-123',
+}));
+
+// Mock hooks
+vi.mock('@/lib/hooks/use-orchard-queries', () => ({
+  useOrchardTrees: vi.fn(() => ({
+    data: { trees: [
+      {
+        id: 'tree-1',
+        code: 'T001',
+        zone: 'A',
+        type: 'ทุเรียน',
+        variety: 'หมอนทอง',
+        status: 'healthy',
+        plantedDate: '2024-01-01',
+        createdAt: '2024-01-01T00:00:00.000Z',
+        orchardId: 'orchard-1',
+      },
+      {
+        id: 'tree-2',
+        code: 'T002',
+        zone: 'B',
+        type: 'ทุเรียน',
+        variety: 'ชันสกุล',
+        status: 'sick',
+        plantedDate: '2024-01-02',
+        createdAt: '2024-01-02T00:00:00.000Z',
+        orchardId: 'orchard-1',
+      },
+    ] },
+    isLoading: false,
+  })),
+  useOrchardActivityLogs: vi.fn(() => ({
+    data: { logs: [] },
+    isLoading: false,
+    refetch: vi.fn(),
+  })),
+  useSpecificCacheInvalidation: vi.fn(() => ({
+    invalidateSpecificTrees: vi.fn(),
+  })),
 }));
 
 const createTestQueryClient = () => new QueryClient({
@@ -81,13 +121,22 @@ describe('DashboardPage Deep Linking', () => {
 
     // Clear all mocks
     vi.clearAllMocks();
+
+    // Reset default mocks
+    vi.mocked(useOrchardTrees).mockReturnValue({
+      data: { trees: mockTrees },
+      isLoading: false,
+      refetch: vi.fn(),
+    } as any);
+
+    vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams());
   });
 
   describe('TreeId Parameter Handling', () => {
     it('should extract treeId from search params', async () => {
       const MockedSearchParams = () => {
         const searchParams = new URLSearchParams('?treeId=tree-1');
-        jest.spyOn(require('next/navigation'), 'useSearchParams').mockReturnValue(searchParams);
+        vi.mocked(useSearchParams).mockReturnValue(searchParams);
 
         return (
           <QueryClientProvider client={queryClient}>
@@ -185,6 +234,11 @@ describe('DashboardPage Deep Linking', () => {
         isLoadingOrchards: false,
       });
 
+      // Start with treeId
+      const searchParams = new URLSearchParams();
+      searchParams.set('treeId', 'tree-1');
+      vi.mocked(useSearchParams).mockReturnValue(searchParams);
+
       // First render with treeId
       const { rerender } = render(
         <QueryClientProvider client={queryClient}>
@@ -208,7 +262,7 @@ describe('DashboardPage Deep Linking', () => {
       );
 
       await waitFor(() => {
-        expect(screen.queryByText(/T001/i)).not.toBeInTheDocument();
+        expect(screen.queryByRole('heading', { name: /T001/i })).not.toBeInTheDocument();
         expect(screen.getByText(/ต้นไม้/i)).toBeInTheDocument(); // Dashboard view
       });
     });
@@ -216,6 +270,17 @@ describe('DashboardPage Deep Linking', () => {
 
   describe('Loading and Error States', () => {
     it('should handle empty trees array gracefully', async () => {
+      const searchParams = new URLSearchParams();
+      searchParams.set('treeId', 'tree-1');
+      vi.mocked(useSearchParams).mockReturnValue(searchParams);
+
+      // Mock empty trees
+      vi.mocked(useOrchardTrees).mockReturnValue({
+        data: { trees: [] },
+        isLoading: false,
+        refetch: vi.fn(),
+      } as any);
+
       const MockProviderEmpty = createMockOrchardProvider({
         trees: [],
         currentOrchard: mockCurrentOrchard,
