@@ -37,14 +37,17 @@ export function useDashboardDeepLinking({
   const isLoadingTreeDetail = hasTreeId && trees.length === 0 && !isLoadingTrees;
 
   useEffect(() => {
-    if (treeId && trees.length > 0) {
-      if (trees.some(t => t.id === treeId)) {
-        setSelectedTreeId(treeId);
+    const timer = setTimeout(() => {
+      if (treeId && trees.length > 0) {
+        if (trees.some(t => t.id === treeId) && selectedTreeId !== treeId) {
+          setSelectedTreeId(treeId);
+        }
+      } else if (!treeId && selectedTreeId) {
+        // If no treeId in URL but we have selectedTreeId, clear it
+        setSelectedTreeId(null);
       }
-    } else if (!treeId && selectedTreeId) {
-      // If no treeId in URL but we have selectedTreeId, clear it
-      setSelectedTreeId(null);
-    }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [treeId, trees, selectedTreeId]);
 
   return {

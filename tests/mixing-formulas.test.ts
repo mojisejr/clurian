@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { auth } from '@/lib/auth'
 import {
   getMixingFormulasByOrchard,
   createMixingFormula,
@@ -109,7 +110,7 @@ describe('Mixing Formulas Actions', () => {
     })
 
     it('ควร return error ถ้าไม่ได้รับอนุญาต', async () => {
-      vi.mocked(require('@/lib/auth').auth.api.getSession).mockResolvedValueOnce(null)
+      vi.mocked(auth.api.getSession).mockResolvedValueOnce(null)
 
       const result = await getMixingFormulasByOrchard('orchard-1')
 

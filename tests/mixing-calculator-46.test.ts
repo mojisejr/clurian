@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Tests for Mixing Calculator with 46 Formulation Types (Issue #27)
  *

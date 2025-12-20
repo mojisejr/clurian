@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from 'vitest';
 import {
   validateTreeCode,
@@ -36,8 +37,8 @@ describe('Validation Utilities', () => {
     it('should handle edge cases', () => {
       expect(validateTreeCode('A001')).toBe(true);
       expect(validateTreeCode('ZZZZ999')).toBe(true);
-      expect(validateTreeCode(null as any)).toBe(false);
-      expect(validateTreeCode(undefined as any)).toBe(false);
+      expect(validateTreeCode(null as unknown as string)).toBe(false);
+      expect(validateTreeCode(undefined as unknown as string)).toBe(false);
     });
   });
 
@@ -53,8 +54,8 @@ describe('Validation Utilities', () => {
       expect(validateOrchardName('')).toBe(false);
       expect(validateOrchardName('   ')).toBe(false); // whitespace only
       expect(validateOrchardName('a'.repeat(101))).toBe(false); // too long
-      expect(validateOrchardName(null as any)).toBe(false);
-      expect(validateOrchardName(undefined as any)).toBe(false);
+      expect(validateOrchardName(null as unknown as string)).toBe(false);
+      expect(validateOrchardName(undefined as unknown as string)).toBe(false);
     });
 
     it('should trim whitespace', () => {
@@ -78,7 +79,7 @@ describe('Validation Utilities', () => {
       expect(validateTreeVariety('')).toBe(false);
       expect(validateTreeVariety('invalid')).toBe(false);
       expect(validateTreeVariety('Apple')).toBe(false);
-      expect(validateTreeVariety(null as any)).toBe(false);
+      expect(validateTreeVariety(null as unknown as string)).toBe(false);
     });
   });
 
@@ -91,8 +92,8 @@ describe('Validation Utilities', () => {
     it('should reject empty or invalid strings', () => {
       expect(validateRequiredString('')).toBe(false);
       expect(validateRequiredString('   ')).toBe(false);
-      expect(validateRequiredString(null as any)).toBe(false);
-      expect(validateRequiredString(undefined as any)).toBe(false);
+      expect(validateRequiredString(null as unknown as string)).toBe(false);
+      expect(validateRequiredString(undefined as unknown as string)).toBe(false);
     });
   });
 
@@ -141,7 +142,7 @@ describe('Validation Utilities', () => {
     it('should reject invalid zone values', () => {
       expect(validateZone('')).toBe(false);
       expect(validateZone('   ')).toBe(false);
-      expect(validateZone(null as any)).toBe(false);
+      expect(validateZone(null as unknown as string)).toBe(false);
     });
   });
 
@@ -180,7 +181,7 @@ describe('Validation Utilities', () => {
     it('should reject invalid parameters', () => {
       expect(() => validatePaginationParams({ page: NaN, limit: 10 })).toThrow();
       expect(() => validatePaginationParams({ page: 1, limit: NaN })).toThrow();
-      expect(() => validatePaginationParams({ page: 'abc' as any, limit: 10 })).toThrow();
+      expect(() => validatePaginationParams({ page: 'abc' as unknown as string, limit: 10 })).toThrow();
       expect(() => validatePaginationParams({ page: {}, limit: 10 })).toThrow();
     });
   });
@@ -200,7 +201,7 @@ describe('Validation Utilities', () => {
       expect(validateLogAction('')).toBe(false);
       expect(validateLogAction('invalid action')).toBe(false);
       expect(validateLogAction('watering')).toBe(false); // not in Thai
-      expect(validateLogAction(null as any)).toBe(false);
+      expect(validateLogAction(null as unknown as string)).toBe(false);
     });
   });
 });

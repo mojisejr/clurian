@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useOrchard } from "@/components/providers/orchard-provider";
 import { useOrchardActivityLogs, useSpecificCacheInvalidation } from '@/lib/hooks/use-orchard-queries';
-import { PullToRefresh } from '@/components/ui/pull-to-refresh';
+import { RefreshButton } from '@/components/ui/refresh-button';
 import { BatchActivityItem } from "@/components/dashboard/batch/batch-activity-item";
 import { LogDetailModal } from "@/components/modals/log-detail-modal";
 import { FollowUpModal, type FollowUpResult } from "@/components/modals/follow-up-modal";
@@ -141,28 +141,24 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
   };
 
   return (
-    <PullToRefresh onRefresh={handleRefresh}>
-      <div className="space-y-4">
-        {/* Header with Refresh Button */}
-        <div className="flex items-center justify-between gap-2">
-          <Button
-            className="flex-1 gap-2"
-            onClick={onAddBatchLog}
-          >
-            <PlusCircle size={18} /> บันทึกงานทั้งแปลง
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isLoading}
-            aria-label="รีเฟรชกิจกรรม"
-            title="ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์"
-          >
-            <RotateCw size={16} className={isLoading ? "animate-spin" : ""} />
-            <span className="hidden sm:inline">รีเฟรช</span>
-          </Button>
-        </div>
+    <div className="space-y-4">
+      {/* Header with Refresh Button */}
+      <div className="flex items-center justify-between gap-2">
+        <Button
+          className="flex-1 gap-2"
+          onClick={onAddBatchLog}
+        >
+          <PlusCircle size={18} /> บันทึกงานทั้งแปลง
+        </Button>
+        <RefreshButton
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isLoading}
+          label="รีเฟรช"
+          tooltip="ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์"
+        />
+      </div>
 
         {/* Error State */}
         {error && (
@@ -319,6 +315,5 @@ export function BatchActivitiesView({ onAddBatchLog }: BatchActivitiesViewProps)
         />
       )}
     </div>
-    </PullToRefresh>
   );
 }

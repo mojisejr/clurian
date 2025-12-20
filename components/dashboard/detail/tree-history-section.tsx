@@ -41,6 +41,16 @@ export function TreeHistorySection({ tree, onLogClick }: TreeHistorySectionProps
   const filteredHistory = useMemo(() => {
     let result = [...logs];
 
+    // Filter by tree context (Robustness against mixed data)
+    result = result.filter(log => {
+      if (log.logType === 'INDIVIDUAL') {
+        return log.treeId === tree.id;
+      } else if (log.logType === 'BATCH') {
+        return log.targetZone === tree.zone;
+      }
+      return true;
+    });
+
     if (historyTab === 'followup') {
         result = result.filter(l => l.status === 'IN_PROGRESS');
     } else if (historyTab === 'batch') {
@@ -62,7 +72,7 @@ export function TreeHistorySection({ tree, onLogClick }: TreeHistorySectionProps
     });
 
     return result;
-  }, [logs, historyTab, historySearch, historySort]);
+  }, [logs, historyTab, historySearch, historySort, tree.id, tree.zone]);
 
   // --- Loading State ---
   if (isLoading) {

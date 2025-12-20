@@ -49,7 +49,10 @@ export function FormulationSearchBox({
     }, debounceMs);
 
     debouncedSearch(query);
-    setShowSuggestions(query.trim().length > 0);
+    const timer = setTimeout(() => {
+      setShowSuggestions(query.trim().length > 0);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [query, onSearch, debounceMs]);
 
   // Handle click outside to close suggestions

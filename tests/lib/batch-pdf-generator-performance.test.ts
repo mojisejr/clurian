@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BatchPDFGenerator } from '../../lib/utils/batch-pdf-generator';
 import type { Tree } from '../../lib/types';
@@ -63,6 +64,7 @@ describe('BatchPDFGenerator Performance Tests', () => {
 
       // Simulate memory increase during processing
       let memoryCallCount = 0;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.spyOn(generator as any, 'getMemoryInfo').mockImplementation(() => {
         memoryCallCount++;
         // Simulate memory increase

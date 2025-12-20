@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
@@ -13,13 +14,31 @@ vi.mock('@/components/ui/pull-to-refresh', () => ({
 // Mock the components
 const mockUseOrchard = vi.fn()
 const mockUseInvalidateOrchardData = vi.fn()
+const mockUseSpecificCacheInvalidation = vi.fn(() => ({
+  invalidateSpecificTrees: vi.fn(),
+  invalidateSpecificActivityLogs: vi.fn(),
+  invalidateSpecificDashboard: vi.fn()
+}))
 
 vi.mock('@/components/providers/orchard-provider', () => ({
   useOrchard: mockUseOrchard
 }))
 
 vi.mock('@/lib/hooks/use-orchard-queries', () => ({
-  useInvalidateOrchardData: mockUseInvalidateOrchardData
+  useInvalidateOrchardData: mockUseInvalidateOrchardData,
+  useSpecificCacheInvalidation: mockUseSpecificCacheInvalidation,
+  useOrchardTrees: vi.fn(() => ({
+    data: [],
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+  useOrchardActivityLogs: vi.fn(() => ({
+    data: { logs: [] },
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
 }))
 
 describe('Dashboard Refresh Button Integration - RED PHASE', () => {
@@ -84,23 +103,21 @@ describe('Dashboard Refresh Button Integration - RED PHASE', () => {
       />, { wrapper })
 
       // Should find refresh button
-      const refreshButton = screen.getByRole('button', { name: /รีเฟรช/i })
+      const refreshButton = screen.getByRole('button', { name: /ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์/i })
       expect(refreshButton).toBeInTheDocument()
 
       // Should have proper ARIA labels
-      expect(refreshButton).toHaveAttribute('aria-label', 'รีเฟรชข้อมูลต้นไม้')
-      expect(refreshButton).toHaveAttribute('title', 'ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์')
+      expect(refreshButton).toHaveAttribute('aria-label', 'ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์')
     })
 
     it('should pass currentOrchardId to refresh handler', async () => {
       const { DashboardView } = await import('@/components/dashboard/views/dashboard-view')
-      const mockInvalidateTrees = vi.fn()
+      const mockInvalidateSpecificTrees = vi.fn()
 
-      mockUseInvalidateOrchardData.mockReturnValue({
-        invalidateTrees: mockInvalidateTrees,
-        invalidateActivityLogs: vi.fn(),
-        invalidateDashboard: vi.fn(),
-        invalidateAllOrchardData: vi.fn()
+      mockUseSpecificCacheInvalidation.mockReturnValue({
+        invalidateSpecificTrees: mockInvalidateSpecificTrees,
+        invalidateSpecificActivityLogs: vi.fn(),
+        invalidateSpecificDashboard: vi.fn()
       })
 
       render(<DashboardView
@@ -108,11 +125,11 @@ describe('Dashboard Refresh Button Integration - RED PHASE', () => {
         onIdentifyTree={vi.fn()}
       />, { wrapper })
 
-      const refreshButton = screen.getByRole('button', { name: /รีเฟรช/i })
+      const refreshButton = screen.getByRole('button', { name: /ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์/i })
       fireEvent.click(refreshButton)
 
       await waitFor(() => {
-        expect(mockInvalidateTrees).toHaveBeenCalledWith('orchard-1')
+        expect(mockInvalidateSpecificTrees).toHaveBeenCalledWith('orchard-1')
       })
     })
   })
@@ -124,28 +141,39 @@ describe('Dashboard Refresh Button Integration - RED PHASE', () => {
       render(<BatchActivitiesView onAddBatchLog={vi.fn()} />, { wrapper })
 
       // Should find refresh button
-      const refreshButton = screen.getByRole('button', { name: /รีเฟรช/i })
+      const refreshButton = screen.getByRole('button', { name: /ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์/i })
       expect(refreshButton).toBeInTheDocument()
 
       // Should have proper ARIA labels
-      expect(refreshButton).toHaveAttribute('aria-label', 'รีเฟรชกิจกรรม')
-      expect(refreshButton).toHaveAttribute('title', 'ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์')
+      expect(refreshButton).toHaveAttribute('aria-label', 'ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์')
     })
   })
 
   describe('ScheduledActivitiesView Component', () => {
     it('should have refresh button that calls invalidateActivityLogs', async () => {
       const { ScheduledActivitiesView } = await import('@/components/dashboard/views/scheduled-activities-view')
+      const mockInvalidateSpecificActivityLogs = vi.fn()
+
+      mockUseSpecificCacheInvalidation.mockReturnValue({
+        invalidateSpecificTrees: vi.fn(),
+        invalidateSpecificActivityLogs: mockInvalidateSpecificActivityLogs,
+        invalidateSpecificDashboard: vi.fn()
+      })
 
       render(<ScheduledActivitiesView />, { wrapper })
 
       // Should find refresh button
-      const refreshButton = screen.getByRole('button', { name: /รีเฟรช/i })
+      const refreshButton = screen.getByRole('button', { name: /ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์/i })
       expect(refreshButton).toBeInTheDocument()
 
       // Should have proper ARIA labels
-      expect(refreshButton).toHaveAttribute('aria-label', 'รีเฟรชกิจกรรมที่ต้องทำ')
-      expect(refreshButton).toHaveAttribute('title', 'ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์')
+      expect(refreshButton).toHaveAttribute('aria-label', 'ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์')
+
+      // Should call invalidateSpecificActivityLogs when clicked
+      fireEvent.click(refreshButton)
+      await waitFor(() => {
+        expect(mockInvalidateSpecificActivityLogs).toHaveBeenCalledWith('orchard-1')
+      })
     })
   })
 

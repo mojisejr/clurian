@@ -99,10 +99,11 @@ export function AddLogForm({
 
   // Reset formula when action changes, but don't auto-select
   useEffect(() => {
-    if (!requiresFormula) {
-      setSelectedFormula("none");
+    if (!requiresFormula && selectedFormula !== "none") {
+      const timer = setTimeout(() => setSelectedFormula("none"), 0);
+      return () => clearTimeout(timer);
     }
-  }, [requiresFormula]);
+  }, [requiresFormula, selectedFormula]);
 
   const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

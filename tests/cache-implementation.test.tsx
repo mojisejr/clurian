@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import React from 'react'
 import { renderHook, waitFor } from '@testing-library/react'
@@ -46,8 +47,8 @@ describe('Cache Implementation Tests - RED PHASE', () => {
   })
 
   describe('RefreshButton Component - Implemented', () => {
-    it('should now have RefreshButton component', () => {
-      const { RefreshButton } = require('@/components/ui/refresh-button')
+    it('should now have RefreshButton component', async () => {
+      const { RefreshButton } = await import('@/components/ui/refresh-button')
       expect(RefreshButton).toBeDefined()
     })
 
@@ -68,8 +69,8 @@ describe('Cache Implementation Tests - RED PHASE', () => {
   })
 
   describe('PullToRefresh Component - Implemented', () => {
-    it('should now have PullToRefresh component', () => {
-      const { PullToRefresh } = require('@/components/ui/pull-to-refresh')
+    it('should now have PullToRefresh component', async () => {
+      const { PullToRefresh } = await import('@/components/ui/pull-to-refresh')
       expect(PullToRefresh).toBeDefined()
     })
 
@@ -88,8 +89,8 @@ describe('Cache Implementation Tests - RED PHASE', () => {
   })
 
   describe('Cache Hooks Enhancements - To Be Implemented', () => {
-    it('should now have enhanced invalidation hook', () => {
-      const { useEnhancedInvalidateOrchardData } = require('@/lib/hooks/use-orchard-queries')
+    it('should now have enhanced invalidation hook', async () => {
+      const { useEnhancedInvalidateOrchardData } = await import('@/lib/hooks/use-orchard-queries')
       expect(typeof useEnhancedInvalidateOrchardData).toBe('function')
     })
 
@@ -154,8 +155,8 @@ describe('Cache Implementation Tests - RED PHASE', () => {
   })
 
   describe('Stale Time Optimization - To Be Implemented', () => {
-    it('should now have optimized cache config', () => {
-      const { OPTIMIZED_CACHE_CONFIG } = require('@/lib/hooks/use-orchard-queries')
+    it('should now have optimized cache config', async () => {
+      const { OPTIMIZED_CACHE_CONFIG } = await import('@/lib/hooks/use-orchard-queries')
       expect(OPTIMIZED_CACHE_CONFIG).toBeDefined()
       expect(OPTIMIZED_CACHE_CONFIG.ORCHARD_DATA.staleTime).toBe(30 * 1000)
     })
@@ -191,8 +192,8 @@ describe('Cache Implementation Tests - RED PHASE', () => {
   })
 
   describe('Real-time Updates - To Be Implemented', () => {
-    it('should now have WebSocket hook', () => {
-      const { useRealTimeUpdates } = require('@/lib/hooks/use-real-time-updates')
+    it('should now have WebSocket hook', async () => {
+      const { useRealTimeUpdates } = await import('@/lib/hooks/use-real-time-updates')
       expect(typeof useRealTimeUpdates).toBe('function')
     })
 
@@ -216,8 +217,8 @@ describe('Cache Implementation Tests - RED PHASE', () => {
   })
 
   describe('Cache Performance Monitoring - To Be Implemented', () => {
-    it('should now have performance monitor hook', () => {
-      const { useCachePerformance } = require('@/lib/hooks/use-cache-performance')
+    it('should now have performance monitor hook', async () => {
+      const { useCachePerformance } = await import('@/lib/hooks/use-cache-performance')
       expect(typeof useCachePerformance).toBe('function')
     })
 
